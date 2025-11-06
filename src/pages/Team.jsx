@@ -9,7 +9,7 @@ const coreTeam = [
   { name: 'PREET SONAR', position: 'VICE PRESIDENT', image: '/team/PREET SONAR.jpeg', icon: Users },
   { name: 'BHAVIKA DESHMUKH', position: 'DESIGN LEAD', image: '/team/BHAVIKA DESHMUKH.png', icon: Users },
   { name: 'PRERANA MAHAJAN', position: 'DESIGN CO-LEAD', image: '/team/PRERANA MAHAJAN.png', icon: Users },
-  { name: 'DISHA SHREE', position: 'SECRETARY', image: '/team/DISHA SHREE.png', icon: Users },
+  { name: 'D DISHA SHREE', position: 'GENERAL SECRETARY', image: '/team/DISHA SHREE.png', icon: Users },
   { name: 'HIMESH WANI', position: 'OPERATION LEAD', image: '/team/HIMESH WANI (2).png', icon: Users },
   { name: 'YASH PAWAR', position: 'PR LEAD', image: '/team/YASH PAWAR.jpeg', icon: Users },
   { name: 'PRANAV BATHEJA', position: 'MARKETING LEAD', image: '/team/PRANAV BHATEJA.jpeg', icon: Users },
