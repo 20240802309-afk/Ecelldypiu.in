@@ -24,13 +24,13 @@ We also share practical insights on idea validation, building minimum viable pro
   };
 
   return (
-    <div className="min-h-screen pt-16 bg-gray-50">
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="min-h-screen bg-black text-white selection:bg-brand-yellow selection:text-black font-sans pt-32 pb-20">
+      <div className="container mx-auto px-4 max-w-4xl">
         <Link
           to="/blogs"
-          className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8 transition-colors"
+          className="inline-flex items-center text-white hover:text-brand-yellow mb-12 transition-colors font-mono uppercase tracking-widest border-2 border-white/20 px-4 py-2 rounded-full hover:border-brand-yellow hover:bg-white/5"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Blogs
         </Link>
 
@@ -38,41 +38,48 @@ We also share practical insights on idea validation, building minimum viable pro
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="bg-white rounded-2xl shadow-lg p-8 md:p-12"
+          className="bg-zinc-900 border-4 border-white rounded-[2rem] p-8 md:p-12 shadow-[12px_12px_0px_#FFB22C] relative overflow-hidden"
         >
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 font-space leading-tight">
+          {/* Decor */}
+          <div className="absolute top-0 right-0 p-4">
+            <div className="w-4 h-4 rounded-full bg-brand-yellow border-2 border-white"></div>
+          </div>
+
+          <h1 className="text-4xl md:text-6xl font-black text-white mb-8 uppercase tracking-tighter leading-none">
             {blog.title}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-6 mb-8 pb-6 border-b border-gray-200">
-            <div className="flex items-center text-gray-600">
-              <Calendar className="w-5 h-5 mr-2" />
+          <div className="flex flex-wrap items-center gap-6 mb-12 pb-8 border-b-4 border-white/10 font-mono text-sm md:text-base text-gray-400">
+            <div className="flex items-center">
+              <Calendar className="w-5 h-5 mr-2 text-brand-yellow" />
               <span>{blog.date}</span>
             </div>
-            <div className="flex items-center text-gray-600">
-              <Clock className="w-5 h-5 mr-2" />
+            <div className="flex items-center">
+              <Clock className="w-5 h-5 mr-2 text-brand-yellow" />
               <span>{blog.readTime}</span>
             </div>
-            <div className="flex items-center text-gray-600">
-              <User className="w-5 h-5 mr-2" />
+            <div className="flex items-center">
+              <User className="w-5 h-5 mr-2 text-brand-yellow" />
               <span>{blog.author}</span>
             </div>
           </div>
 
-          <div className="prose prose-lg max-w-none">
+          <div className="prose prose-lg prose-invert max-w-none">
             {blog.content.split('\n\n').map((paragraph, idx) => (
-              <p key={idx} className="text-gray-700 mb-6 leading-relaxed font-body">
-                {paragraph}
+              <p key={idx} className="text-gray-300 mb-6 leading-relaxed font-sans text-lg">
+                <span className="text-brand-yellow font-black text-2xl float-left mr-2 leading-none mt-1">{idx === 0 ? paragraph.charAt(0) : ''}</span>
+                {idx === 0 ? paragraph.slice(1) : paragraph}
               </p>
             ))}
           </div>
 
-          <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className="mt-12 pt-8 border-t-4 border-white/10">
+            <p className="font-mono text-gray-500 uppercase tracking-widest mb-4 text-xs">Tags</p>
             <div className="flex flex-wrap gap-3">
               {blog.tags.map((tag, idx) => (
                 <span
                   key={idx}
-                  className="inline-flex items-center bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-semibold"
+                  className="inline-flex items-center bg-black border-2 border-white text-white px-4 py-2 rounded-xl text-sm font-bold uppercase hover:bg-white hover:text-black transition-colors cursor-default"
                 >
                   <Tag className="w-4 h-4 mr-2" />
                   {tag}

@@ -87,263 +87,138 @@ const SIH = () => {
     };
 
     return (
-        <div className="min-h-screen pt-16">
+        <div className="min-h-screen bg-black text-white selection:bg-brand-yellow selection:text-black font-sans">
             {/* Hero Section */}
-            <section className="py-20 bg-gradient-hero relative overflow-hidden">
-                <div className="container mx-auto px-4">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                    >
-                        <Link
-                            to="/events"
-                            className="inline-flex items-center text-blue-400 hover:text-white transition-colors mb-6"
-                        >
-                            <ArrowLeft className="w-4 h-4 mr-2" />
+            <section className="min-h-[60vh] md:min-h-screen flex flex-col justify-center pt-32 pb-12 relative border-b-4 border-white bg-black">
+                <div className="container mx-auto px-4 relative z-10">
+                    <div className="mb-8">
+                        <Link to="/events" className="inline-flex items-center text-white hover:text-brand-yellow transition-colors font-mono uppercase tracking-widest border-2 border-white/20 px-4 py-2 rounded-full hover:border-brand-yellow hover:bg-white/5">
+                            <ArrowLeft className="w-5 h-5 mr-2" />
                             Back to Events
                         </Link>
+                    </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                            <div>
-                                {/* Removed 48 HOUR HACKATHON text */}
-                                <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 font-space">
-                                    {eventDetails.title}
-                                </h1>
-                                <p className="text-2xl text-blue-100 mb-6 font-space">{eventDetails.subtitle}</p>
-                                <p className="text-xl text-blue-100 mb-8 font-body leading-relaxed">
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="max-w-6xl"
+                    >
+                        <div className="inline-block bg-brand-yellow text-black font-black px-4 py-1 mb-6 text-xl transform -rotate-1 rounded-sm">
+                            INTERNAL ROUND
+                        </div>
+                        <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-black mb-8 uppercase tracking-tighter leading-[0.8] break-words">
+                            SIH 2025
+                        </h1>
+                        <p className="text-3xl md:text-5xl font-bold text-transparent stroke-text mb-12 max-w-4xl tracking-tight">
+                            {eventDetails.subtitle.toUpperCase()}
+                        </p>
+
+                        <div className="flex flex-col lg:flex-row gap-12 items-start">
+                            <div className="flex-1">
+                                <p className="text-xl md:text-2xl text-gray-300 leading-relaxed border-l-4 border-brand-yellow pl-8 mb-12">
                                     {eventDetails.longDescription}
                                 </p>
 
-                                <div className="flex flex-wrap gap-4 mb-8">
-                                    <div className="bg-white/10 backdrop-blur-lg px-4 py-2 rounded-lg flex items-center">
-                                        <Calendar className="w-5 h-5 mr-2 text-blue-400" />
-                                        <span className="text-white font-semibold">{eventDetails.date}</span>
-                                    </div>
-                                    <div className="bg-white/10 backdrop-blur-lg px-4 py-2 rounded-lg flex items-center">
-                                        <Timer className="w-5 h-5 mr-2 text-blue-400" />
-                                        <span className="text-white font-semibold">{eventDetails.time}</span>
-                                    </div>
-                                    <div className="bg-white/10 backdrop-blur-lg px-4 py-2 rounded-lg flex items-center">
-                                        <Users className="w-5 h-5 mr-2 text-blue-400" />
-                                        <span className="text-white font-semibold">{eventDetails.participants} Participants</span>
-                                    </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    {[
+                                        { icon: Calendar, label: "DATE", value: eventDetails.date },
+                                        { icon: Users, label: "PARTICIPANTS", value: eventDetails.participants },
+                                        { icon: Timer, label: "DURATION", value: eventDetails.time },
+                                        { icon: Trophy, label: "STATUS", value: "COMPLETED" }
+                                    ].map((item, i) => (
+                                        <div key={i} className="bg-zinc-900 border-2 border-white/20 p-6 rounded-xl hover:border-brand-yellow transition-colors group">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <item.icon className="w-6 h-6 text-brand-yellow group-hover:scale-110 transition-transform" />
+                                                <span className="text-gray-500 font-mono text-xs tracking-widest">{item.label}</span>
+                                            </div>
+                                            <p className="text-xl font-bold uppercase">{item.value}</p>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
-                            <div className="relative">
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ duration: 0.8, delay: 0.2 }}
-                                    className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20"
-                                >
-                                    <img
-                                        src={eventDetails.image}
-                                        alt={eventDetails.title}
-                                        className="w-full h-64 object-contain rounded-2xl"
-                                    />
-                                    <div className="mt-6 text-center">
-                                        <div className="inline-flex items-center bg-green-500 text-white px-4 py-2 rounded-full">
-                                            <Trophy className="w-4 h-4 mr-2" />
-                                            Event Completed Successfully
-                                        </div>
-                                    </div>
-                                </motion.div>
+                            <div className="lg:w-1/3">
+                                <div className="border-4 border-white bg-zinc-900 p-4 rounded-[2rem] rotate-3 hover:rotate-0 transition-transform duration-500 shadow-[12px_12px_0px_#FFB22C]">
+                                    <img src={eventDetails.image} alt="SIH" className="w-full h-auto rounded-xl grayscale hover:grayscale-0 transition-all duration-500" />
+                                </div>
                             </div>
                         </div>
                     </motion.div>
                 </div>
             </section>
 
-            {/* Hackathon Highlights */}
-            <section className="py-20 bg-white">
+            {/* Highlights */}
+            <section className="py-20 border-b-4 border-white bg-brand-yellow text-black">
                 <div className="container mx-auto px-4">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        className="text-center mb-16"
-                    >
-                        {/* Removed EVENT HIGHLIGHTS text */}
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-                            Innovation & <span className="text-blue-600">Excellence</span>
-                        </h2>
-                        <p className="text-xl text-gray-700 max-w-3xl mx-auto font-body">
-                            The Internal Round brought together brilliant minds to showcase creativity, teamwork, and technical excellence
-                        </p>
-                    </motion.div>
-
+                    <h2 className="text-5xl md:text-8xl font-black mb-16 uppercase tracking-tighter text-center">
+                        HIGHLIGHTS
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0 * 0.1 }}
-                            className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                        >
-                            <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-                                <span className="text-3xl">👥</span>
+                        {eventDetails.highlights.map((highlight, index) => (
+                            <div key={index} className="bg-white border-4 border-black p-8 rounded-[2rem] shadow-[8px_8px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-default flex flex-col h-full">
+                                <div className="bg-black w-14 h-14 rounded-full flex items-center justify-center mb-6">
+                                    <Star className="w-8 h-8 text-brand-yellow" />
+                                </div>
+                                <h3 className="text-2xl font-black uppercase mb-4 leading-tight">{highlight.title}</h3>
+                                <p className="font-bold text-gray-800 leading-relaxed font-mono text-sm">{highlight.description}</p>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-4 font-space">Student Participation</h3>
-                            <p className="text-gray-700 font-body leading-relaxed">21 student teams showcased exceptional creativity, teamwork, and technical acumen across diverse problem statements</p>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 1 * 0.1 }}
-                            className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                        >
-                            <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-                                <span className="text-3xl">🧠</span>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-4 font-space">Real-World Impact</h3>
-                            <p className="text-gray-700 font-body leading-relaxed">Participants worked intensively to propose impactful solutions addressing genuine societal and industrial challenges</p>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 2 * 0.1 }}
-                            className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                        >
-                            <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-                                <span className="text-3xl">⭐</span>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-4 font-space">Expert Evaluation</h3>
-                            <p className="text-gray-700 font-body leading-relaxed">Comprehensive assessment by external panel of 5 industry experts ensuring transparent and rigorous evaluation</p>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 3 * 0.1 }}
-                            className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                        >
-                            <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-                                <span className="text-3xl">🏆</span>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-4 font-space">National Qualification</h3>
-                            <p className="text-gray-700 font-body leading-relaxed">Top performing teams qualified to represent DYPIU at the Smart India Hackathon 2025 Grand Finale</p>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 4 * 0.1 }}
-                            className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                        >
-                            <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-                                <span className="text-3xl">💻</span>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-4 font-space">Innovation Platform</h3>
-                            <p className="text-gray-700 font-body leading-relaxed">Vibrant platform for students to present innovative technological solutions and foster problem-solving skills</p>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 5 * 0.1 }}
-                            className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                        >
-                            <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-                                <span className="text-3xl">🎯</span>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-4 font-space">Excellence Culture</h3>
-                            <p className="text-gray-700 font-body leading-relaxed">Event reflects DYPIU's culture of excellence, practical innovation, and commitment to producing future-ready innovators</p>
-                        </motion.div>
+                        ))}
                     </div>
                 </div>
             </section>
 
             {/* Problem Statements */}
-            <section className="py-20 bg-gray-50">
+            <section className="py-20 bg-black text-white border-b-4 border-white">
                 <div className="container mx-auto px-4">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        className="text-center mb-16"
-                    >
-                        {/* Removed PROBLEM STATEMENTS text */}
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-                            Real-World <span className="text-blue-600">Challenges</span>
-                        </h2>
-                    </motion.div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {eventDetails.problemStatements.map((problem, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6, delay: index * 0.1 }}
-                                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                            >
-                                <div className="flex items-center mb-4">
-                                    <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
-                                        <Brain className="w-5 h-5 text-white" />
-                                    </div>
-                                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
-                                        {problem.category}
-                                    </span>
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-3 font-space">{problem.title}</h3>
-                                <p className="text-gray-600 font-body leading-relaxed">{problem.description}</p>
-                            </motion.div>
+                    <h2 className="text-5xl md:text-8xl font-black mb-20 uppercase tracking-tighter text-center text-transparent stroke-text hover:text-white transition-colors cursor-default">
+                        CHALLENGES
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {eventDetails.problemStatements.map((problem, i) => (
+                            <div key={i} className="group bg-zinc-900 border-4 border-zinc-700 hover:border-brand-yellow p-8 rounded-[2rem] transition-all duration-300">
+                                <span className="inline-block bg-brand-yellow text-black font-black px-3 py-1 rounded text-sm uppercase tracking-wider mb-6">
+                                    {problem.category}
+                                </span>
+                                <h3 className="text-2xl md:text-3xl font-black uppercase mb-4 group-hover:text-brand-yellow transition-colors">{problem.title}</h3>
+                                <p className="text-gray-400 font-mono text-lg">{problem.description}</p>
+                            </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-
-            {/* Judges Section */}
-            <section className="py-20 bg-gradient-to-br from-blue-50 to-green-50">
-                <div className="container mx-auto px-4">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        className="text-center mb-16"
-                    >
-                        {/* Removed EXPERT PANEL text */}
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-                            Our Esteemed <span className="text-blue-600">Judges</span>
-                        </h2>
-                    </motion.div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                        {eventDetails.judges.map((judge, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6, delay: index * 0.1 }}
-                                className="bg-white rounded-2xl p-8 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                            >
-                                <div className="relative mb-6">
-                                    <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-4 border-gradient-to-r from-green-500 to-blue-500 shadow-lg">
-                                        <img
-                                            src={judge.image}
-                                            alt={judge.name}
-                                            className="w-full h-full object-cover"
-                                        />
+            {/* Judges */}
+            <section className="py-20 bg-zinc-900 border-b-4 border-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                <div className="container mx-auto px-4 relative z-10">
+                    <h2 className="text-5xl md:text-8xl font-black mb-20 uppercase tracking-tighter text-center">
+                        JUDGES
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 max-w-4xl mx-auto">
+                        {eventDetails.judges.map((judge, i) => (
+                            <div key={i} className="group relative">
+                                <div className="bg-black border-4 border-white p-8 rounded-[2rem] flex items-center gap-8 shadow-[12px_12px_0px_#fff] group-hover:shadow-[8px_8px_0px_#fff] group-hover:translate-x-1 group-hover:translate-y-1 transition-all">
+                                    <div className="w-24 h-24 shrink-0 rounded-full border-4 border-brand-yellow overflow-hidden">
+                                        <img src={judge.image} alt={judge.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all" />
                                     </div>
-                                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
-                                        <Star className="w-4 h-4 text-white" />
+                                    <div>
+                                        <h3 className="text-2xl font-black uppercase mb-1">{judge.name}</h3>
+                                        <p className="text-brand-yellow font-mono text-sm tracking-wider uppercase border-l-2 border-brand-yellow pl-2">{judge.role}</p>
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-2 font-space">{judge.name}</h3>
-                                <p className="text-green-600 font-semibold font-body">{judge.role}</p>
-                            </motion.div>
+                            </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-
-
-
+            <style>{`
+        .stroke-text {
+          -webkit-text-stroke: 2px white;
+          color: transparent;
+        }
+       `}</style>
         </div>
     );
 };

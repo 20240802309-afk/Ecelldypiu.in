@@ -116,70 +116,54 @@ const FinBiz = () => {
   };
 
   return (
-    <div className="min-h-screen pt-16">
-
+    <div className="min-h-screen bg-black text-white selection:bg-brand-yellow selection:text-black font-sans">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-hero relative overflow-hidden">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Link
-              to="/events"
-              className="inline-flex items-center text-blue-300 hover:text-blue-200 mb-6 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+      <section className="min-h-[60vh] md:min-h-screen flex flex-col justify-center pt-32 pb-12 relative border-b-4 border-white bg-black">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="mb-8">
+            <Link to="/events" className="inline-flex items-center text-white hover:text-brand-yellow transition-colors font-mono uppercase tracking-widest border-2 border-white/20 px-4 py-2 rounded-full hover:border-brand-yellow hover:bg-white/5">
+              <ArrowLeft className="w-5 h-5 mr-2" />
               Back to Events
             </Link>
+          </div>
 
-            <div className="flex flex-col lg:flex-row items-center gap-12">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="max-w-6xl"
+          >
+            <div className="inline-block bg-brand-yellow text-black font-black px-4 py-1 mb-6 text-xl transform -rotate-1 rounded-sm">
+              UPCOMING ... JUST KIDDING, COMPLETED
+            </div>
+            <h1 className="text-6xl md:text-8xl lg:text-[8rem] font-black mb-8 uppercase tracking-tighter leading-[0.9] break-words">
+              FINBIZ '25
+            </h1>
+            <p className="text-3xl md:text-5xl font-bold text-transparent stroke-text mb-12 max-w-4xl tracking-tight">
+              POWERED BY SURYA ELECTRONICS
+            </p>
+
+            <div className="flex flex-col lg:flex-row gap-12 items-start">
               <div className="flex-1">
-                <div className="inline-block bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-full mb-4">
-                  <span className="font-semibold flex items-center">
-                    <Star className="w-4 h-4 mr-2" />
-                    Upcoming Event
-                  </span>
-                </div>
-
-                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 font-space">
-                  {eventDetails.title}
-                </h1>
-                <p className="text-2xl text-blue-200 mb-6 font-space">{eventDetails.subtitle}</p>
-                <p className="text-lg text-blue-100 mb-8 leading-relaxed font-body">
+                <p className="text-xl md:text-2xl text-gray-300 leading-relaxed border-l-4 border-brand-yellow pl-8 mb-12">
                   {eventDetails.description}
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center text-blue-100">
-                    <Calendar className="w-5 h-5 mr-3 text-blue-300" />
-                    <div>
-                      <p className="text-sm text-blue-300">Date</p>
-                      <p className="font-semibold">{eventDetails.date}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {[
+                    { icon: Calendar, label: "DATE", value: eventDetails.date },
+                    { icon: Clock, label: "DURATION", value: eventDetails.time },
+                    { icon: MapPin, label: "LOCATION", value: eventDetails.location },
+                    { icon: Users, label: "ELIGIBILITY", value: eventDetails.participants }
+                  ].map((item, i) => (
+                    <div key={i} className="bg-zinc-900 border-2 border-white/20 p-6 rounded-xl hover:border-brand-yellow transition-colors group">
+                      <div className="flex items-center gap-3 mb-2">
+                        <item.icon className="w-6 h-6 text-brand-yellow group-hover:scale-110 transition-transform" />
+                        <span className="text-gray-500 font-mono text-xs tracking-widest">{item.label}</span>
+                      </div>
+                      <p className="text-xl font-bold uppercase">{item.value}</p>
                     </div>
-                  </div>
-                  <div className="flex items-center text-blue-100">
-                    <Clock className="w-5 h-5 mr-3 text-blue-300" />
-                    <div>
-                      <p className="text-sm text-blue-300">Duration</p>
-                      <p className="font-semibold">{eventDetails.time}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center text-blue-100">
-                    <MapPin className="w-5 h-5 mr-3 text-blue-300" />
-                    <div>
-                      <p className="text-sm text-blue-300">Location</p>
-                      <p className="font-semibold">{eventDetails.location}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center text-blue-100">
-                    <Users className="w-5 h-5 mr-3 text-blue-300" />
-                    <div>
-                      <p className="text-sm text-blue-300">Participation</p>
-                      <p className="font-semibold">{eventDetails.participants}</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -187,353 +171,140 @@ const FinBiz = () => {
         </div>
       </section>
 
-      {/* CTA Section - Registration */}
-      <section id="registration" className="py-20 bg-gradient-primary scroll-mt-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Ready to Experience FinBiz'25 Powered by Surya Electronics?
-            </h2>
-            <p className="text-xl text-blue-100 mb-4">
-              Join us for 24+ hours of immersive finance and business innovation
-            </p>
-            <p className="text-lg text-blue-200 font-semibold">Register below</p>
-          </div>
+      {/* Registration CTA - Brutalist Style */}
+      <section id="registration" className="py-20 border-b-4 border-white bg-brand-yellow text-black overflow-hidden relative">
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
+        <div className="container mx-auto px-4 relative z-10 text-center">
+          <h2 className="text-5xl md:text-7xl font-black mb-8 uppercase tracking-tighter">
+            REGISTRATION CLOSED
+          </h2>
+          <p className="text-2xl font-bold mb-12 max-w-2xl mx-auto">
+            The event has successfully concluded. Stay tuned for FinBiz'26!
+          </p>
 
-          <div id="registration-options" className="max-w-3xl mx-auto grid grid-cols-1 gap-8 mb-12 scroll-mt-20">
-            {/* Refined card in the classic/old style */}
-            <div className="relative overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-200">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-8 text-center rounded-t-2xl text-white">
-                <h3 className="text-3xl font-bold mb-1">Secure Your Spot</h3>
-                <p className="text-blue-100 text-sm md:text-base">
-                  {eventDetails.title} • {eventDetails.date} • {eventDetails.location}
-                </p>
-              </div>
-              {/* Divider under header */}
-              <div className="h-px w-full bg-gray-200" />
-
-              {/* Pricing */}
-              <div className="px-10 pb-6 text-center">
-                <div className="mb-6">
-                  <p className="text-2xl font-bold text-gray-900 mb-1">ILLUMINATE</p>
-                  <p className="text-6xl font-bold text-blue-600">₹499</p>
-                </div>
-                <div className="border-t border-gray-200 my-4" />
-                <div className="mb-2">
-                  <p className="text-2xl font-bold text-gray-900 mb-1">FINBIZ'25</p>
-                  <p className="text-6xl font-bold text-blue-600">₹299</p>
-                </div>
-                <p className="text-gray-900 mt-4 mb-6 md:mb-8 text-2xl md:text-3xl font-extrabold tracking-tight">
-                  OFFER PRICE :₹649 FOR BOTH THE EVENTS (ENROLL NOW)
-                </p>
-              </div>
-
-              {/* Features */}
-              <ul className="px-10 max-w-2xl mx-auto space-y-3 mb-8">
-                {[
-                  'Full event access',
-                  'All meals & refreshments',
-                  'Event materials',
-                  'Certificate of participation',
-                ].map((item, idx) => (
-                  <li key={idx} className="flex items-center">
-                    <span className="mr-3 text-blue-600 text-lg leading-none">✓</span>
-                    <span className="text-gray-800">{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA */}
-              <div className="px-10 pb-10">
-                <a
-                  href="https://forms.gle/dLcbtygScXXdhgb69"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full mx-auto bg-gradient-to-r from-blue-600 to-blue-400 text-white text-center py-4 px-6 rounded-xl font-bold text-lg hover:shadow-xl transition-all"
-                >
-                  Register Now
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <Link
-              to="/events#upcoming-events"
-              className="inline-block text-white hover:text-blue-200 transition-colors font-semibold"
-            >
-              ← Back to Events
-            </Link>
+          <div className="inline-block bg-black text-white p-8 rounded-[2rem] border-4 border-white shadow-[12px_12px_0px_white] transform rotate-1 hover:rotate-0 transition-transform cursor-default">
+            <p className="text-xl font-mono mb-2 text-gray-400 uppercase">Total Participation</p>
+            <p className="text-6xl font-black text-brand-yellow">500+</p>
           </div>
         </div>
       </section>
 
-      {/* Event Highlights */}
-      <section className="py-20 bg-white">
+      {/* Highlights */}
+      <section className="py-20 bg-black text-white border-b-4 border-white">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            {/* Removed KEY FEATURES text */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-              Event <span className="text-blue-600">Highlights</span>
-            </h2>
-          </motion.div>
-
+          <h2 className="text-5xl md:text-7xl font-black mb-16 uppercase tracking-tighter text-center">
+            HIGHLIGHTS
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {eventDetails.highlights.map((highlight, index) => {
               const IconComponent = getIcon(highlight.icon);
               return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-2xl hover:shadow-lg transition-all duration-300"
-                >
-                  <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-4">
-                    <IconComponent className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 font-space">{highlight.title}</h3>
-                  <p className="text-gray-700 font-body">{highlight.description}</p>
-                </motion.div>
+                <div key={index} className="bg-zinc-900 border-4 border-zinc-700 p-8 rounded-[2rem] hover:border-brand-yellow hover:bg-zinc-800 transition-all group">
+                  <IconComponent className="w-12 h-12 text-brand-yellow mb-6 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-2xl font-black uppercase mb-4 leading-none">{highlight.title}</h3>
+                  <p className="text-gray-400 font-mono text-sm leading-relaxed group-hover:text-gray-300">{highlight.description}</p>
+                </div>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* Event Zones */}
-      <section className="py-20 bg-gray-50">
+      {/* Zones */}
+      <section className="py-20 bg-white text-black border-b-4 border-black">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            {/* Removed STRUCTURE text */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-              Event <span className="text-blue-600">Zones</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <h2 className="text-5xl md:text-7xl font-black mb-16 uppercase tracking-tighter text-center">
+            EVENT ZONES
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {eventDetails.zones.map((zone, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.2 }}
-                className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300"
-              >
-                <div className="flex items-start mb-4">
-                  <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg font-bold mr-4">
-                    {zone.zone}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2 font-space">{zone.name}</h3>
-                    <div className="flex items-center text-gray-600 text-sm mb-2">
-                      <Clock className="w-4 h-4 mr-2" />
-                      <span>{zone.duration}</span>
-                    </div>
-                  </div>
+              <div key={index} className="bg-brand-yellow border-4 border-black p-8 rounded-[2rem] shadow-[12px_12px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+                <div className="bg-black text-white inline-block px-4 py-1 font-mono font-bold uppercase mb-4 rounded-sm">{zone.zone}</div>
+                <h3 className="text-4xl font-black uppercase mb-2 leading-none">{zone.name}</h3>
+                <div className="flex items-center gap-2 mb-6 font-mono font-bold">
+                  <Clock className="w-5 h-5" />
+                  {zone.duration}
                 </div>
-                <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                  <p className="text-sm font-semibold text-blue-800 mb-1">Focus Areas:</p>
-                  <p className="text-gray-700 font-body">{zone.focus}</p>
+                <div className="bg-white/20 p-4 rounded-xl backdrop-blur-sm border-2 border-black/10">
+                  <p className="font-bold uppercase text-sm mb-1 opacity-70">Focus Areas</p>
+                  <p className="font-black leading-tight">{zone.focus}</p>
                 </div>
-                <p className="text-gray-700 font-body leading-relaxed">{zone.description}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Schedule */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-black text-white border-b-4 border-white">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            {/* Removed TIMELINE text */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-              Event <span className="text-blue-600">Schedule</span>
-            </h2>
-          </motion.div>
+          <h2 className="text-5xl md:text-7xl font-black mb-16 uppercase tracking-tighter text-center text-transparent stroke-text hover:text-white transition-colors cursor-default">
+            AGENDA
+          </h2>
 
-          <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="bg-white rounded-2xl shadow-xl p-6 max-h-[600px] overflow-y-auto"
-              style={{ scrollbarWidth: 'thin' }}
-            >
-              {/* Day 1: Evening & Overnight */}
-              <div className="mb-12">
-                <h3 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-500 text-gray-900">
-                  DAY 1 – Evening & Overnight (6 PM – 6 AM)
-                </h3>
-                <div className="overflow-x-auto rounded-lg shadow-md">
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs uppercase bg-gray-100">
-                      <tr>
-                        <th className="px-6 py-3 w-1/3 text-gray-700">Time</th>
-                        <th className="px-6 py-3 text-gray-700">Activity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="bg-white border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">6:00 PM – 6:30 PM</td>
-                        <td className="px-6 py-4"><b>Team Formation & Role Assignment:</b> Teams finalize trader, analyst, and leader roles.</td>
-                      </tr>
-                      <tr className="bg-gray-50 border-b hover:bg-gray-100">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">6:30 PM – 8:00 PM</td>
-                        <td className="px-6 py-4"><b>Market Research & Portfolio Setup:</b> Analyze given data sets and design opening portfolios.</td>
-                      </tr>
-                      <tr className="bg-white border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">8:00 PM – 9:00 PM</td>
-                        <td className="px-6 py-4"><b>Dinner:</b> Buffet dinner break.</td>
-                      </tr>
-                      <tr className="bg-gray-50 border-b hover:bg-gray-100">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">9:00 PM – 11:00 PM</td>
-                        <td className="px-6 py-4"><b>Task 1 – Opening Market Simulation:</b> First live trading session.</td>
-                      </tr>
-                      <tr className="bg-white border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">11:00 PM – 11:30 PM</td>
-                        <td className="px-6 py-4"><b>Midnight Snack:</b> Refreshments & networking.</td>
-                      </tr>
-                      <tr className="bg-gray-50 border-b hover:bg-gray-100">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">11:30 PM – 12:30 AM</td>
-                        <td className="px-6 py-4"><b>Chill Beats / Open Mic Gig:</b> Relaxed musical session for engagement.</td>
-                      </tr>
-                      <tr className="bg-white border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">12:30 AM – 2:30 AM</td>
-                        <td className="px-6 py-4"><b>Task 2 – Volatility Round:</b> Simulated market shocks and adaptive trading.</td>
-                      </tr>
-                      <tr className="bg-gray-50 border-b hover:bg-gray-100">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">2:30 AM – 3:00 AM</td>
-                        <td className="px-6 py-4"><b>Finance Meme Hour:</b> Interactive fun & finance humor session.</td>
-                      </tr>
-                      <tr className="bg-white hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">3:00 AM – 6:00 AM</td>
-                        <td className="px-6 py-4"><b>Night Work Sprint:</b> Teams refine reports, visuals, and analysis.</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Day 1 */}
+            <div className="bg-zinc-900 border-4 border-white rounded-[2rem] overflow-hidden">
+              <div className="bg-brand-yellow p-6 border-b-4 border-white">
+                <h3 className="text-3xl font-black text-black uppercase text-center">DAY 1</h3>
+                <p className="text-black text-center font-mono font-bold">EVENING & OVERNIGHT</p>
               </div>
+              <div className="p-0">
+                {eventDetails.schedule.day1Night.map((item, i) => (
+                  <div key={i} className="flex border-b border-zinc-700 last:border-0 p-6 hover:bg-white/5 transition-colors">
+                    <div className="w-24 shrink-0 font-mono text-brand-yellow text-sm pt-1">{item.time.split(' ')[0]}</div>
+                    <div>
+                      <p className="font-bold text-lg leading-tight">{item.event}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-              {/* Day 2: Simulation, Pitch & Celebration */}
-              <div>
-                <h3 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-500 text-gray-900">
-                  DAY 2 – Simulation, Pitch & Celebration (6 AM – 8 PM)
-                </h3>
-                <div className="overflow-x-auto rounded-lg shadow-md">
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs uppercase bg-gray-100">
-                      <tr>
-                        <th className="px-6 py-3 w-1/3 text-gray-700">Time</th>
-                        <th className="px-6 py-3 text-gray-700">Activity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="bg-white border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">6:00 AM – 7:00 AM</td>
-                        <td className="px-6 py-4"><b>Breakfast:</b> Poha/Upma + Tea.</td>
-                      </tr>
-                      <tr className="bg-gray-50 border-b hover:bg-gray-100">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">7:00 AM – 9:00 AM</td>
-                        <td className="px-6 py-4"><b>Task 3 – News Impact Round:</b> Reaction to new financial data and policy updates.</td>
-                      </tr>
-                      <tr className="bg-white border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">9:30 AM – 10:30 AM</td>
-                        <td className="px-6 py-4"><b>Workshop 4 – Entrepreneurial Finance:</b> Linking trading insights to startup funding.</td>
-                      </tr>
-                      <tr className="bg-gray-50 border-b hover:bg-gray-100">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">10:45 AM – 12:15 PM</td>
-                        <td className="px-6 py-4"><b>Portfolio Finalization:</b> Teams compile their final performance and strategies.</td>
-                      </tr>
-                      <tr className="bg-white border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">12:15 PM – 1:15 PM</td>
-                        <td className="px-6 py-4"><b>Lunch:</b> Light thali or buffet.</td>
-                      </tr>
-                      <tr className="bg-gray-50 border-b hover:bg-gray-100">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">1:15 PM – 2:00 PM</td>
-                        <td className="px-6 py-4"><b>DJ / Finance Quiz:</b> Light entertainment and engagement activity.</td>
-                      </tr>
-                      <tr className="bg-white border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">2:00 PM – 3:00 PM</td>
-                        <td className="px-6 py-4"><b>Mock Pitch Session:</b> Teams practice their presentations.</td>
-                      </tr>
-                      <tr className="bg-gray-50 border-b hover:bg-gray-100">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">3:00 PM – 5:30 PM</td>
-                        <td className="px-6 py-4"><b>Final Pitch – Investor Round:</b> Jury evaluation and team presentations.</td>
-                      </tr>
-                      <tr className="bg-white border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">5:30 PM – 6:00 PM</td>
-                        <td className="px-6 py-4"><b>Student Band Performance:</b> Music set during jury deliberation.</td>
-                      </tr>
-                      <tr className="bg-gray-50 border-b hover:bg-gray-100">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">6:00 PM – 7:00 PM</td>
-                        <td className="px-6 py-4"><b>Closing Ceremony & Awards:</b> Results, speeches, and certificates.</td>
-                      </tr>
-                      <tr className="bg-white hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">7:00 PM – 8:00 PM</td>
-                        <td className="px-6 py-4"><b>Wrap-Up & Group Photos:</b> Photos & closing celebration.</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+            {/* Day 2 */}
+            <div className="bg-zinc-900 border-4 border-white rounded-[2rem] overflow-hidden">
+              <div className="bg-white p-6 border-b-4 border-white">
+                <h3 className="text-3xl font-black text-black uppercase text-center">DAY 2</h3>
+                <p className="text-black text-center font-mono font-bold">SIMULATION & PITCH</p>
               </div>
-            </motion.div>
+              <div className="p-0">
+                {eventDetails.schedule.day2.map((item, i) => (
+                  <div key={i} className="flex border-b border-zinc-700 last:border-0 p-6 hover:bg-white/5 transition-colors">
+                    <div className="w-24 shrink-0 font-mono text-brand-yellow text-sm pt-1">{item.time.split(' ')[0]}</div>
+                    <div>
+                      <p className="font-bold text-lg leading-tight">{item.event}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Workshops */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-zinc-900">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            {/* Removed Illuminate text */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-              Workshop <span className="text-blue-600">Series</span>
-            </h2>
-            <p className="text-xl text-gray-700 max-w-3xl mx-auto font-body">
-              Curated sessions for aspiring entrepreneurs merging finance with innovation
-            </p>
-          </motion.div>
-
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {eventDetails.workshops.map((workshop, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <p className="text-gray-800 font-body leading-relaxed">{workshop}</p>
-                </motion.div>
-              ))}
-            </div>
+          <h2 className="text-5xl md:text-7xl font-black mb-16 uppercase tracking-tighter text-center">
+            WORKSHOPS
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            {eventDetails.workshops.map((workshop, index) => (
+              <div key={index} className="bg-black border-2 border-zinc-700 p-6 rounded-xl flex items-start gap-4 hover:border-brand-yellow transition-colors">
+                <Lightbulb className="w-6 h-6 text-brand-yellow shrink-0 mt-1" />
+                <p className="font-bold text-lg leading-tight">{workshop}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
+
+      <style>{`
+        .stroke-text {
+          -webkit-text-stroke: 2px white;
+          color: transparent;
+        }
+       `}</style>
     </div>
   );
 };

@@ -67,235 +67,168 @@ const Inceptio = () => {
   };
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen bg-black text-white selection:bg-brand-yellow selection:text-black font-sans">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-hero relative overflow-hidden">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Link
-              to="/events"
-              className="inline-flex items-center text-blue-400 hover:text-white transition-colors mb-6"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+      <section className="min-h-[60vh] md:min-h-screen flex flex-col justify-center pt-32 pb-12 relative border-b-4 border-white bg-black">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="mb-8">
+            <Link to="/events" className="inline-flex items-center text-white hover:text-brand-yellow transition-colors font-mono uppercase tracking-widest border-2 border-white/20 px-4 py-2 rounded-full hover:border-brand-yellow hover:bg-white/5">
+              <ArrowLeft className="w-5 h-5 mr-2" />
               Back to Events
             </Link>
+          </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                {/* Removed FLAGSHIP EVENT text */}
-                <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 font-space">
-                  {eventDetails.title}
-                </h1>
-                <p className="text-2xl text-blue-100 mb-6 font-space">{eventDetails.subtitle}</p>
-                <p className="text-xl text-blue-100 mb-8 font-body leading-relaxed">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="max-w-6xl"
+          >
+            <div className="inline-block bg-brand-yellow text-black font-black px-4 py-1 mb-6 text-xl transform -rotate-1 rounded-sm">
+              COMPLETED
+            </div>
+            <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-black mb-8 uppercase tracking-tighter leading-[0.8]">
+              {eventDetails.title}
+            </h1>
+            <p className="text-3xl md:text-5xl font-bold text-transparent stroke-text mb-12 max-w-4xl tracking-tight">
+              {eventDetails.subtitle.toUpperCase()}
+            </p>
+
+            <div className="flex flex-col lg:flex-row gap-12 items-start">
+              <div className="flex-1">
+                <p className="text-xl md:text-2xl text-gray-300 leading-relaxed border-l-4 border-brand-yellow pl-8 mb-12">
                   {eventDetails.longDescription}
                 </p>
 
-                <div className="flex flex-wrap gap-4 mb-8">
-                  <div className="bg-white/10 backdrop-blur-lg px-4 py-2 rounded-lg flex items-center">
-                    <Calendar className="w-5 h-5 mr-2 text-blue-400" />
-                    <span className="text-white font-semibold">{eventDetails.date}</span>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-lg px-4 py-2 rounded-lg flex items-center">
-                    <Users className="w-5 h-5 mr-2 text-blue-400" />
-                    <span className="text-white font-semibold">{eventDetails.participants} Participants</span>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-lg px-4 py-2 rounded-lg flex items-center">
-                    <MapPin className="w-5 h-5 mr-2 text-blue-400" />
-                    <span className="text-white font-semibold">{eventDetails.location}</span>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {[
+                    { icon: Calendar, label: "DATE", value: eventDetails.date },
+                    { icon: Users, label: "PARTICIPANTS", value: eventDetails.participants },
+                    { icon: MapPin, label: "LOCATION", value: eventDetails.location },
+                    { icon: Award, label: "TYPE", value: eventDetails.category }
+                  ].map((item, i) => (
+                    <div key={i} className="bg-zinc-900 border-2 border-white/20 p-6 rounded-xl hover:border-brand-yellow transition-colors group">
+                      <div className="flex items-center gap-3 mb-2">
+                        <item.icon className="w-6 h-6 text-brand-yellow group-hover:scale-110 transition-transform" />
+                        <span className="text-gray-500 font-mono text-xs tracking-widest">{item.label}</span>
+                      </div>
+                      <p className="text-xl font-bold uppercase">{item.value}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="relative">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20"
-                >
-                  <img
-                    src={eventDetails.image}
-                    alt={eventDetails.title}
-                    className="w-full h-64 object-contain rounded-2xl"
-                  />
-                  <div className="mt-6 text-center">
-                    <div className="inline-flex items-center bg-green-500 text-white px-4 py-2 rounded-full">
-                      <Trophy className="w-4 h-4 mr-2" />
-                      Event Completed Successfully
-                    </div>
-                  </div>
-                </motion.div>
+              <div className="lg:w-1/3">
+                <div className="border-4 border-white bg-zinc-900 p-4 rounded-[2rem] rotate-3 hover:rotate-0 transition-transform duration-500 shadow-[12px_12px_0px_#FFB22C]">
+                  <img src={eventDetails.image} alt="Inceptio" className="w-full h-auto rounded-xl grayscale hover:grayscale-0 transition-all duration-500" />
+                </div>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Event Highlights */}
-      <section className="py-20 bg-white">
+      {/* Highlights */}
+      <section className="py-20 border-b-4 border-white bg-brand-yellow text-black">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            {/* Removed EVENT HIGHLIGHTS text */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-              What Made It <span className="text-blue-600">Special</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <h2 className="text-5xl md:text-8xl font-black mb-16 uppercase tracking-tighter text-center">
+            HIGHLIGHTS
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {eventDetails.highlights.map((highlight, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
-              >
-                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-4">
-                  <Star className="w-6 h-6 text-white" />
-                </div>
-                <p className="text-gray-800 font-body leading-relaxed">{highlight}</p>
-              </motion.div>
+              <div key={index} className="bg-white border-4 border-black p-8 rounded-[2rem] shadow-[8px_8px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-default">
+                <Star className="w-12 h-12 mb-6 text-black fill-brand-yellow" />
+                <p className="text-2xl font-bold leading-tight uppercase font-mono tracking-tight">{highlight}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Event Schedule */}
-      <section className="py-20 bg-gray-50">
+      {/* Schedule */}
+      <section className="py-20 bg-black text-white border-b-4 border-white">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            {/* Removed EVENT SCHEDULE text */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-              Two Days of <span className="text-blue-600">Innovation</span>
-            </h2>
-          </motion.div>
+          <h2 className="text-5xl md:text-8xl font-black mb-20 uppercase tracking-tighter text-center text-transparent stroke-text hover:text-white transition-colors cursor-default">
+            TIMELINE
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 relative">
+            {/* Decorative Line (Hidden on mobile) */}
+            <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-1 bg-white/20 -translate-x-1/2"></div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {eventDetails.schedule.map((day, dayIndex) => (
-              <motion.div
-                key={dayIndex}
-                initial={{ opacity: 0, x: dayIndex === 0 ? -30 : 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: dayIndex * 0.2 }}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden"
-              >
-                <div className="bg-gradient-primary text-white p-6">
-                  <h3 className="text-2xl font-bold font-space">{day.day}</h3>
+            {eventDetails.schedule.map((day, i) => (
+              <div key={i} className={`bg-zinc-900 border-4 border-white rounded-[2rem] overflow-hidden relative z-10 ${i % 2 === 1 ? 'lg:mt-32' : ''}`}>
+                <div className="bg-brand-yellow text-black p-8 border-b-4 border-white flex justify-between items-center">
+                  <h3 className="text-3xl md:text-4xl font-black uppercase text-center w-full">{day.day.split('-')[0]}</h3>
                 </div>
-                <div className="p-6">
-                  <div className="space-y-4">
-                    {day.events.map((event, eventIndex) => (
-                      <div key={eventIndex} className="flex items-start">
-                        <div className="w-20 flex-shrink-0">
-                          <span className="text-blue-600 font-semibold text-sm">{event.time}</span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-gray-800 font-body">{event.activity}</p>
-                        </div>
+                <div className="p-8 space-y-8">
+                  {day.events.map((event, j) => (
+                    <div key={j} className="flex gap-6 items-start group">
+                      <span className="font-mono text-brand-yellow shrink-0 text-lg bg-black px-2 py-1 -mt-1 rounded border border-white/20 group-hover:bg-brand-yellow group-hover:text-black transition-colors">{event.time}</span>
+                      <div>
+                        <p className="font-bold text-xl uppercase leading-tight group-hover:text-brand-yellow transition-colors">{event.activity}</p>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Judges Section */}
-      <section className="py-20 bg-white">
+      {/* Judges */}
+      <section className="py-20 bg-zinc-900 border-b-4 border-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <h2 className="text-5xl md:text-8xl font-black mb-20 uppercase tracking-tighter text-center">
+            JUDGES
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 max-w-4xl mx-auto">
+            {eventDetails.judges.map((judge, i) => (
+              <div key={i} className="group relative">
+                <div className="bg-black border-4 border-white p-8 rounded-[2rem] flex items-center gap-8 shadow-[12px_12px_0px_#fff] group-hover:shadow-[8px_8px_0px_#fff] group-hover:translate-x-1 group-hover:translate-y-1 transition-all">
+                  <div className="w-24 h-24 shrink-0 rounded-full border-4 border-brand-yellow overflow-hidden">
+                    <img src={judge.image} alt={judge.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black uppercase mb-1">{judge.name}</h3>
+                    <p className="text-brand-yellow font-mono text-sm tracking-wider uppercase border-l-2 border-brand-yellow pl-2">{judge.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Prizes */}
+      <section className="py-20 bg-black overflow-hidden relative">
+        <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-zinc-900 to-transparent pointer-events-none"></div>
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            {/* Removed EXPERT PANEL text */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-              Our Distinguished <span className="text-blue-600">Judges</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {eventDetails.judges.map((judge, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-8 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-              >
-                <div className="relative mb-6">
-                  <div className="w-28 h-28 mx-auto rounded-full overflow-hidden border-4 border-gradient-to-r from-blue-500 to-purple-500 shadow-lg">
-                    <img
-                      src={judge.image}
-                      alt={judge.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-500 rounded-full border-4 border-white flex items-center justify-center">
-                    <Star className="w-4 h-4 text-white" />
-                  </div>
+          <h2 className="text-5xl md:text-8xl font-black mb-20 uppercase tracking-tighter text-center">
+            <span className="text-brand-yellow">WIN</span>NERS
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {eventDetails.prizes.map((prize, i) => (
+              <div key={i} className="group bg-zinc-900 border-4 border-zinc-700 p-8 rounded-[2rem] hover:border-brand-yellow transition-all duration-300">
+                <div className="w-16 h-16 bg-black rounded-full border-2 border-white flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">
+                  {i + 1}
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2 font-space">{judge.name}</h3>
-                <p className="text-blue-600 font-semibold font-body">{judge.role}</p>
-              </motion.div>
+                <h3 className="text-xl font-black uppercase text-gray-400 mb-2 group-hover:text-white">{prize.position}</h3>
+                <p className="text-4xl font-black text-brand-yellow mb-4">{prize.amount}</p>
+                <p className="font-mono text-sm text-gray-500 uppercase tracking-wide border-t border-zinc-700 pt-4 group-hover:border-brand-yellow/50 group-hover:text-gray-300 transition-colors">{prize.description}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Prizes Section */}
-      <section className="py-20 bg-gradient-to-br from-purple-50 to-blue-50">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            {/* Removed PRIZES & AWARDS text */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-              Recognition & <span className="text-blue-600">Rewards</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {eventDetails.prizes.map((prize, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2 font-space">{prize.position}</h3>
-                <p className="text-3xl font-bold text-blue-600 mb-2">{prize.amount}</p>
-                <p className="text-gray-600 text-sm font-body">{prize.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <style>{`
+        .stroke-text {
+          -webkit-text-stroke: 2px white;
+          color: transparent;
+        }
+       `}</style>
     </div>
   );
 };

@@ -89,208 +89,142 @@ const Elevate = () => {
   };
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen bg-black text-white selection:bg-brand-yellow selection:text-black font-sans">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-hero relative overflow-hidden">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Link
-              to="/events"
-              className="inline-flex items-center text-blue-400 hover:text-white transition-colors mb-6"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+      <section className="min-h-[60vh] md:min-h-screen flex flex-col justify-center pt-32 pb-12 relative border-b-4 border-white bg-black">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="mb-8">
+            <Link to="/events" className="inline-flex items-center text-white hover:text-brand-yellow transition-colors font-mono uppercase tracking-widest border-2 border-white/20 px-4 py-2 rounded-full hover:border-brand-yellow hover:bg-white/5">
+              <ArrowLeft className="w-5 h-5 mr-2" />
               Back to Events
             </Link>
+          </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                {/* Removed ACCELERATION PROGRAM text */}
-                <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 font-space">
-                  {eventDetails.title}
-                </h1>
-                <p className="text-2xl text-blue-100 mb-6 font-space">{eventDetails.subtitle}</p>
-                <p className="text-xl text-blue-100 mb-8 font-body leading-relaxed">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="max-w-6xl"
+          >
+            <div className="inline-block bg-brand-yellow text-black font-black px-4 py-1 mb-6 text-xl transform -rotate-1 rounded-sm">
+              COMPLETED INITIATIVE
+            </div>
+            <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-black mb-8 uppercase tracking-tighter leading-[0.8] break-words">
+              {eventDetails.title.toUpperCase()}
+            </h1>
+            <p className="text-3xl md:text-5xl font-bold text-transparent stroke-text mb-12 max-w-4xl tracking-tight">
+              {eventDetails.subtitle.toUpperCase()}
+            </p>
+
+            <div className="flex flex-col lg:flex-row gap-12 items-start">
+              <div className="flex-1">
+                <p className="text-xl md:text-2xl text-gray-300 leading-relaxed border-l-4 border-brand-yellow pl-8 mb-12">
                   {eventDetails.longDescription}
                 </p>
 
-                <div className="flex flex-wrap gap-4 mb-8">
-                  <div className="bg-white/10 backdrop-blur-lg px-4 py-2 rounded-lg flex items-center">
-                    <Calendar className="w-5 h-5 mr-2 text-blue-400" />
-                    <span className="text-white font-semibold">{eventDetails.date}</span>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-lg px-4 py-2 rounded-lg flex items-center">
-                    <Users className="w-5 h-5 mr-2 text-blue-400" />
-                    <span className="text-white font-semibold">{eventDetails.participants} Participants</span>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-lg px-4 py-2 rounded-lg flex items-center">
-                    <MapPin className="w-5 h-5 mr-2 text-blue-400" />
-                    <span className="text-white font-semibold">{eventDetails.location}</span>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {[
+                    { icon: Calendar, label: "DATE", value: eventDetails.date },
+                    { icon: Users, label: "PARTICIPANTS", value: eventDetails.participants },
+                    { icon: MapPin, label: "LOCATION", value: eventDetails.location },
+                    { icon: Star, label: "TYPE", value: eventDetails.category }
+                  ].map((item, i) => (
+                    <div key={i} className="bg-zinc-900 border-2 border-white/20 p-6 rounded-xl hover:border-brand-yellow transition-colors group">
+                      <div className="flex items-center gap-3 mb-2">
+                        <item.icon className="w-6 h-6 text-brand-yellow group-hover:scale-110 transition-transform" />
+                        <span className="text-gray-500 font-mono text-xs tracking-widest">{item.label}</span>
+                      </div>
+                      <p className="text-xl font-bold uppercase">{item.value}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="relative">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20"
-                >
-                  <img
-                    src={eventDetails.image}
-                    alt={eventDetails.title}
-                    className="w-full h-64 object-contain rounded-2xl"
-                  />
-                  <div className="mt-6 text-center">
-                    <div className="inline-flex items-center bg-green-500 text-white px-4 py-2 rounded-full">
-                      <Trophy className="w-4 h-4 mr-2" />
-                      Event Completed Successfully
-                    </div>
-                  </div>
-                </motion.div>
+              <div className="lg:w-1/3">
+                <div className="border-4 border-white bg-zinc-900 p-4 rounded-[2rem] rotate-3 hover:rotate-0 transition-transform duration-500 shadow-[12px_12px_0px_#FFB22C]">
+                  <img src={eventDetails.image} alt="Elevate" className="w-full h-auto rounded-xl grayscale hover:grayscale-0 transition-all duration-500" />
+                </div>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Program Highlights */}
-      <section className="py-20 bg-white">
+      {/* Highlights */}
+      <section className="py-20 border-b-4 border-white bg-brand-yellow text-black">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            {/* Removed PROGRAM HIGHLIGHTS text */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-              Entrepreneurial <span className="text-blue-600">Excellence</span>
-            </h2>
-            <p className="text-xl text-gray-700 max-w-3xl mx-auto font-body">
-              World Entrepreneurship Day celebration featuring industry insights and leadership development
-            </p>
-          </motion.div>
-
+          <h2 className="text-5xl md:text-8xl font-black mb-16 uppercase tracking-tighter text-center">
+            EXCELLENCE
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {eventDetails.highlights.map((highlight, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-              >
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-                  <span className="text-3xl">{highlight.icon}</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4 font-space">{highlight.title}</h3>
-                <p className="text-gray-700 font-body leading-relaxed">{highlight.description}</p>
-              </motion.div>
+              <div key={index} className="bg-white border-4 border-black p-8 rounded-[2rem] shadow-[8px_8px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-default flex flex-col h-full">
+                <div className="text-4xl mb-6">{highlight.icon}</div>
+                <h3 className="text-2xl font-black uppercase mb-4 leading-tight">{highlight.title}</h3>
+                <p className="font-bold text-gray-800 leading-relaxed font-mono text-sm">{highlight.description}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-
-
-      {/* Distinguished Guests Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            {/* Removed DISTINGUISHED GUESTS text */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-              Event <span className="text-blue-600">Leadership</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {eventDetails.guests.map((guest, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-8 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-              >
-                <div className="relative mb-6">
-                  {guest.image ? (
-                    <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-4 border-gradient-to-r from-purple-500 to-blue-500 shadow-lg">
-                      <img
-                        src={guest.image}
-                        alt={guest.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-24 h-24 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto shadow-lg">
-                      <Star className="w-12 h-12 text-white" />
-                    </div>
-                  )}
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-purple-500 rounded-full border-4 border-white flex items-center justify-center">
-                    <Star className="w-4 h-4 text-white" />
+      {/* Guests */}
+      <section className="py-20 bg-zinc-900 border-b-4 border-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <h2 className="text-5xl md:text-8xl font-black mb-20 uppercase tracking-tighter text-center">
+            LEADERSHIP
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {eventDetails.guests.map((guest, i) => (
+              <div key={i} className="group relative">
+                <div className="bg-black border-4 border-white p-8 rounded-[2rem] flex flex-col items-center gap-6 shadow-[12px_12px_0px_#fff] group-hover:shadow-[8px_8px_0px_#fff] group-hover:translate-x-1 group-hover:translate-y-1 transition-all text-center h-full">
+                  <div className="w-32 h-32 shrink-0 rounded-full border-4 border-brand-yellow overflow-hidden bg-zinc-800 flex items-center justify-center">
+                    {guest.image ? (
+                      <img src={guest.image} alt={guest.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all" />
+                    ) : (
+                      <Star className="w-12 h-12 text-brand-yellow" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black uppercase mb-2">{guest.name}</h3>
+                    <p className="text-brand-yellow font-mono text-xs tracking-wider uppercase border-b-2 border-brand-yellow pb-1 inline-block">{guest.role}</p>
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2 font-space">{guest.name}</h3>
-                <p className="text-purple-600 font-semibold text-sm font-body leading-relaxed">{guest.role}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Outcomes Section */}
-      <section className="py-20 bg-gray-50">
+      {/* Outcomes */}
+      <section className="py-20 bg-black">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            {/* Removed PROGRAM OUTCOMES text */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-space">
-              Measurable <span className="text-blue-600">Impact</span>
-            </h2>
-            <p className="text-xl text-gray-700 max-w-3xl mx-auto font-body">
-              Tangible results and achievements from the World Entrepreneurship Day celebration
-            </p>
-          </motion.div>
-
-          <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {eventDetails.outcomes.map((outcome, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                >
-                  <div className="flex items-start">
-                    <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
-                      <span className="text-3xl">{outcome.icon}</span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 mb-3 font-space">{outcome.title}</h3>
-                      <p className="text-gray-700 font-body leading-relaxed">{outcome.description}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+          <h2 className="text-5xl md:text-8xl font-black mb-20 uppercase tracking-tighter text-center text-transparent stroke-text hover:text-white transition-colors cursor-default">
+            IMPACT
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {eventDetails.outcomes.map((outcome, i) => (
+              <div key={i} className="group bg-zinc-900 border-4 border-zinc-700 p-8 rounded-[2rem] hover:border-brand-yellow transition-all duration-300 flex items-start gap-6">
+                <div className="text-4xl shrink-0 bg-black w-16 h-16 flex items-center justify-center rounded-xl border border-white/20 group-hover:scale-110 transition-transform">
+                  {outcome.icon}
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black uppercase text-white mb-2 group-hover:text-brand-yellow transition-colors">{outcome.title}</h3>
+                  <p className="font-mono text-sm text-gray-400 group-hover:text-gray-300 transition-colors uppercase">{outcome.description}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
+
+      <style>{`
+        .stroke-text {
+          -webkit-text-stroke: 2px white;
+          color: transparent;
+        }
+       `}</style>
     </div>
   );
 };
