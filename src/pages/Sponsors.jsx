@@ -37,7 +37,7 @@ const Sponsors = () => {
     <div className="min-h-screen bg-black text-white selection:bg-brand-yellow selection:text-black font-sans overflow-x-hidden">
 
       {/* Hero Section */}
-      <section className="min-h-[60vh] md:min-h-screen flex flex-col justify-center pt-24 md:pt-32 pb-12 relative border-b-2 border-white/10">
+      <section className="min-h-[60vh] md:min-h-screen flex flex-col justify-center pt-32 md:pt-32 pb-12 relative border-b-2 border-white/10">
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 100 }}

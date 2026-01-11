@@ -76,7 +76,7 @@ const Home = () => {
     <div className="min-h-screen bg-brand-white text-black overflow-hidden">
 
       {/* Hero Section */}
-      <section className="relative min-h-[60vh] md:min-h-screen flex flex-col justify-center items-center bg-black px-4 pt-24 pb-12 md:pt-32 md:pb-20">
+      <section className="relative min-h-[60vh] md:min-h-screen flex flex-col justify-center items-center bg-black px-4 pt-56 pb-12 md:pt-32 md:pb-20">
         <div className="container mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 100 }}
@@ -171,7 +171,7 @@ const Home = () => {
       {/* Large Statement Section */}
       <section className="py-20 md:py-40 bg-black text-white px-4 border-t border-white/10">
         <div className="container mx-auto text-center">
-          <p className="text-brand-yellow font-bold font-mono tracking-widest mb-6">THE VISION</p>
+          <h2 className="text-5xl md:text-7xl text-brand-yellow font-black font-mono tracking-tighter mb-8">THE VISION</h2>
           <h2 className="text-4xl md:text-7xl font-bold font-sans max-w-5xl mx-auto leading-tight">
             "We don't just predict the future. We <span className="text-brand-yellow underline decoration-wavy underline-offset-8">incubate</span> it."
           </h2>
