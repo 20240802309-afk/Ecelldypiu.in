@@ -98,7 +98,7 @@ const Team = () => {
           <div className="flex flex-col md:flex-row items-stretch border-4 border-white">
             {/* Image Side */}
             <div className="md:w-1/2 relative min-h-[500px] border-b-4 md:border-b-0 md:border-r-4 border-white overflow-hidden group">
-              <div className="absolute inset-0 bg-brand-yellow mix-blend-multiply opacity-0 group-hover:opacity-60 transition-opacity duration-300 z-10" />
+
               <img
                 src={mentor.image}
                 alt={mentor.name}
@@ -185,7 +185,7 @@ const Team = () => {
                   </div>
 
                   {/* Hover Effect: Yellow Flash */}
-                  <div className="absolute inset-0 bg-brand-yellow mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
                 </div>
               </motion.div>
             ))}
