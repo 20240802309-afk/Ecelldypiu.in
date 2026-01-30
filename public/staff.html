@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSVP - Innovate For Impact | E-Cell DYPIU</title>
+    <link rel="icon" href="/ecell-logo.svg" type="image/svg+xml">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-yellow': '#FFB22C',
+                        'brand-black': '#000000',
+                    },
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #000;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        ::selection {
+            background-color: #FFB22C;
+            color: #000;
+        }
+
+        .input-field {
+            background: #18181b;
+            border: 2px solid #3f3f46;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: #FFB22C;
+            box-shadow: 0 0 0 3px rgba(255, 178, 44, 0.2);
+            outline: none;
+        }
+
+        .btn-primary {
+            background: #FFB22C;
+            color: #000;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: #fff;
+            transform: scale(1.02);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #fff;
+            color: #fff;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .card {
+            background: #18181b;
+            border: 2px solid #3f3f46;
+        }
+
+        .card-highlight {
+            border-color: #FFB22C;
+            box-shadow: 0 0 30px rgba(255, 178, 44, 0.15);
+        }
+
+        @keyframes pulse-yellow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 178, 44, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(255, 178, 44, 0);
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse-yellow 2s infinite;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .member-field {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Pass Modal Styles */
+        .pass-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .pass-modal.active {
+            display: flex;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            border-color: #FFB22C;
+            color: #FFB22C;
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: #FFB22C;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen text-white antialiased">
+
+    <!-- Header -->
+    <header class="border-b-4 border-white bg-black sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <img src="/ecell-logo.svg" alt="E-Cell" class="h-10 w-10">
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">E-CELL DYPIU</h1>
+                    <p class="text-xs text-gray-400 font-mono">INNOVATE FOR IMPACT</p>
+                </div>
+            </a>
+            <a href="/events/hack-for-impact"
+                class="text-sm text-gray-400 hover:text-brand-yellow transition-colors font-mono">
+                ← Back to Event
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8 md:py-12">
+
+        <!-- Hero Section -->
+        <div class="text-center mb-8">
+            <div
+                class="inline-block bg-brand-yellow text-black font-black px-4 py-1 mb-4 text-sm transform -rotate-1 rounded-sm uppercase tracking-wider">
+                Event RSVP
+            </div>
+            <h1 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">
+                CONFIRM YOUR <span class="text-brand-yellow">SPOT</span>
+            </h1>
+            <p class="text-gray-400 text-lg max-w-xl mx-auto">
+                Register for Innovate For Impact - E-Summit 2026 Zonals
+            </p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex justify-center border-b border-zinc-700 mb-8">
+            <button id="tab-register" class="tab-btn active text-gray-400">
+                🎟️ New Registration
+            </button>
+            <button id="tab-retrieve" class="tab-btn text-gray-400">
+                🔍 Retrieve Pass
+            </button>
+        </div>
+
+        <!-- View: Registration Form -->
+        <div id="form-view" class="view active">
+            <div class="grid md:grid-cols-2 gap-6 md:gap-8">
+
+                <!-- Left: Form -->
+                <div class="card rounded-2xl p-6 md:p-8">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                        <span
+                            class="w-10 h-10 bg-brand-yellow text-black rounded-full flex items-center justify-center font-black text-lg">1</span>
+                        Team Leader Details
+                    </h2>
+
+                    <form id="rsvp-form" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
+                            <input type="text" id="name" required
+                                class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
+                                placeholder="Enter your full name">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Email Address *</label>
+                            <input type="email" id="email" required
+                                class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
+                                placeholder="your.email@example.com">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Phone Number *</label>
+                            <input type="tel" id="phone" required
+                                class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
+                                placeholder="10-digit mobile number">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">College/University</label>
+                                <input type="text" id="college"
+                                    class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
+                                    placeholder="Your college">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Year</label>
+                                <select id="year" class="input-field w-full px-4 py-3 rounded-xl text-white">
+                                    <option value="">Select</option>
+                                    <option value="1st Year">1st Year</option>
+                                    <option value="2nd Year">2nd Year</option>
+                                    <option value="3rd Year">3rd Year</option>
+                                    <option value="4th Year">4th Year</option>
+                                    <option value="PG">PG</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Team Name *</label>
+                            <input type="text" id="team" required
+                                class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
+                                placeholder="Your team name">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Number of Team Members *</label>
+                            <select id="team-size" class="input-field w-full px-4 py-3 rounded-xl text-white" required>
+                                <option value="1">Solo (1 member)</option>
+                                <option value="2">2 members</option>
+                                <option value="3">3 members</option>
+                                <option value="4">4 members</option>
+                                <option value="5">5 members</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Maximum 5 members per team</p>
+                        </div>
+
+                        <!-- Dynamic Team Members Container -->
+                        <div id="team-members-container" class="hidden space-y-4 pt-4 border-t border-zinc-700">
+                            <h3 class="text-lg font-bold text-brand-yellow flex items-center gap-2">
+                                <span
+                                    class="w-8 h-8 bg-brand-yellow text-black rounded-full flex items-center justify-center font-black text-sm">2</span>
+                                Team Members Details
+                            </h3>
+                            <p class="text-sm text-gray-400">Enter details for all team members</p>
+                            <div id="members-list" class="space-y-4">
+                                <!-- Members will be added here dynamically -->
+                            </div>
+                        </div>
+
+                        <div id="form-error"
+                            class="hidden text-red-400 text-sm text-center py-2 bg-red-900/20 rounded-lg"></div>
+
+                        <button type="submit"
+                            class="btn-primary w-full py-4 rounded-xl text-lg uppercase tracking-wider pulse-animation">
+                            Submit RSVP →
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right: Event Info -->
+                <div class="space-y-6">
+                    <div class="card card-highlight rounded-2xl p-6">
+                        <h3 class="text-xl font-bold mb-4 text-brand-yellow uppercase tracking-wide">Event Details</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 bg-brand-yellow/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-brand-yellow" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-xs font-mono uppercase">Date</p>
+                                    <p class="font-bold text-lg">01 February 2026</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 bg-brand-yellow/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-brand-yellow" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-xs font-mono uppercase">Duration</p>
+                                    <p class="font-bold text-lg">6 Hours</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 bg-brand-yellow/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-brand-yellow" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                                        </path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-xs font-mono uppercase">Venue</p>
+                                    <p class="font-bold text-lg">DYPIU, Akurdi, Pune</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 bg-brand-yellow/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-brand-yellow" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-xs font-mono uppercase">Prize Pool</p>
+                                    <p class="font-bold text-lg text-brand-yellow">₹10,000</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card rounded-2xl p-6">
+                        <h3 class="text-lg font-bold mb-3">Why RSVP?</h3>
+                        <ul class="space-y-2 text-gray-400 text-sm">
+                            <li class="flex items-center gap-2">
+                                <span class="text-brand-yellow">✓</span> Secure your spot at the event
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-brand-yellow">✓</span> Get event updates via email
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-brand-yellow">✓</span> Fast-track entry on event day
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-brand-yellow">✓</span> Receive participation certificate
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-zinc-900 border-2 border-zinc-800 rounded-2xl p-4 text-center">
+                        <p class="text-xs text-gray-500 font-mono uppercase mb-1">For Queries</p>
+                        <a href="tel:9021479745"
+                            class="text-xl font-bold text-white hover:text-brand-yellow transition-colors">
+                            9021479745
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Retrieve Pass -->
+        <div id="retrieve-view" class="view">
+            <div class="max-w-md mx-auto">
+                <div class="card rounded-2xl p-6 md:p-8">
+                    <div class="text-center mb-6">
+                        <div
+                            class="w-16 h-16 bg-brand-yellow/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-brand-yellow" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold mb-2">Retrieve Your Pass</h2>
+                        <p class="text-gray-400 text-sm">Enter your name and email to get your event pass</p>
+                    </div>
+
+                    <form id="retrieve-form" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Your Full Name *</label>
+                            <input type="text" id="retrieve-name" required
+                                class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
+                                placeholder="Enter your full name">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Your Email *</label>
+                            <input type="email" id="retrieve-email" required
+                                class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
+                                placeholder="Enter your registered email">
+                        </div>
+
+                        <div id="retrieve-error"
+                            class="hidden text-red-400 text-sm text-center py-2 bg-red-900/20 rounded-lg"></div>
+
+                        <button type="submit"
+                            class="btn-primary w-full py-4 rounded-xl text-lg uppercase tracking-wider">
+                            🔍 Find My Pass
+                        </button>
+                    </form>
+                </div>
+
+                <div class="mt-6 text-center">
+                    <p class="text-gray-500 text-sm">Haven't registered yet?</p>
+                    <button id="go-to-register" class="text-brand-yellow font-bold hover:underline mt-1">
+                        Register Now →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Success -->
+        <div id="success-view" class="view">
+            <div class="max-w-lg mx-auto text-center">
+                <div class="card card-highlight rounded-3xl p-8 md:p-12">
+                    <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7">
+                            </path>
+                        </svg>
+                    </div>
+
+                    <h2 class="text-3xl md:text-4xl font-black uppercase mb-4">
+                        You're <span class="text-brand-yellow">In!</span>
+                    </h2>
+
+                    <p class="text-gray-400 text-lg mb-6">
+                        Your RSVP has been confirmed. Save your event pass below!
+                    </p>
+
+                    <div class="bg-black/50 rounded-xl p-4 mb-6">
+                        <p class="text-xs text-gray-500 font-mono uppercase mb-1">Confirmation ID</p>
+                        <p id="confirmation-id" class="text-xl font-mono font-bold text-brand-yellow">---</p>
+                    </div>
+
+                    <button id="view-pass-btn"
+                        class="btn-primary w-full py-4 rounded-xl text-lg uppercase tracking-wider mb-4">
+                        🎟️ Download & Send to Team
+                    </button>
+
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <a href="/events/hack-for-impact"
+                            class="btn-secondary flex-1 py-3 rounded-xl text-center font-bold">
+                            ← Back to Event
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Pass Modal -->
+    <div id="pass-modal" class="pass-modal">
+        <div class="max-w-2xl w-full">
+            <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-700">
+                <!-- Modal Header -->
+                <div class="p-4 bg-gradient-to-r from-brand-yellow to-yellow-600 flex justify-between items-center">
+                    <h3 class="font-black text-black text-lg uppercase tracking-wide">Official Event Pass</h3>
+                    <button id="close-pass-modal" class="text-black hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Pass Canvas Container -->
+                <div class="p-6 flex flex-col items-center bg-zinc-800">
+                    <canvas id="pass-canvas" class="rounded-lg shadow-2xl max-w-full"></canvas>
+                    <p class="text-sm text-gray-400 mt-4">Right-click image to save or print</p>
+                    <div class="flex flex-wrap gap-3 mt-4 justify-center">
+                        <button id="download-pass-btn" class="btn-primary px-6 py-2 rounded-lg flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            Download
+                        </button>
+                        <button id="send-to-team-btn"
+                            class="btn-secondary px-6 py-2 rounded-lg flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            Send to Team
+                        </button>
+                    </div>
+                    <p id="send-instructions"
+                        class="hidden text-xs text-brand-yellow mt-3 text-center bg-brand-yellow/10 p-2 rounded-lg">
+                        📎 Download the pass first, then attach it to the email that opens!
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- Hidden QR container -->
+        <div id="qr-temp" class="hidden"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t-4 border-white mt-12 py-6">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm font-mono">
+                © 2026 E-Cell DYPIU. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAeRS2vu_GTpOHBbZFMFEvbwUuGrBaj-Ss",
+            authDomain: "ecell-86bee.firebaseapp.com",
+            projectId: "ecell-86bee",
+            storageBucket: "ecell-86bee.firebasestorage.app",
+            messagingSenderId: "488931917899",
+            appId: "1:488931917899:web:c0563224a39c7448d74dce",
+            measurementId: "G-ZGHDG3SRCQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // State
+        let currentPassData = null;
+
+        // DOM Elements
+        const form = document.getElementById('rsvp-form');
+        const formView = document.getElementById('form-view');
+        const retrieveView = document.getElementById('retrieve-view');
+        const successView = document.getElementById('success-view');
+        const formError = document.getElementById('form-error');
+        const confirmationId = document.getElementById('confirmation-id');
+        const teamSizeSelect = document.getElementById('team-size');
+        const teamMembersContainer = document.getElementById('team-members-container');
+        const membersList = document.getElementById('members-list');
+        const passModal = document.getElementById('pass-modal');
+        const viewPassBtn = document.getElementById('view-pass-btn');
+        const closePassModal = document.getElementById('close-pass-modal');
+        const downloadPassBtn = document.getElementById('download-pass-btn');
+
+        // Tab elements
+        const tabRegister = document.getElementById('tab-register');
+        const tabRetrieve = document.getElementById('tab-retrieve');
+        const retrieveForm = document.getElementById('retrieve-form');
+        const retrieveError = document.getElementById('retrieve-error');
+        const goToRegister = document.getElementById('go-to-register');
+
+        // Tab switching
+        tabRegister.addEventListener('click', () => {
+            tabRegister.classList.add('active');
+            tabRetrieve.classList.remove('active');
+            formView.classList.add('active');
+            retrieveView.classList.remove('active');
+            successView.classList.remove('active');
+        });
+
+        tabRetrieve.addEventListener('click', () => {
+            tabRetrieve.classList.add('active');
+            tabRegister.classList.remove('active');
+            retrieveView.classList.add('active');
+            formView.classList.remove('active');
+            successView.classList.remove('active');
+        });
+
+        goToRegister.addEventListener('click', () => {
+            tabRegister.click();
+        });
+
+        // Generate unique ID
+        function generateId() {
+            const timestamp = Date.now().toString().slice(-10);
+            const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+            return timestamp + random;
+        }
+
+        // Create member input fields
+        function createMemberFields(count) {
+            membersList.innerHTML = '';
+
+            // Create fields for members 2 through count
+            for (let i = 2; i <= count; i++) {
+                const memberDiv = document.createElement('div');
+                memberDiv.className = 'member-field bg-zinc-900 p-4 rounded-xl border border-zinc-700';
+                memberDiv.innerHTML = `
+                    <h4 class="font-bold text-sm text-gray-300 mb-3">Member ${i}</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input type="text" name="member_${i}_name" required
+                            class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
+                            placeholder="Full Name *">
+                        <input type="email" name="member_${i}_email" required
+                            class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
+                            placeholder="Email *">
+                        <input type="tel" name="member_${i}_phone" required
+                            class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
+                            placeholder="Phone *">
+                        <input type="text" name="member_${i}_college"
+                            class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
+                            placeholder="College">
+                    </div>
+                `;
+                membersList.appendChild(memberDiv);
+            }
+        }
+
+        // Handle team size changes
+        teamSizeSelect.addEventListener('change', (e) => {
+            const size = parseInt(e.target.value);
+
+            if (size > 1) {
+                teamMembersContainer.classList.remove('hidden');
+                createMemberFields(size);
+            } else {
+                teamMembersContainer.classList.add('hidden');
+                membersList.innerHTML = '';
+            }
+        });
+
+        // Draw Event Pass
+        function drawEventPass(data) {
+            const canvas = document.getElementById('pass-canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas size
+            canvas.width = 600;
+            canvas.height = 280;
+
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(1, '#16213e');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw yellow accent line at top
+            ctx.fillStyle = '#FFB22C';
+            ctx.fillRect(0, 0, canvas.width, 6);
+
+            // Draw dashed line separator (for tear-off effect)
+            ctx.setLineDash([8, 5]);
+            ctx.strokeStyle = '#FFB22C';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - 150, 20);
+            ctx.lineTo(canvas.width - 150, canvas.height - 20);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw border
+            ctx.strokeStyle = '#FFB22C';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+
+            // Event name
+            ctx.fillStyle = '#FFB22C';
+            ctx.font = 'bold 22px "Space Grotesk", sans-serif';
+            ctx.fillText('INNOVATE FOR IMPACT 2026', 35, 55);
+
+            // Subtitle
+            ctx.fillStyle = '#888';
+            ctx.font = '14px "Space Grotesk", sans-serif';
+            ctx.fillText('EVENT ACCESS PASS', 35, 78);
+
+            // Person name
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 32px "Space Grotesk", sans-serif';
+            const displayName = data.name.length > 20 ? data.name.substring(0, 20) + '...' : data.name;
+            ctx.fillText(displayName.toUpperCase(), 35, 130);
+
+            // Team name
+            ctx.fillStyle = '#aaa';
+            ctx.font = '16px "Space Grotesk", sans-serif';
+            const displayTeam = data.team.length > 25 ? data.team.substring(0, 25) + '...' : data.team;
+            ctx.fillText(`Team: ${displayTeam}`, 35, 160);
+
+            // Ticket ID
+            ctx.fillStyle = '#FFB22C';
+            ctx.font = 'bold 14px "JetBrains Mono", monospace';
+            ctx.fillText('TICKET ID:', 35, 200);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 20px "JetBrains Mono", monospace';
+            ctx.fillText(data.ticketId, 35, 225);
+
+            // Date info
+            ctx.fillStyle = '#666';
+            ctx.font = '12px "Space Grotesk", sans-serif';
+            ctx.fillText('01 FEB 2026 | DYPIU, PUNE', 35, 250);
+
+            // QR Code section label
+            ctx.fillStyle = '#666';
+            ctx.font = '10px "Space Grotesk", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('SCAN HERE', canvas.width - 75, 255);
+            ctx.textAlign = 'left';
+
+            // Generate QR code and draw it
+            const qrTemp = document.getElementById('qr-temp');
+            qrTemp.innerHTML = '';
+
+            new QRCode(qrTemp, {
+                text: `IFI2026-${data.ticketId}`,
+                width: 100,
+                height: 100,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Wait for QR to generate then draw it
+            setTimeout(() => {
+                const qrImg = qrTemp.querySelector('img');
+                if (qrImg) {
+                    const qrCanvas = qrTemp.querySelector('canvas');
+                    const qrSrc = qrImg.src || qrCanvas.toDataURL();
+                    const img = new Image();
+                    img.onload = () => {
+                        ctx.drawImage(img, canvas.width - 130, 40, 100, 100);
+                    };
+                    img.src = qrSrc;
+                }
+            }, 100);
+        }
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+            formError.classList.add('hidden');
+
+            try {
+                // Get team size
+                const teamSize = parseInt(teamSizeSelect.value);
+
+                // Collect team members data
+                const members = [];
+                if (teamSize > 1) {
+                    for (let i = 2; i <= teamSize; i++) {
+                        const memberName = document.querySelector(`[name="member_${i}_name"]`)?.value?.trim();
+                        const memberEmail = document.querySelector(`[name="member_${i}_email"]`)?.value?.trim();
+                        const memberPhone = document.querySelector(`[name="member_${i}_phone"]`)?.value?.trim();
+                        const memberCollege = document.querySelector(`[name="member_${i}_college"]`)?.value?.trim();
+
+                        if (!memberName || !memberEmail || !memberPhone) {
+                            throw new Error(`Please fill all required fields for Member ${i}`);
+                        }
+
+                        members.push({
+                            memberNumber: i,
+                            name: memberName,
+                            email: memberEmail,
+                            phone: memberPhone,
+                            college: memberCollege || ''
+                        });
+                    }
+                }
+
+                const ticketId = generateId();
+                const leaderEmail = document.getElementById('email').value.trim().toLowerCase();
+
+                const data = {
+                    name: document.getElementById('name').value.trim(),
+                    email: leaderEmail,
+                    phone: document.getElementById('phone').value.trim(),
+                    college: document.getElementById('college').value.trim(),
+                    year: document.getElementById('year').value,
+                    team: document.getElementById('team').value.trim(),
+                    teamSize: teamSize,
+                    members: members,
+                    ticketId: ticketId,
+                    event: 'Innovate For Impact 2026',
+                    status: 'confirmed',
+                    createdAt: serverTimestamp()
+                };
+
+                // Validate phone
+                if (!/^\d{10}$/.test(data.phone)) {
+                    throw new Error('Please enter a valid 10-digit phone number');
+                }
+
+                // Validate email
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+                    throw new Error('Please enter a valid email address');
+                }
+
+                // Check if email already registered
+                const existingQuery = query(collection(db, 'rsvp_innovate_2026'), where('email', '==', leaderEmail));
+                const existingDocs = await getDocs(existingQuery);
+
+                if (!existingDocs.empty) {
+                    throw new Error('This email is already registered. Use "Retrieve Pass" to get your pass.');
+                }
+
+                // Save to Firestore
+                await addDoc(collection(db, 'rsvp_innovate_2026'), data);
+
+                // Store for pass generation
+                currentPassData = data;
+
+                // Show success
+                confirmationId.textContent = ticketId;
+                formView.classList.remove('active');
+                retrieveView.classList.remove('active');
+                successView.classList.add('active');
+                tabRegister.classList.remove('active');
+                tabRetrieve.classList.remove('active');
+
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (error) {
+                console.error('Error:', error);
+                formError.textContent = error.message || 'Something went wrong. Please try again.';
+                formError.classList.remove('hidden');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Retrieve Pass form submission
+        retrieveForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = retrieveForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Searching...';
+            submitBtn.disabled = true;
+            retrieveError.classList.add('hidden');
+
+            try {
+                const name = document.getElementById('retrieve-name').value.trim();
+                const email = document.getElementById('retrieve-email').value.trim().toLowerCase();
+
+                if (!name || !email) {
+                    throw new Error('Please enter both name and email');
+                }
+
+                // First, query for team leader email
+                let foundData = null;
+                const leaderQuery = query(collection(db, 'rsvp_innovate_2026'), where('email', '==', email));
+                const leaderSnapshot = await getDocs(leaderQuery);
+
+                if (!leaderSnapshot.empty) {
+                    // Found as team leader
+                    const docData = leaderSnapshot.docs[0].data();
+                    // Verify name matches (case insensitive)
+                    if (docData.name.toLowerCase() === name.toLowerCase()) {
+                        foundData = docData;
+                    }
+                }
+
+                // If not found as leader, search in members
+                if (!foundData) {
+                    const allDocsQuery = query(collection(db, 'rsvp_innovate_2026'));
+                    const allDocsSnapshot = await getDocs(allDocsQuery);
+
+                    for (const doc of allDocsSnapshot.docs) {
+                        const docData = doc.data();
+                        if (docData.members && docData.members.length > 0) {
+                            const matchingMember = docData.members.find(
+                                m => m.email.toLowerCase() === email &&
+                                    m.name.toLowerCase() === name.toLowerCase()
+                            );
+                            if (matchingMember) {
+                                foundData = docData;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (!foundData) {
+                    throw new Error('No registration found. Please check your name and email.');
+                }
+
+                // Store for pass generation
+                currentPassData = {
+                    name: foundData.name,
+                    email: foundData.email,
+                    team: foundData.team,
+                    ticketId: foundData.ticketId,
+                    members: foundData.members || []
+                };
+
+                // Show success view
+                confirmationId.textContent = foundData.ticketId;
+                formView.classList.remove('active');
+                retrieveView.classList.remove('active');
+                successView.classList.add('active');
+                tabRegister.classList.remove('active');
+                tabRetrieve.classList.remove('active');
+
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (error) {
+                console.error('Error:', error);
+                retrieveError.textContent = error.message || 'Something went wrong. Please try again.';
+                retrieveError.classList.remove('hidden');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // View Pass button
+        viewPassBtn.addEventListener('click', () => {
+            if (currentPassData) {
+                passModal.classList.add('active');
+                drawEventPass(currentPassData);
+            }
+        });
+
+        // Close Pass Modal
+        closePassModal.addEventListener('click', () => {
+            passModal.classList.remove('active');
+        });
+
+        // Download Pass
+        downloadPassBtn.addEventListener('click', () => {
+            const canvas = document.getElementById('pass-canvas');
+            const link = document.createElement('a');
+            link.download = `EventPass_${currentPassData.ticketId}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+
+        // Close modal on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                passModal.classList.remove('active');
+            }
+        });
+
+        // Phone number formatting
+        document.getElementById('phone').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+        });
+
+        // Send to Team button
+        const sendToTeamBtn = document.getElementById('send-to-team-btn');
+        const sendInstructions = document.getElementById('send-instructions');
+
+        sendToTeamBtn.addEventListener('click', () => {
+            if (!currentPassData) return;
+
+            // Collect all email addresses
+            const emails = [currentPassData.email];
+            if (currentPassData.members && currentPassData.members.length > 0) {
+                currentPassData.members.forEach(member => {
+                    if (member.email) {
+                        emails.push(member.email);
+                    }
+                });
+            }
+
+            // Create email subject
+            const subject = `🎟️ Your Event Pass - Innovate For Impact 2026 | Team: ${currentPassData.team}`;
+
+            // Create professional email body
+            const retrievePassUrl = window.location.origin + '/staff.html';
+            const body = `Hi Team ${currentPassData.team}! 👋
+
+Great news! Your registration for Innovate For Impact 2026 has been confirmed! 🎉
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 REGISTRATION DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎫 Ticket ID: ${currentPassData.ticketId}
+👤 Team Leader: ${currentPassData.name}
+👥 Team Name: ${currentPassData.team}
+📧 Registered Email: ${currentPassData.email}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 EVENT DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📅 Date: 01 February 2026
+⏰ Duration: 6 Hours
+📍 Venue: DYPIU, Akurdi, Pune
+🏆 Prize Pool: ₹10,000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎟️ GET YOUR EVENT PASS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+To download your graphical Event Pass anytime, visit:
+${retrievePassUrl}
+
+Click on "Retrieve Pass" tab and enter your name and email to get your pass!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ IMPORTANT INSTRUCTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ Please find your official Event Pass attached to this email
+2️⃣ Save this pass on your phone - you'll need it for entry
+3️⃣ Arrive 30 minutes before the event for smooth check-in
+4️⃣ Bring a valid college ID card
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📞 CONTACT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For any queries, contact: 9021479745
+
+We're excited to see you at the event! 🚀
+
+Best regards,
+E-Cell DYPIU Team
+
+---
+This is an automated confirmation email. Please don't forget to attach the Event Pass image to this email before sending!`;
+
+            // Encode for URL
+            const encodedSubject = encodeURIComponent(subject);
+            const encodedBody = encodeURIComponent(body);
+            const emailList = emails.join(',');
+
+            // Open Gmail compose
+            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${emailList}&su=${encodedSubject}&body=${encodedBody}`;
+
+            // Show instructions
+            sendInstructions.classList.remove('hidden');
+
+            // Open Gmail in new tab
+            window.open(gmailUrl, '_blank');
+        });
+    </script>
+
+</body>
+
+</html>

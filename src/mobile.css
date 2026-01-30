@@ -1,0 +1,206 @@
+/* Mobile CSS - Simple and Clean */
+
+/* Mobile devices */
+@media (max-width: 768px) {
+
+  /* Container adjustments */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Reduce section padding */
+  .py-20 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  /* Hero text sizing */
+  .text-5xl,
+  .text-6xl {
+    font-size: 2.25rem;
+    line-height: 1.1;
+  }
+
+  .text-4xl {
+    font-size: 1.875rem;
+    line-height: 1.2;
+  }
+
+  /* Card padding */
+  .p-8,
+  .p-12 {
+    padding: 1.5rem;
+  }
+
+  .px-8,
+  .px-10 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Hamburger Menu Animation - Mobile Only */
+@media (max-width: 768px) {
+  .hamburger-btn {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .hamburger-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.05);
+  }
+
+  /* Hamburger Lines */
+  .hamburger-line {
+    width: 20px;
+    height: 2px;
+    background-color: #000;
+    border-radius: 1px;
+    transition: all 0.3s ease;
+  }
+
+  /* X Animation when open */
+  .hamburger-btn.open .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+  }
+
+  .hamburger-btn.open .hamburger-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-btn.open .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+  }
+}
+
+/* Ensure hamburger is hidden on desktop */
+@media (min-width: 769px) {
+  .hamburger-btn {
+    display: none !important;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+
+  .text-5xl,
+  .text-6xl {
+    font-size: 2rem;
+  }
+
+  .text-4xl {
+    font-size: 1.75rem;
+  }
+
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* MindMarket Style Mobile Menu */
+@media (max-width: 768px) {
+  .mobile-menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+    overflow-y: auto;
+  }
+
+  /* Header Card (Logo + Close) */
+  .mobile-header-card {
+    background-color: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Links Card */
+  .mobile-links-card {
+    background-color: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-bottom: 1px solid #27272a;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-nav-item:last-child {
+    border-bottom: none;
+  }
+
+  .mobile-nav-item.active {
+    color: #FFB22C;
+    background-color: rgba(255, 178, 44, 0.05);
+  }
+
+  .mobile-nav-item:hover {
+    background-color: #27272a;
+    padding-left: 2rem;
+    /* Removed color change to keep inactive items white */
+  }
+
+  /* Contact Card */
+  .mobile-contact-card {
+    margin-top: auto;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  }
+
+  .mobile-contact-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 1.25rem;
+    background-color: #FFB22C;
+    color: black;
+    font-weight: 900;
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-contact-btn:hover {
+    background-color: white;
+  }
+}

@@ -1,0 +1,222 @@
+import { motion } from 'framer-motion';
+import {
+    Calendar,
+    Users,
+    MapPin,
+    Trophy,
+    Award,
+    Star,
+    ArrowLeft,
+    ArrowRight,
+    Clock,
+    ExternalLink,
+    Target,
+    Zap,
+    Rocket
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const HackForImpact = () => {
+    const eventDetails = {
+        title: 'INNOVATE FOR IMPACT',
+        subtitle: 'E-SUMMIT 2026 ZONALS',
+        date: '01 February 2026',
+        time: '6 Hours',
+        location: 'DYPIU, Akurdi, Pune',
+        teamSize: '1–5 Members',
+        category: 'Hackathon',
+        image: '/hack-for-impact.png',
+        description: 'Our university is proud to host Innovate for Impact, a flagship Zonal Qualifier event for E-Summit 2026, organized by IIIT-Delhi in collaboration with DYPIU, Pune.',
+        longDescription: 'This is a 6-hour high-intensity ideation + buildathon where teams will identify real-world problems, build innovative solutions under time pressure, pitch directly to judges, and compete for national-level recognition and prizes. This is a rare opportunity to compete at a national level, showcase your skills, and represent our college on a bigger stage.',
+        highlights: [
+            '₹10,000 Cash Prize for Zonal Winners',
+            'Direct Qualification to E-Summit 2026 National Grand Finale',
+            '₹2,00,000 National Cash Pool',
+            'Participation Certificates (IIIT-Delhi × DYPIU)',
+            'Massive value for resumes, internships, and startup exposure'
+        ],
+        process: [
+            { title: 'Identify', desc: 'Identify real-world problems', icon: Target },
+            { title: 'Build', desc: 'Build innovative solutions under time pressure', icon: Zap },
+            { title: 'Pitch', desc: 'Pitch directly to judges', icon: Users },
+            { title: 'Compete', desc: 'Compete for national-level recognition', icon: Trophy }
+        ]
+    };
+
+    return (
+        <div className="min-h-screen bg-black text-white selection:bg-brand-yellow selection:text-black font-sans">
+            {/* Hero Section */}
+            <section className="min-h-[80vh] flex flex-col justify-center pt-32 pb-12 relative border-b-4 border-white bg-black">
+                <div className="container mx-auto px-4 relative z-10">
+                    <div className="mb-8">
+                        <Link to="/events" className="inline-flex items-center text-white hover:text-brand-yellow transition-colors font-mono uppercase tracking-widest border-2 border-white/20 px-4 py-2 rounded-full hover:border-brand-yellow hover:bg-white/5">
+                            <ArrowLeft className="w-5 h-5 mr-2" />
+                            Back to Events
+                        </Link>
+                    </div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="grid lg:grid-cols-2 gap-12 items-center"
+                    >
+                        <div>
+                            <div className="inline-block bg-brand-yellow text-black font-black px-4 py-1 mb-6 text-xl transform -rotate-1 rounded-sm">
+                                BIG ANNOUNCEMENT
+                            </div>
+                            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-4 uppercase tracking-tighter leading-[0.9]">
+                                {eventDetails.title}
+                            </h1>
+                            <p className="text-2xl md:text-4xl font-bold text-brand-yellow mb-8 tracking-tight">
+                                {eventDetails.subtitle}
+                            </p>
+
+                            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed border-l-4 border-brand-yellow pl-8 mb-12">
+                                {eventDetails.description}
+                            </p>
+
+                            <div className="flex flex-wrap gap-4 mb-12">
+                                <a
+                                    href="https://unstop.com/o/XMzvcDi"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-brand-yellow text-black text-xl font-bold px-8 py-4 rounded-full hover:bg-white hover:scale-105 transition-all flex items-center shadow-[0_0_20px_rgba(255,178,44,0.4)]"
+                                >
+                                    REGISTER NOW
+                                    <ExternalLink className="ml-2 w-6 h-6" />
+                                </a>
+                                <a
+                                    href="/staff.html"
+                                    target="_blank"
+                                    className="bg-zinc-900 border-2 border-white/20 text-white text-xl font-bold px-8 py-4 rounded-full hover:bg-white hover:text-black hover:border-white transition-all flex items-center"
+                                >
+                                    RSVP
+                                    <ArrowRight className="ml-2 w-6 h-6" />
+                                </a>
+                                <div className="px-6 py-4 border-2 border-white/20 rounded-full font-mono text-sm text-gray-400 flex items-center">
+                                    ⚠️ Limited slots available
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {[
+                                    { icon: Calendar, label: "DATE", value: eventDetails.date },
+                                    { icon: Clock, label: "DURATION", value: eventDetails.time },
+                                    { icon: MapPin, label: "VENUE", value: eventDetails.location },
+                                    { icon: Users, label: "TEAM SIZE", value: eventDetails.teamSize }
+                                ].map((item, i) => (
+                                    <div key={i} className="bg-zinc-900 border border-white/10 p-4 rounded-xl flex items-center gap-4">
+                                        <div className="bg-black p-2 rounded-lg border border-white/20">
+                                            <item.icon className="w-5 h-5 text-brand-yellow" />
+                                        </div>
+                                        <div>
+                                            <span className="text-zinc-500 font-mono text-xs tracking-widest block">{item.label}</span>
+                                            <span className="text-lg font-bold uppercase">{item.value}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="relative">
+                            <div className="border-4 border-white bg-zinc-900 p-2 rounded-[2rem] rotate-3 hover:rotate-0 transition-transform duration-500 shadow-[20px_20px_0px_#FFB22C]">
+                                <img src={eventDetails.image} alt={eventDetails.title} className="w-full h-auto rounded-[1.5rem]" />
+                            </div>
+
+                            <div className="absolute -bottom-10 -left-10 bg-black border-4 border-white p-6 rounded-xl shadow-[8px_8px_0px_white] hidden md:block">
+                                <p className="text-brand-yellow font-black text-4xl mb-1">₹10,000</p>
+                                <p className="text-white font-bold uppercase tracking-wide text-sm">Zonal Cash Prize</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* Process / What you'll do */}
+            <section className="py-20 border-b-4 border-white bg-zinc-900">
+                <div className="container mx-auto px-4">
+                    <h2 className="text-4xl md:text-6xl font-black mb-16 uppercase tracking-tighter text-center">
+                        WHAT YOU WILL <span className="text-brand-yellow">DO</span>
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {eventDetails.process.map((step, i) => (
+                            <div key={i} className="bg-black border-2 border-zinc-800 p-8 rounded-[2rem] hover:border-brand-yellow transition-all group">
+                                <div className="w-16 h-16 bg-brand-yellow rounded-full flex items-center justify-center mb-6 border-4 border-black group-hover:scale-110 transition-transform">
+                                    <step.icon className="w-8 h-8 text-black" />
+                                </div>
+                                <h3 className="text-2xl font-black uppercase mb-4 text-white">{step.title}</h3>
+                                <p className="text-gray-400 font-medium">{step.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Highlights / Why Join */}
+            <section className="py-20 border-b-4 border-white bg-brand-yellow text-black relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                <div className="container mx-auto px-4 relative z-10">
+                    <div className="max-w-4xl mx-auto">
+                        <h2 className="text-5xl md:text-7xl font-black mb-12 uppercase tracking-tighter text-center leading-[0.9]">
+                            WHY YOU SHOULD <br /> NOT MISS THIS
+                        </h2>
+
+                        <div className="space-y-4">
+                            {eventDetails.highlights.map((highlight, index) => (
+                                <div key={index} className="bg-white border-4 border-black p-6 rounded-xl shadow-[8px_8px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-default flex items-center gap-6">
+                                    <Star className="w-8 h-8 min-w-[2rem] text-black fill-brand-yellow" />
+                                    <p className="text-xl md:text-2xl font-bold uppercase font-mono tracking-tight">{highlight}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section className="py-20 bg-black text-white">
+                <div className="container mx-auto px-4 text-center">
+                    <h2 className="text-4xl md:text-6xl font-black mb-8 uppercase tracking-tighter">
+                        READY TO <span className="text-brand-yellow">INNOVATE?</span>
+                    </h2>
+                    <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-12">
+                        If you’re serious about innovation, startups, tech, or problem-solving — this is for you.
+                    </p>
+
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+                        <a
+                            href="https://unstop.com/o/XMzvcDi"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-brand-yellow text-black text-2xl font-black px-12 py-6 rounded-full hover:bg-white hover:scale-105 transition-all shadow-[0_0_40px_rgba(255,178,44,0.6)]"
+                        >
+                            REGISTER NOW
+                        </a>
+                        <a
+                            href="/staff.html"
+                            target="_blank"
+                            className="bg-transparent border-4 border-white text-white text-2xl font-black px-12 py-6 rounded-full hover:bg-white hover:text-black transition-all"
+                        >
+                            RSVP
+                        </a>
+                    </div>
+
+                    <div className="text-center mt-12">
+                        <p className="text-gray-500 font-mono text-sm uppercase tracking-widest mb-2">For Further Queries</p>
+                        <p className="text-2xl font-bold text-white">9021479745</p>
+                    </div>
+                </div>
+            </section>
+
+            <style>{`
+        .stroke-text {
+          -webkit-text-stroke: 2px white;
+          color: transparent;
+        }
+       `}</style>
+        </div>
+    );
+};
+
+export default HackForImpact;
