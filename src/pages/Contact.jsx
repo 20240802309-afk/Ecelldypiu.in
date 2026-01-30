@@ -113,9 +113,16 @@ const Contact = () => {
                   GET DIRECTIONS
                 </a>
               </div>
-              <div className="flex-1 w-full h-80 bg-zinc-800 border-4 border-zinc-600 rounded-3xl flex items-center justify-center relative">
-                <MapPin className="w-24 h-24 text-brand-yellow animate-bounce" />
-                <p className="absolute bottom-4 font-mono text-sm opacity-50">MAP PLACEHOLDER</p>
+              <div className="flex-1 w-full h-80 bg-zinc-800 border-4 border-zinc-600 rounded-3xl overflow-hidden relative">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4484.3036780073235!2d73.75667057579898!3d18.645997365329716!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b9f02f4b8f47%3A0x994b7c247d09fde!2sD.%20Y.%20Patil%20International%20University!5e1!3m2!1sen!2sin!4v1769798073225!5m2!1sen!2sin"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
               </div>
             </div>
           </div>
