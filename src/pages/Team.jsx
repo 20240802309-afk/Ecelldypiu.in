@@ -41,7 +41,7 @@ const coreTeam = [
   { name: 'YASH PAWAR', position: 'PR LEAD', image: '/team/YASH PAWAR.jpeg', icon: Users },
   { name: 'PRANAV BATHEJA', position: 'MARKETING LEAD', image: '/team/PRANAV BHATEJA.jpeg', icon: Users },
   { name: 'RAM MITTAL', position: 'CORPORATE LEAD', image: '/team/RAM MITTAL.png', icon: Users },
-  { name: 'RIGVED AHEARRAO', position: 'TECHNICAL LEAD', image: '/team/RIGVED AHEARRAO.png', icon: Users },
+  { name: 'RIGVED AHERRAO', position: 'TECHNICAL LEAD', image: '/team/RIGVED AHEARRAO.png', icon: Users },
   { name: 'YASH TRIPATHI', position: 'WEB DEVELOPMENT LEAD', image: '/team/YASH TRIPATHI.png', icon: Users },
   { name: 'SHARWARI KHANDAIT', position: 'SOCIAL MEDIA LEAD', image: '/team/SHARWARI KHANDAIT.jpeg', icon: Users },
   { name: 'SHANTANU PATIL', position: 'TREASURY LEAD', image: '/team/SHANTANU PATIL.png', icon: Users },
