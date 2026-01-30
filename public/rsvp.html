@@ -693,6 +693,15 @@
 
                 ctx.fillText(data.name, nameX, nameY);
 
+                // --- 1.1 Team Name (New) ---
+                // Position: Below Name
+                ctx.fillStyle = '#FFB22C'; // Brand Yellow
+                const teamFontSize = Math.floor(canvas.width * 0.025);
+                ctx.font = `600 ${teamFontSize}px "Inter", "Space Grotesk", sans-serif`;
+
+                const teamY = canvas.height * 0.58; // Below name
+                ctx.fillText(`TEAM: ${data.team.toUpperCase()}`, nameX, teamY);
+
                 // --- 2. QR Code (Right Side, Top) ---
                 // Shifted RIGHT (Center at 0.875)
                 const qrSize = Math.floor(canvas.height * 0.45);
@@ -705,6 +714,11 @@
                 // --- 3. Ticket ID Formatting & Display ---
                 let displayId = data.ticketId;
 
+                // Ensure ID exists (for legacy members who might not have one)
+                if (!displayId) {
+                    displayId = generateId(data.name);
+                }
+
                 // If legacy ID (long number) or not matching format, reformat for display
                 const needsFormatting = !/^[A-Z]{3}\d{3}$/.test(displayId);
 
@@ -713,7 +727,7 @@
                     const prefix = firstName.length >= 3 ? firstName.substring(0, 3) : firstName.padEnd(3, 'X');
                     // Use last 3 digits of legacy ID if possible, else random
                     const nums = displayId.replace(/\D/g, '');
-                    const suffix = nums.length >= 3 ? nums.substring(nums.length - 3) : '123';
+                    const suffix = nums.length >= 3 ? nums.substring(nums.length - 3) : Math.floor(Math.random() * 900 + 100);
                     displayId = `${prefix}${suffix}`;
                 }
 
@@ -825,7 +839,8 @@
                             name: memberName,
                             email: memberEmail,
                             phone: memberPhone,
-                            college: memberCollege || ''
+                            college: memberCollege || '',
+                            ticketId: generateId(memberName) // Generate ID for member
                         });
                     }
                 }
@@ -911,7 +926,8 @@
                     throw new Error('Please enter your Name or Email');
                 }
 
-                let foundData = null;
+                let foundDoc = null;
+                let foundPerson = null; // Store specific person details (Name, ID)
                 const isEmail = inputVal.includes('@');
 
                 if (isEmail) {
@@ -923,23 +939,32 @@
                     const leaderSnapshot = await getDocs(leaderQuery);
 
                     if (!leaderSnapshot.empty) {
-                        foundData = leaderSnapshot.docs[0].data();
+                        foundDoc = leaderSnapshot.docs[0].data();
+                        foundPerson = {
+                            name: foundDoc.name,
+                            ticketId: foundDoc.ticketId
+                        };
                     } else {
                         // Search in members
                         const allDocsQuery = query(collection(db, 'rsvp_innovate_2026'));
-                        const allDocsSnapshot = await getDocs(allDocsQuery); // Helper iteration since array-contains-object is hard
+                        const allDocsSnapshot = await getDocs(allDocsQuery);
 
                         for (const doc of allDocsSnapshot.docs) {
                             const docData = doc.data();
                             if (docData.members && docData.members.some(m => m.email.toLowerCase() === email)) {
-                                foundData = docData;
+                                foundDoc = docData;
+                                // Find specific member
+                                const member = docData.members.find(m => m.email.toLowerCase() === email);
+                                foundPerson = {
+                                    name: member.name,
+                                    ticketId: member.ticketId || generateId(member.name) // Handle legacy (no ID)
+                                };
                                 break;
                             }
                         }
                     }
                 } else {
-                    // 2. Search by Name (Iterative search for case-insensitive match)
-                    // Note: This isn't efficient for huge DBs but fine for this event scale.
+                    // 2. Search by Name
                     const searchName = inputVal.toLowerCase();
                     const allDocsQuery = query(collection(db, 'rsvp_innovate_2026'));
                     const allDocsSnapshot = await getDocs(allDocsQuery);
@@ -949,33 +974,54 @@
 
                         // Check leader name
                         if (docData.name.toLowerCase() === searchName) {
-                            foundData = docData;
+                            foundDoc = docData;
+                            foundPerson = {
+                                name: docData.name,
+                                ticketId: docData.ticketId
+                            };
                             break;
                         }
 
                         // Check members names
                         if (docData.members && docData.members.some(m => m.name.toLowerCase() === searchName)) {
-                            foundData = docData;
+                            foundDoc = docData;
+                            const member = docData.members.find(m => m.name.toLowerCase() === searchName);
+                            foundPerson = {
+                                name: member.name,
+                                ticketId: member.ticketId || generateId(member.name)
+                            };
                             break;
                         }
                     }
                 }
 
-                if (!foundData) {
+                if (!foundDoc || !foundPerson) {
                     throw new Error('No registration found with these details.');
                 }
 
-                // Store for pass generation
+                // Store for pass generation - Merge specific person data with Team data
                 currentPassData = {
-                    name: foundData.name,
-                    email: foundData.email,
-                    team: foundData.team,
-                    ticketId: foundData.ticketId,
-                    members: foundData.members || []
+                    name: foundPerson.name,      // Correct Person Name
+                    email: foundDoc.email,       // Leader email (for contact ref) or general
+                    team: foundDoc.team,
+                    ticketId: foundPerson.ticketId, // Correct Person ID
+                    members: foundDoc.members || []
                 };
 
-                // Show success view
-                confirmationId.textContent = foundData.ticketId;
+                // Show success view (and pass email content update which happens in drawEventPass/sendToTeam)
+                // Note: SendToTeam logic uses currentPassData, so checking logic there involves
+                // ensure we are sending the *Leader's* email if "Send to Team" is clicked?
+                // Actually, "Send to Team" sends to EVERYONE. But the pass generated is for THIS user.
+
+                // For "Send to Team", we might want to attach *everyone's* pass?
+                // The current implementation downloads the *current view's* pass.
+                // If I am a member, I see my pass. If I click "Send to Team", I send the email to everyone.
+                // The email text uses `currentPassData.ticketId`. If I am a member, it sends *my* ID in the text.
+                // This is acceptable/expected behavior: "Hey team, here is the email info".
+                // Ideally, everyone should get *their own* pass, but that's complex (batch generating).
+                // For now, solving "Retrieve Pass" gives correct pass is the goal.
+
+                confirmationId.textContent = foundPerson.ticketId;
                 formView.classList.remove('active');
                 retrieveView.classList.remove('active');
                 successView.classList.add('active');
@@ -1036,10 +1082,13 @@
             if (!currentPassData) return;
 
             // Collect all email addresses
-            const emails = [currentPassData.email];
+            const emails = [currentPassData.email]; // This is Leader's email from foundDoc because we mapped it
+            // Wait, in retrieval we mapped foundDoc.email to currentPassData.email
+            // If foundDoc was the full document, it has leader email.
+
             if (currentPassData.members && currentPassData.members.length > 0) {
                 currentPassData.members.forEach(member => {
-                    if (member.email) {
+                    if (member.email && !emails.includes(member.email)) {
                         emails.push(member.email);
                     }
                 });
