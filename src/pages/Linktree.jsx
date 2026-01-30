@@ -154,13 +154,14 @@ const Linktree = () => {
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                style={styles.linkBox}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex items-center justify-between transition-all group hover:bg-brand-yellow hover:border-brand-yellow hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,178,44,0.3)] my-2"
+                style={{ textDecoration: 'none' }}
               >
-                <div style={styles.linkTitle}>
-                  <link.icon size={20} style={{ marginRight: '10px' }} />
+                <div className="flex items-center text-lg font-bold text-white group-hover:text-black transition-colors">
+                  <link.icon size={22} className="mr-3 text-white group-hover:text-black transition-colors" />
                   {link.title}
                 </div>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white group-hover:text-black transition-colors">
                   <path d="M9 18l6-6-6-6" />
                 </svg>
               </motion.a>
@@ -168,17 +169,7 @@ const Linktree = () => {
           </motion.div>
         </div>
 
-        {/* Bottom Part */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          style={styles.footer}
-        >
-          <h4 style={styles.footerText}>
-            Made with ❤️ by <a href="https://ecell-dypiu.vercel.app" style={styles.footerLink}>E-Cell DYPIU</a>
-          </h4>
-        </motion.div>
+        {/* Bottom Part - Footer Removed */}
       </div>
     </div>
   );
@@ -314,46 +305,6 @@ const styles = {
     marginBottom: '20px',
     color: '#666',
     fontWeight: '700',
-  },
-  linkBox: {
-    padding: '20px 24px',
-    borderRadius: '16px',
-    margin: '8px 0',
-    border: '1px solid #333',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    cursor: 'pointer',
-    fontSize: '16px',
-    fontWeight: '600',
-    letterSpacing: '-0.5px',
-    position: 'relative',
-    textDecoration: 'none',
-    color: '#fff',
-    backgroundColor: '#111', // Dark background for cards
-    transition: 'all 0.3s ease',
-  },
-  linkTitle: {
-    display: 'flex',
-    fontSize: '18px',
-    alignItems: 'center',
-    fontWeight: '700',
-  },
-  footer: {
-    marginBottom: '40px',
-    marginTop: '60px',
-  },
-  footerText: {
-    color: '#666',
-    lineHeight: '32px',
-    letterSpacing: '-0.2px',
-    fontSize: '14px',
-    fontWeight: '500',
-  },
-  footerLink: {
-    fontWeight: '700',
-    color: '#FFB22C', // Brand Yellow
-    textDecoration: 'none',
   },
 };
 
