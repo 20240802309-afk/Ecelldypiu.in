@@ -416,22 +416,15 @@
                             </svg>
                         </div>
                         <h2 class="text-2xl font-bold mb-2">Retrieve Your Pass</h2>
-                        <p class="text-gray-400 text-sm">Enter your name and email to get your event pass</p>
+                        <p class="text-gray-400 text-sm">Enter your Name or Email to get your event pass</p>
                     </div>
 
                     <form id="retrieve-form" class="space-y-5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Your Full Name *</label>
-                            <input type="text" id="retrieve-name" required
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Name or Email *</label>
+                            <input type="text" id="retrieve-input" required
                                 class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
-                                placeholder="Enter your full name">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Your Email *</label>
-                            <input type="email" id="retrieve-email" required
-                                class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
-                                placeholder="Enter your registered email">
+                                placeholder="Enter your Name or registered Email">
                         </div>
 
                         <div id="retrieve-error"
@@ -616,11 +609,13 @@
             tabRegister.click();
         });
 
-        // Generate unique ID
-        function generateId() {
-            const timestamp = Date.now().toString().slice(-10);
-            const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-            return timestamp + random;
+        // Generate unique ID (3 chars from first name + 3 digits)
+        function generateId(name) {
+            // Get first name only
+            const firstName = name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
+            const prefix = firstName.length >= 3 ? firstName.substring(0, 3) : firstName.padEnd(3, 'X');
+            const randomNum = Math.floor(100 + Math.random() * 900); // 100-999
+            return `${prefix}${randomNum}`;
         }
 
         // Create member input fields
@@ -670,104 +665,102 @@
             const canvas = document.getElementById('pass-canvas');
             const ctx = canvas.getContext('2d');
 
-            // Set canvas size
-            canvas.width = 600;
-            canvas.height = 280;
+            const img = new Image();
+            img.onload = () => {
+                // Set canvas size to match image
+                canvas.width = img.width;
+                canvas.height = img.height;
 
-            // Create gradient background
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-            gradient.addColorStop(0, '#1a1a2e');
-            gradient.addColorStop(1, '#16213e');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Draw background template
+                ctx.drawImage(img, 0, 0);
 
-            // Draw yellow accent line at top
-            ctx.fillStyle = '#FFB22C';
-            ctx.fillRect(0, 0, canvas.width, 6);
+                // --- 1. Participant Name ---
+                // Style: Very Large, White, Bold.
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#FFFFFF';
 
-            // Draw dashed line separator (for tear-off effect)
-            ctx.setLineDash([8, 5]);
-            ctx.strokeStyle = '#FFB22C';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(canvas.width - 150, 20);
-            ctx.lineTo(canvas.width - 150, canvas.height - 20);
-            ctx.stroke();
-            ctx.setLineDash([]);
+                // Font scaling
+                let nameFontSize = Math.floor(canvas.width * 0.05);
+                if (data.name.length > 15) nameFontSize *= 0.8;
+                if (data.name.length > 25) nameFontSize *= 0.7;
 
-            // Draw border
-            ctx.strokeStyle = '#FFB22C';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+                ctx.font = `700 ${nameFontSize}px "Inter", "Space Grotesk", sans-serif`;
 
-            // Event name
-            ctx.fillStyle = '#FFB22C';
-            ctx.font = 'bold 22px "Space Grotesk", sans-serif';
-            ctx.fillText('INNOVATE FOR IMPACT 2026', 35, 55);
+                // Position: Shifted LEFT (0.028)
+                const nameX = canvas.width * 0.028;
+                const nameY = canvas.height * 0.45;
 
-            // Subtitle
-            ctx.fillStyle = '#888';
-            ctx.font = '14px "Space Grotesk", sans-serif';
-            ctx.fillText('EVENT ACCESS PASS', 35, 78);
+                ctx.fillText(data.name, nameX, nameY);
 
-            // Person name
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 32px "Space Grotesk", sans-serif';
-            const displayName = data.name.length > 20 ? data.name.substring(0, 20) + '...' : data.name;
-            ctx.fillText(displayName.toUpperCase(), 35, 130);
+                // --- 2. QR Code (Right Side, Top) ---
+                // Shifted RIGHT (Center at 0.875)
+                const qrSize = Math.floor(canvas.height * 0.45);
+                const qrX = canvas.width * 0.875 - (qrSize / 2);
+                const qrY = canvas.height * 0.15;
 
-            // Team name
-            ctx.fillStyle = '#aaa';
-            ctx.font = '16px "Space Grotesk", sans-serif';
-            const displayTeam = data.team.length > 25 ? data.team.substring(0, 25) + '...' : data.team;
-            ctx.fillText(`Team: ${displayTeam}`, 35, 160);
+                // Draw White Background for QR
+                ctx.fillStyle = '#FFFFFF';
 
-            // Ticket ID
-            ctx.fillStyle = '#FFB22C';
-            ctx.font = 'bold 14px "JetBrains Mono", monospace';
-            ctx.fillText('TICKET ID:', 35, 200);
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 20px "JetBrains Mono", monospace';
-            ctx.fillText(data.ticketId, 35, 225);
+                // --- 3. Ticket ID Formatting & Display ---
+                let displayId = data.ticketId;
 
-            // Date info
-            ctx.fillStyle = '#666';
-            ctx.font = '12px "Space Grotesk", sans-serif';
-            ctx.fillText('01 FEB 2026 | DYPIU, PUNE', 35, 250);
+                // If legacy ID (long number) or not matching format, reformat for display
+                const needsFormatting = !/^[A-Z]{3}\d{3}$/.test(displayId);
 
-            // QR Code section label
-            ctx.fillStyle = '#666';
-            ctx.font = '10px "Space Grotesk", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('SCAN HERE', canvas.width - 75, 255);
-            ctx.textAlign = 'left';
-
-            // Generate QR code and draw it
-            const qrTemp = document.getElementById('qr-temp');
-            qrTemp.innerHTML = '';
-
-            new QRCode(qrTemp, {
-                text: `IFI2026-${data.ticketId}`,
-                width: 100,
-                height: 100,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
-            });
-
-            // Wait for QR to generate then draw it
-            setTimeout(() => {
-                const qrImg = qrTemp.querySelector('img');
-                if (qrImg) {
-                    const qrCanvas = qrTemp.querySelector('canvas');
-                    const qrSrc = qrImg.src || qrCanvas.toDataURL();
-                    const img = new Image();
-                    img.onload = () => {
-                        ctx.drawImage(img, canvas.width - 130, 40, 100, 100);
-                    };
-                    img.src = qrSrc;
+                if (needsFormatting) {
+                    const firstName = data.name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
+                    const prefix = firstName.length >= 3 ? firstName.substring(0, 3) : firstName.padEnd(3, 'X');
+                    // Use last 3 digits of legacy ID if possible, else random
+                    const nums = displayId.replace(/\D/g, '');
+                    const suffix = nums.length >= 3 ? nums.substring(nums.length - 3) : '123';
+                    displayId = `${prefix}${suffix}`;
                 }
-            }, 100);
+
+                // Generate QR
+                const qrTemp = document.getElementById('qr-temp');
+                qrTemp.innerHTML = '';
+                new QRCode(qrTemp, {
+                    text: `IFI2026-${displayId}`,
+                    width: qrSize,
+                    height: qrSize,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                // --- 4. Ticket Number (Inside pre-drawn pill) ---
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#0d3872';
+
+                // Adjusted Font Size
+                const idSize = Math.floor(canvas.height * 0.032);
+                ctx.font = `800 ${idSize}px "Inter", sans-serif`;
+
+                // Position: Adjusted for better alignment
+                const idX = canvas.width * 0.88;
+                const idY = canvas.height * 0.915;
+
+                ctx.fillText(displayId, idX, idY);
+
+                // Wait for QR
+                setTimeout(() => {
+                    const qrImg = qrTemp.querySelector('img');
+                    if (qrImg) {
+                        const qrSrc = qrImg.src;
+                        const imgQR = new Image();
+                        imgQR.onload = () => {
+                            ctx.drawImage(imgQR, qrX, qrY, qrSize, qrSize);
+                            ctx.strokeStyle = '#FFFFFF';
+                            ctx.lineWidth = 4;
+                            ctx.strokeRect(qrX, qrY, qrSize, qrSize);
+                        };
+                        imgQR.src = qrSrc;
+                    }
+                }, 50);
+            };
+            img.src = '/event-pass-template.png';
         }
 
         // Form submission
@@ -783,6 +776,7 @@
             try {
                 // Get team size
                 const teamSize = parseInt(teamSizeSelect.value);
+                const leaderName = document.getElementById('name').value.trim();
 
                 // Collect team members data
                 const members = [];
@@ -807,11 +801,12 @@
                     }
                 }
 
-                const ticketId = generateId();
+                // Updated ID Generation call (pass name)
+                const ticketId = generateId(leaderName);
                 const leaderEmail = document.getElementById('email').value.trim().toLowerCase();
 
                 const data = {
-                    name: document.getElementById('name').value.trim(),
+                    name: leaderName,
                     email: leaderEmail,
                     phone: document.getElementById('phone').value.trim(),
                     college: document.getElementById('college').value.trim(),
@@ -880,49 +875,65 @@
             retrieveError.classList.add('hidden');
 
             try {
-                const name = document.getElementById('retrieve-name').value.trim();
-                const email = document.getElementById('retrieve-email').value.trim().toLowerCase();
+                // Modified: Single input logic
+                const inputVal = document.getElementById('retrieve-input').value.trim();
 
-                if (!name || !email) {
-                    throw new Error('Please enter both name and email');
+                if (!inputVal) {
+                    throw new Error('Please enter your Name or Email');
                 }
 
-                // First, query for team leader email
                 let foundData = null;
-                const leaderQuery = query(collection(db, 'rsvp_innovate_2026'), where('email', '==', email));
-                const leaderSnapshot = await getDocs(leaderQuery);
+                const isEmail = inputVal.includes('@');
 
-                if (!leaderSnapshot.empty) {
-                    // Found as team leader
-                    const docData = leaderSnapshot.docs[0].data();
-                    // Verify name matches (case insensitive)
-                    if (docData.name.toLowerCase() === name.toLowerCase()) {
-                        foundData = docData;
-                    }
-                }
+                if (isEmail) {
+                    // 1. Search by Email
+                    const email = inputVal.toLowerCase();
 
-                // If not found as leader, search in members
-                if (!foundData) {
-                    const allDocsQuery = query(collection(db, 'rsvp_innovate_2026'));
-                    const allDocsSnapshot = await getDocs(allDocsQuery);
+                    // Search as leader
+                    const leaderQuery = query(collection(db, 'rsvp_innovate_2026'), where('email', '==', email));
+                    const leaderSnapshot = await getDocs(leaderQuery);
 
-                    for (const doc of allDocsSnapshot.docs) {
-                        const docData = doc.data();
-                        if (docData.members && docData.members.length > 0) {
-                            const matchingMember = docData.members.find(
-                                m => m.email.toLowerCase() === email &&
-                                    m.name.toLowerCase() === name.toLowerCase()
-                            );
-                            if (matchingMember) {
+                    if (!leaderSnapshot.empty) {
+                        foundData = leaderSnapshot.docs[0].data();
+                    } else {
+                        // Search in members
+                        const allDocsQuery = query(collection(db, 'rsvp_innovate_2026'));
+                        const allDocsSnapshot = await getDocs(allDocsQuery); // Helper iteration since array-contains-object is hard
+
+                        for (const doc of allDocsSnapshot.docs) {
+                            const docData = doc.data();
+                            if (docData.members && docData.members.some(m => m.email.toLowerCase() === email)) {
                                 foundData = docData;
                                 break;
                             }
                         }
                     }
+                } else {
+                    // 2. Search by Name (Iterative search for case-insensitive match)
+                    // Note: This isn't efficient for huge DBs but fine for this event scale.
+                    const searchName = inputVal.toLowerCase();
+                    const allDocsQuery = query(collection(db, 'rsvp_innovate_2026'));
+                    const allDocsSnapshot = await getDocs(allDocsQuery);
+
+                    for (const doc of allDocsSnapshot.docs) {
+                        const docData = doc.data();
+
+                        // Check leader name
+                        if (docData.name.toLowerCase() === searchName) {
+                            foundData = docData;
+                            break;
+                        }
+
+                        // Check members names
+                        if (docData.members && docData.members.some(m => m.name.toLowerCase() === searchName)) {
+                            foundData = docData;
+                            break;
+                        }
+                    }
                 }
 
                 if (!foundData) {
-                    throw new Error('No registration found. Please check your name and email.');
+                    throw new Error('No registration found with these details.');
                 }
 
                 // Store for pass generation
@@ -1006,77 +1017,54 @@
             }
 
             // Create email subject
-            const subject = `🎟️ Your Event Pass - Innovate For Impact 2026 | Team: ${currentPassData.team}`;
+            const subject = `Your Event Pass - Innovate For Impact 2026`;
 
-            // Create professional email body
-            const retrievePassUrl = window.location.origin + '/staff.html';
-            const body = `Hi Team ${currentPassData.team}! 👋
+            // Create concise email body to avoid URL length limits
+            const retrievePassUrl = window.location.origin + '/rsvp.html';
+            const body = `Hi Team,
 
-Great news! Your registration for Innovate For Impact 2026 has been confirmed! 🎉
+Registration confirmed for Innovate For Impact 2026!
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 REGISTRATION DETAILS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TICKET DETAILS:
+ID: ${currentPassData.ticketId}
+Team: ${currentPassData.team}
+Leader: ${currentPassData.name}
 
-🎫 Ticket ID: ${currentPassData.ticketId}
-👤 Team Leader: ${currentPassData.name}
-👥 Team Name: ${currentPassData.team}
-📧 Registered Email: ${currentPassData.email}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📍 EVENT DETAILS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📅 Date: 01 February 2026
-⏰ Duration: 6 Hours
-📍 Venue: DYPIU, Akurdi, Pune
-🏆 Prize Pool: ₹10,000
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎟️ GET YOUR EVENT PASS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-To download your graphical Event Pass anytime, visit:
+GET YOUR PASS:
+Download your official pass here:
 ${retrievePassUrl}
 
-Click on "Retrieve Pass" tab and enter your name and email to get your pass!
+(Go to "Retrieve Pass", enter your name/email)
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ IMPORTANT INSTRUCTIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPORTANT:
+- Save the pass image.
+- Bring college ID.
+- Arrive 30 mins early.
 
-1️⃣ Please find your official Event Pass attached to this email
-2️⃣ Save this pass on your phone - you'll need it for entry
-3️⃣ Arrive 30 minutes before the event for smooth check-in
-4️⃣ Bring a valid college ID card
+See you on Feb 1st!
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📞 CONTACT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-For any queries, contact: 9021479745
-
-We're excited to see you at the event! 🚀
-
-Best regards,
-E-Cell DYPIU Team
-
----
-This is an automated confirmation email. Please don't forget to attach the Event Pass image to this email before sending!`;
+- E-Cell DYPIU Team`;
 
             // Encode for URL
             const encodedSubject = encodeURIComponent(subject);
             const encodedBody = encodeURIComponent(body);
             const emailList = emails.join(',');
 
-            // Open Gmail compose
-            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${emailList}&su=${encodedSubject}&body=${encodedBody}`;
+            // Detect if mobile device
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                // Mobile: Use mailto: to open default app (Gmail/Apple Mail)
+                const mailtoUrl = `mailto:${emailList}?subject=${encodedSubject}&body=${encodedBody}`;
+                window.location.href = mailtoUrl;
+            } else {
+                // Desktop: Open Gmail Web in new tab (Reliable for PC users)
+                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${emailList}&su=${encodedSubject}&body=${encodedBody}`;
+                window.open(gmailUrl, '_blank');
+            }
 
             // Show instructions
             sendInstructions.classList.remove('hidden');
-
-            // Open Gmail in new tab
-            window.open(gmailUrl, '_blank');
         });
     </script>
 

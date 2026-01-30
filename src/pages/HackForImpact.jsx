@@ -87,7 +87,7 @@ const HackForImpact = () => {
                                     <ExternalLink className="ml-2 w-6 h-6" />
                                 </a>
                                 <a
-                                    href="/staff.html"
+                                    href="/rsvp.html"
                                     target="_blank"
                                     className="bg-zinc-900 border-2 border-white/20 text-white text-xl font-bold px-8 py-4 rounded-full hover:bg-white hover:text-black hover:border-white transition-all flex items-center"
                                 >
