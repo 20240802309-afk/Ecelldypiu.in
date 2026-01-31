@@ -692,7 +692,13 @@
                 const nameX = canvas.width * 0.028;
                 const nameY = canvas.height * 0.45;
 
-                ctx.fillText(data.name, nameX, nameY);
+                // Truncate name to max 25 characters
+                let displayName = data.name;
+                if (displayName.length > 25) {
+                    displayName = displayName.substring(0, 25) + '...';
+                }
+
+                ctx.fillText(displayName, nameX, nameY);
 
                 // --- 1.1 Team Name (New) ---
                 // Position: Below Name
