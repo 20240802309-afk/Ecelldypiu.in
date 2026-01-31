@@ -223,8 +223,9 @@
 
                     <form id="rsvp-form" class="space-y-5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
-                            <input type="text" id="name" required
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Full Name * <span
+                                    class="text-xs text-gray-500 font-normal">(Max 25 chars)</span></label>
+                            <input type="text" id="name" required maxlength="25"
                                 class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
                                 placeholder="Enter your full name">
                         </div>
@@ -630,9 +631,9 @@
                 memberDiv.innerHTML = `
                     <h4 class="font-bold text-sm text-gray-300 mb-3">Member ${i}</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input type="text" name="member_${i}_name" required
+                        <input type="text" name="member_${i}_name" required maxlength="25"
                             class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
-                            placeholder="Full Name *">
+                            placeholder="Full Name (Max 25 chars) *">
                         <input type="email" name="member_${i}_email" required
                             class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
                             placeholder="Email *">
