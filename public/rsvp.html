@@ -256,12 +256,14 @@
         </div>
 
         <!-- Tabs -->
-        <div class="flex justify-center border-b border-zinc-700 mb-8">
-            <button id="tab-register" class="tab-btn active text-gray-400">
-                🎟️ New Registration
-            </button>
-            <button id="tab-retrieve" class="tab-btn text-gray-400">
+        <div class="flex flex-col sm:flex-row justify-center gap-4 mb-8">
+            <button id="tab-retrieve"
+                class="btn-secondary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold transition-all">
                 🔍 Retrieve Pass
+            </button>
+            <button id="tab-register"
+                class="btn-primary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold transition-all transform scale-105 shadow-lg shadow-brand-yellow/20">
+                🎟️ New Registration
             </button>
         </div>
 
@@ -654,18 +656,26 @@
         const suggestionsBox = document.getElementById('suggestions');
         let allRegisteredNames = []; // Cache for names
 
+        // Helper to toggle button styles
+        function setActiveButton(activeBtn, inactiveBtn) {
+            // Active: Primary
+            activeBtn.className = 'btn-primary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold transition-all transform scale-105 shadow-lg shadow-brand-yellow/20';
+            // Inactive: Secondary
+            inactiveBtn.className = 'btn-secondary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold transition-all';
+        }
+
         // Tab switching
         tabRegister.addEventListener('click', () => {
-            tabRegister.classList.add('active');
-            tabRetrieve.classList.remove('active');
+            setActiveButton(tabRegister, tabRetrieve);
+
             formView.classList.add('active');
             retrieveView.classList.remove('active');
             successView.classList.remove('active');
         });
 
         tabRetrieve.addEventListener('click', async () => {
-            tabRetrieve.classList.add('active');
-            tabRegister.classList.remove('active');
+            setActiveButton(tabRetrieve, tabRegister);
+
             retrieveView.classList.add('active');
             formView.classList.remove('active');
             successView.classList.remove('active');
