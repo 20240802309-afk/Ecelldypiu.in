@@ -257,19 +257,25 @@
 
         <!-- Tabs -->
         <div class="flex flex-col sm:flex-row justify-center gap-4 mb-8">
-            <button id="tab-retrieve"
-                class="btn-primary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold transition-all transform scale-105 shadow-lg shadow-brand-yellow/20">
-                Retrieve Pass
-            </button>
             <button id="tab-register"
-                class="btn-secondary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold transition-all">
+                class="btn-primary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold transition-all transform scale-105 shadow-lg shadow-brand-yellow/20">
                 New Registration
+            </button>
+            <button id="tab-retrieve"
+                class="btn-secondary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold transition-all">
+                Retrieve Pass
             </button>
         </div>
 
         <!-- View: Registration Form -->
-        <!-- View: Registration Form -->
-        <div id="form-view" class="view">
+        <div id="form-view" class="view active">
+            <!-- Flashing Warning Message -->
+            <div class="mb-6 text-center">
+                <p
+                    class="text-red-500 font-bold uppercase tracking-wider animate-pulse text-sm md:text-base bg-red-900/10 border border-red-500/20 p-3 rounded-lg border-l-4 border-l-red-500">
+                    ⚠️ ONLY TEAM LEADERS FILL THE DETAILS TO GET THE PASS
+                </p>
+            </div>
             <div class="grid md:grid-cols-2 gap-6 md:gap-8">
 
                 <!-- Left: Form -->
@@ -465,7 +471,7 @@
         </div>
 
         <!-- View: Retrieve Pass -->
-        <div id="retrieve-view" class="view active">
+        <div id="retrieve-view" class="view">
             <div class="max-w-md mx-auto">
                 <div class="card rounded-2xl p-6 md:p-8">
                     <div class="text-center mb-6">
@@ -871,16 +877,17 @@
                 }
 
                 // If legacy ID (long number) or not matching format, reformat for display
-                const needsFormatting = !/^[A-Z]{3}\d{3}$/.test(displayId);
+                // REVISION: Disabled reformatting to allow custom Team IDs to be displayed exactly as fetched
+                // const needsFormatting = !/^[A-Z]{3}\d{3}$/.test(displayId);
 
-                if (needsFormatting) {
-                    const firstName = data.name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
-                    const prefix = firstName.length >= 3 ? firstName.substring(0, 3) : firstName.padEnd(3, 'X');
-                    // Use last 3 digits of legacy ID if possible, else random
-                    const nums = displayId.replace(/\D/g, '');
-                    const suffix = nums.length >= 3 ? nums.substring(nums.length - 3) : Math.floor(Math.random() * 900 + 100);
-                    displayId = `${prefix}${suffix}`;
-                }
+                // if (needsFormatting) {
+                //    const firstName = data.name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
+                //    const prefix = firstName.length >= 3 ? firstName.substring(0, 3) : firstName.padEnd(3, 'X');
+                //    // Use last 3 digits of legacy ID if possible, else random
+                //    const nums = displayId.replace(/\D/g, '');
+                //    const suffix = nums.length >= 3 ? nums.substring(nums.length - 3) : Math.floor(Math.random() * 900 + 100);
+                //    displayId = `${prefix}${suffix}`;
+                // }
 
                 // Generate QR
                 const qrTemp = document.getElementById('qr-temp');
@@ -1102,6 +1109,18 @@
 
                         for (const doc of allDocsSnapshot.docs) {
                             const docData = doc.data();
+
+                            // Check leader email manually (case-insensitive fallback)
+                            if (docData.email && docData.email.toLowerCase() === email) {
+                                foundDoc = docData;
+                                foundPerson = {
+                                    name: docData.name,
+                                    ticketId: docData.ticketId
+                                };
+                                break;
+                            }
+
+                            // Check members
                             if (docData.members && docData.members.some(m => m.email.toLowerCase() === email)) {
                                 foundDoc = docData;
                                 // Find specific member
@@ -1123,8 +1142,8 @@
                     for (const doc of allDocsSnapshot.docs) {
                         const docData = doc.data();
 
-                        // Check leader name
-                        if (docData.name.toLowerCase() === searchName) {
+                        // Check leader name (Partial match allowed)
+                        if (docData.name && docData.name.toLowerCase().includes(searchName)) {
                             foundDoc = docData;
                             foundPerson = {
                                 name: docData.name,
@@ -1133,10 +1152,10 @@
                             break;
                         }
 
-                        // Check members names
-                        if (docData.members && docData.members.some(m => m.name.toLowerCase() === searchName)) {
+                        // Check members names (Partial match allowed)
+                        if (docData.members && docData.members.some(m => m.name && m.name.toLowerCase().includes(searchName))) {
                             foundDoc = docData;
-                            const member = docData.members.find(m => m.name.toLowerCase() === searchName);
+                            const member = docData.members.find(m => m.name && m.name.toLowerCase().includes(searchName));
                             foundPerson = {
                                 name: member.name,
                                 ticketId: member.ticketId || generateId(member.name)
@@ -1150,29 +1169,46 @@
                     throw new Error('No registration found with these details.');
                 }
 
+                // --- NEW LOGIC: Fetch Team ID from 'events' collection ---
+                let finalTicketId = foundPerson.ticketId;
+                try {
+                    const teamName = foundDoc.team;
+                    if (teamName) {
+                        const eventsRef = collection(db, 'events');
+                        // Try matching by 'team' field or 'teamName' field
+                        const q1 = query(eventsRef, where('team', '==', teamName));
+                        const snap1 = await getDocs(q1);
+
+                        let eventDoc = null;
+                        if (!snap1.empty) {
+                            eventDoc = snap1.docs[0].data();
+                        } else {
+                            const q2 = query(eventsRef, where('teamName', '==', teamName));
+                            const snap2 = await getDocs(q2);
+                            if (!snap2.empty) eventDoc = snap2.docs[0].data();
+                        }
+
+                        if (eventDoc && eventDoc.teamId) {
+                            finalTicketId = eventDoc.teamId;
+                        } else if (foundDoc.teamId) {
+                            // Check local doc if not found in events
+                            finalTicketId = foundDoc.teamId;
+                        }
+                    }
+                } catch (err) {
+                    console.warn("Team ID lookup in events collection failed:", err);
+                }
+
                 // Store for pass generation - Merge specific person data with Team data
                 currentPassData = {
                     name: foundPerson.name,      // Correct Person Name
                     email: foundDoc.email,       // Leader email (for contact ref) or general
                     team: foundDoc.team,
-                    ticketId: foundPerson.ticketId, // Correct Person ID
+                    ticketId: finalTicketId, // Using fetched teamId
                     members: foundDoc.members || []
                 };
 
-                // Show success view (and pass email content update which happens in drawEventPass/sendToTeam)
-                // Note: SendToTeam logic uses currentPassData, so checking logic there involves
-                // ensure we are sending the *Leader's* email if "Send to Team" is clicked?
-                // Actually, "Send to Team" sends to EVERYONE. But the pass generated is for THIS user.
-
-                // For "Send to Team", we might want to attach *everyone's* pass?
-                // The current implementation downloads the *current view's* pass.
-                // If I am a member, I see my pass. If I click "Send to Team", I send the email to everyone.
-                // The email text uses `currentPassData.ticketId`. If I am a member, it sends *my* ID in the text.
-                // This is acceptable/expected behavior: "Hey team, here is the email info".
-                // Ideally, everyone should get *their own* pass, but that's complex (batch generating).
-                // For now, solving "Retrieve Pass" gives correct pass is the goal.
-
-                confirmationId.textContent = foundPerson.ticketId;
+                confirmationId.textContent = finalTicketId;
                 formView.classList.remove('active');
                 retrieveView.classList.remove('active');
                 successView.classList.add('active');
