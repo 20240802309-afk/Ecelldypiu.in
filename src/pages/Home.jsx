@@ -10,7 +10,7 @@ import {
   Cpu
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import JoinInfoPopover from '../components/JoinInfoPopover';
+
 
 const Marquee = ({ text, direction = 'left', speed = 25 }) => {
   return (
@@ -116,6 +116,13 @@ const Home = () => {
               >
                 Explore Events
               </Link>
+              <Link
+                to="/apply"
+                className="group px-8 py-4 sm:px-10 sm:py-5 rounded-full bg-brand-yellow border-2 border-white text-black font-bold text-lg hover:bg-black hover:text-white transition-all duration-300 w-full sm:w-auto text-center shadow-glow-yellow"
+              >
+                Wanna Join Us?
+
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -197,13 +204,13 @@ const Home = () => {
           <h2 className="text-5xl md:text-9xl font-black text-black tracking-tighter mb-8 md:mb-12 transform group-hover:scale-105 transition-transform duration-500">
             READY TO LAUNCH?
           </h2>
-          <JoinInfoPopover>
+          <Link to="/apply">
             <button
               className="bg-black text-white text-xl md:text-2xl font-bold py-6 px-12 rounded-full hover:bg-white hover:text-black hover:scale-105 transition-all duration-300 shadow-glow-white"
             >
               Join The Experience
             </button>
-          </JoinInfoPopover>
+          </Link>
         </div>
       </section>
 

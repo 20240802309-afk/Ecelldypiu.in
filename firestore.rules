@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. PUBLIC: Keep your existing RSVP form working
+    match /rsvp_innovate_2026/{document=**} {
+      allow read, write: if true;
+    }
+
+    // 2. PUBLIC: Allow anyone to submit a Team Application
+    match /TEAM_APPLICATION_FORM/{document=**} {
+      allow read, write: if true;
+    }
+
+    // 3. ADMIN ONLY: Allow YOU (logged in) to edit Events & Import CSVs
+    match /events/{eventId} {
+      allow read, write: if request.auth != null;
+      
+      // Specifically allow access to the new attendees subcollection
+      match /attendees/{attendeeId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+  }
+}

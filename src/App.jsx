@@ -19,6 +19,7 @@ import BlogDetail1 from './pages/BlogDetail1';
 import BlogDetail2 from './pages/BlogDetail2';
 import BlogDetail3 from './pages/BlogDetail3';
 import Linktree from './pages/Linktree';
+import ApplyNow from './pages/ApplyNow';
 import './App.css';
 // import { useEffect } from 'react';
 // import Lenis from 'lenis';
@@ -50,6 +51,7 @@ function App() {
             <Route path="/blogs/entrepreneurship-awareness-drive" element={<BlogDetail3 />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/ourlinks" element={<Linktree />} />
+            <Route path="/apply" element={<ApplyNow />} />
             {/* Backward compatibility: redirect old path */}
             <Route path="/linktree" element={<Navigate to="/ourlinks" replace />} />
           </Routes>

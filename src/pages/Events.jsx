@@ -8,7 +8,8 @@ import {
   Users,
   Star,
   Trophy,
-  ArrowRight
+  ArrowRight,
+  Rocket
 } from 'lucide-react';
 
 const Events = () => {
@@ -33,6 +34,18 @@ const Events = () => {
   }, [location]);
 
   const successfulEvents = [
+    {
+      id: 5,
+      title: 'Innovate For Impact',
+      date: '01 Feb 2026',
+      time: '6 Hours',
+      location: 'DYPIU Campus',
+      description: 'E-Summit 2026 Zonal Qualifier where teams built innovative solutions under time pressure and competed for national recognition.',
+      category: 'Hackathon',
+      participants: '150+',
+      image: '/innovate-completed.png',
+      featured: true,
+    },
     {
       id: 4,
       title: "FinBiz'25 Powered by Surya Electronics",
@@ -118,58 +131,13 @@ const Events = () => {
             WHAT'S <span className="text-brand-yellow">NEXT?</span>
           </h2>
 
-          {/* Innovate For Impact Card */}
-          <div className="grid grid-cols-1 gap-8">
-            <motion.div
-              whileHover={{ y: -10 }}
-              className="group relative bg-zinc-900 border-4 border-brand-yellow rounded-[2rem] overflow-hidden flex flex-col md:flex-row shadow-[0_0_30px_rgba(255,178,44,0.2)] hover:shadow-[0_0_50px_rgba(255,178,44,0.4)] transition-all"
-            >
-              <div className="md:w-2/5 h-64 md:h-auto bg-black relative overflow-hidden border-b-4 md:border-b-0 md:border-r-4 border-white">
-                <img src="/hack-for-impact.png" alt="Innovate For Impact" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute top-4 left-4 bg-red-600 text-white font-black px-4 py-1 uppercase tracking-wider transform -rotate-2">
-                  Registration Open
-                </div>
-              </div>
-
-              <div className="md:w-3/5 p-8 md:p-12 flex flex-col justify-center relative">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <Star className="w-32 h-32 text-brand-yellow" />
-                </div>
-
-                <div className="mb-6">
-                  <span className="text-brand-yellow font-mono tracking-widest uppercase text-sm border border-brand-yellow/30 px-3 py-1 rounded-full">Zonal Qualifier</span>
-                  <h3 className="text-4xl md:text-5xl font-black uppercase text-white leading-none mt-4 mb-2">
-                    Innovate For <span className="text-brand-yellow">Impact</span>
-                  </h3>
-                  <p className="text-xl text-gray-400 font-bold">E-Summit 2026 Zonals</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="text-brand-yellow w-6 h-6" />
-                    <div>
-                      <p className="text-xs text-gray-500 font-mono uppercase">Date</p>
-                      <p className="font-bold">01 Feb 2026</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Trophy className="text-brand-yellow w-6 h-6" />
-                    <div>
-                      <p className="text-xs text-gray-500 font-mono uppercase">Prize</p>
-                      <p className="font-bold">₹10,000</p>
-                    </div>
-                  </div>
-                </div>
-
-                <Link
-                  to="/events/innovate-for-impact"
-                  className="inline-flex items-center justify-between bg-white text-black font-black uppercase tracking-wider px-8 py-4 rounded-xl hover:bg-brand-yellow hover:scale-105 transition-all group-hover:shadow-[8px_8px_0px_rgba(0,0,0,1)]"
-                >
-                  Event Details
-                  <ArrowRight className="w-6 h-6" />
-                </Link>
-              </div>
-            </motion.div>
+          {/* Innovate For Impact Card - Moved to Past Highlights */}
+          <div className="flex flex-col items-center justify-center py-12 border-4 border-dashed border-zinc-800 rounded-[2rem] text-center">
+            <div className="bg-zinc-900 p-6 rounded-full mb-6">
+              <Rocket className="w-12 h-12 text-gray-500" />
+            </div>
+            <h3 className="text-3xl font-black uppercase text-gray-500 mb-2">More Events Coming Soon</h3>
+            <p className="text-gray-400 max-w-md">We are cooking up something big! Stay tuned for the next wave of innovation.</p>
           </div>
         </div>
       </section>
@@ -197,7 +165,13 @@ const Events = () => {
                   <h3 className="text-3xl font-black uppercase mb-4">{event.title}</h3>
                   <div className="flex justify-between items-center border-t-2 border-zinc-700 pt-4 mt-auto">
                     <span className="font-mono text-brand-yellow">{event.date}</span>
-                    <Link to={`/events/${event.title.toLowerCase().replace("'", "").replace("25", "")}`}>
+                    <Link to={
+                      event.title.includes('Innovate') ? '/events/innovate-for-impact' :
+                        event.title.includes('FinBiz') ? '/events/finbiz' :
+                          event.title.includes('SIH') ? '/events/sih' :
+                            event.title.includes('Elevate') ? '/events/elevate' :
+                              `/events/${event.title.toLowerCase().replace("'", "").replace("25", "")}`
+                    }>
                       <div className="w-12 h-12 bg-black border-2 border-white rounded-full flex items-center justify-center group-hover:bg-brand-yellow group-hover:text-black group-hover:border-black transition-all">
                         <ArrowRight className="-rotate-45 group-hover:rotate-0 transition-transform" />
                       </div>

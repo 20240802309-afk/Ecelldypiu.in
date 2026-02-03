@@ -97,6 +97,14 @@ const Footer = () => {
                   Contact Us
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/apply"
+                  className="text-gray-300 hover:text-brand-yellow transition-colors duration-300"
+                >
+                  Join the Team
+                </Link>
+              </li>
             </ul>
           </div>
 

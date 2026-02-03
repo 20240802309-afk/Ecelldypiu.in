@@ -25,7 +25,7 @@ const InnovateForImpact = () => {
         location: 'DYPIU, Akurdi, Pune',
         teamSize: '1–5 Members',
         category: 'Hackathon',
-        image: '/hack-for-impact.png',
+        image: '/innovate-completed.png',
         description: 'Our university is proud to host Innovate for Impact, a flagship Zonal Qualifier event for E-Summit 2026, organized by IIIT-Delhi in collaboration with DYPIU, Pune.',
         longDescription: 'This is a 6-hour high-intensity ideation + buildathon where teams will identify real-world problems, build innovative solutions under time pressure, pitch directly to judges, and compete for national-level recognition and prizes. This is a rare opportunity to compete at a national level, showcase your skills, and represent our college on a bigger stage.',
         highlights: [
@@ -77,25 +77,8 @@ const InnovateForImpact = () => {
                             </p>
 
                             <div className="flex flex-wrap gap-4 mb-12">
-                                <a
-                                    href="https://unstop.com/o/XMzvcDi"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="bg-brand-yellow text-black text-xl font-bold px-8 py-4 rounded-full hover:bg-white hover:scale-105 transition-all flex items-center shadow-[0_0_20px_rgba(255,178,44,0.4)]"
-                                >
-                                    REGISTER NOW
-                                    <ExternalLink className="ml-2 w-6 h-6" />
-                                </a>
-                                <a
-                                    href="/rsvp.html"
-                                    target="_blank"
-                                    className="bg-zinc-900 border-2 border-white/20 text-white text-xl font-bold px-8 py-4 rounded-full hover:bg-white hover:text-black hover:border-white transition-all flex items-center"
-                                >
-                                    RSVP
-                                    <ArrowRight className="ml-2 w-6 h-6" />
-                                </a>
-                                <div className="px-6 py-4 border-2 border-white/20 rounded-full font-mono text-sm text-gray-400 flex items-center">
-                                    ⚠️ Limited slots available
+                                <div className="bg-red-600 text-white text-2xl font-black px-8 py-4 rounded-full border-4 border-white transform -rotate-2 cursor-default shadow-[8px_8px_0px_white]">
+                                    EVENT CLOSED
                                 </div>
                             </div>
 
@@ -178,28 +161,16 @@ const InnovateForImpact = () => {
             <section className="py-20 bg-black text-white">
                 <div className="container mx-auto px-4 text-center">
                     <h2 className="text-4xl md:text-6xl font-black mb-8 uppercase tracking-tighter">
-                        READY TO <span className="text-brand-yellow">INNOVATE?</span>
+                        RESULTS <span className="text-brand-yellow">OUT SOON!!</span>
                     </h2>
                     <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-12">
-                        If you’re serious about innovation, startups, tech, or problem-solving — this is for you.
+                        The competition was fierce, and the ideas were groundbreaking. Stay tuned to find out who takes the crown.
                     </p>
 
                     <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-                        <a
-                            href="https://unstop.com/o/XMzvcDi"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-brand-yellow text-black text-2xl font-black px-12 py-6 rounded-full hover:bg-white hover:scale-105 transition-all shadow-[0_0_40px_rgba(255,178,44,0.6)]"
-                        >
-                            REGISTER NOW
-                        </a>
-                        <a
-                            href="/rsvp.html"
-                            target="_blank"
-                            className="bg-transparent border-4 border-white text-white text-2xl font-black px-12 py-6 rounded-full hover:bg-white hover:text-black transition-all"
-                        >
-                            RSVP
-                        </a>
+                        <div className="bg-red-600 text-white text-3xl font-black px-12 py-6 rounded-full border-4 border-white transform -rotate-1 cursor-default shadow-[0_0_40px_rgba(220,38,38,0.6)]">
+                            EVENT CLOSED
+                        </div>
                     </div>
 
                     <div className="text-center mt-12">

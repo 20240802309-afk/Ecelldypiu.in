@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Users, Award, Star, ArrowRight } from 'lucide-react';
-import JoinInfoPopover from '../components/JoinInfoPopover';
+import { Link } from 'react-router-dom';
 
 // Marquee Component
 const Marquee = ({ text, direction = 'left', speed = 20, className = "" }) => {
@@ -203,11 +203,11 @@ const Team = () => {
           <h2 className="text-5xl md:text-8xl font-black mb-8 md:mb-12 tracking-tighter">
             READY TO <span className="outline-text">LEAD?</span>
           </h2>
-          <JoinInfoPopover>
+          <Link to="/apply">
             <button className="text-xl md:text-4xl font-black bg-brand-yellow px-10 md:px-16 py-6 md:py-8 rounded-full border-4 border-black hover:bg-black hover:text-white hover:scale-110 transition-all duration-300 shadow-[6px_6px_0px_0px_#000] md:shadow-[10px_10px_0px_0px_#000]">
               APPLY NOW!
             </button>
-          </JoinInfoPopover>
+          </Link>
         </div>
       </section>
 

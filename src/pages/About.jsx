@@ -1,5 +1,5 @@
 
-import JoinInfoPopover from '../components/JoinInfoPopover';
+
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -163,13 +163,13 @@ const About = () => {
             JOIN THE<br /><span className="text-brand-yellow">REVOLUTION</span>
           </h2>
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <JoinInfoPopover>
-              <button className="text-xl md:text-2xl font-black bg-white text-black px-12 py-6 rounded-full border-4 border-black hover:bg-brand-yellow hover:scale-105 transition-all shadow-[8px_8px_0px_#000]">
+            <Link to="/apply">
+              <button className="w-full sm:w-auto text-xl md:text-2xl font-black bg-brand-yellow text-black px-10 py-5 rounded-full border-4 border-black hover:bg-white hover:scale-105 transition-all shadow-[6px_6px_0px_white]">
                 JOIN E-CELL
               </button>
-            </JoinInfoPopover>
+            </Link>
             <Link to="/events">
-              <button className="text-xl md:text-2xl font-black bg-transparent text-white px-12 py-6 rounded-full border-4 border-white hover:bg-white hover:text-black hover:scale-105 transition-all">
+              <button className="w-full sm:w-auto text-xl md:text-2xl font-black bg-transparent text-white px-10 py-5 rounded-full border-4 border-white hover:bg-white hover:text-black hover:scale-105 transition-all shadow-[6px_6px_0px_#FFB22C]">
                 VIEW EVENTS
               </button>
             </Link>

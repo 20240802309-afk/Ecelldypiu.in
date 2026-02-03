@@ -7,6 +7,11 @@ const ScrollToTop = () => {
   const lenisRef = useRef(null);
 
   useEffect(() => {
+    // Prevent browser from restoring scroll position automatically
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
     // Initialize Lenis
     const lenis = new Lenis({
       duration: 1.2,
@@ -38,19 +43,24 @@ const ScrollToTop = () => {
 
   useEffect(() => {
     // Handle navigation scroll reset
-    if (!hash) {
-      // Immediate scroll to top
-      window.scrollTo(0, 0);
+    const handleScroll = () => {
+      if (!hash) {
+        // Immediate scroll to top
+        window.scrollTo(0, 0);
 
-      // Force Lenis to update its internal state
-      if (lenisRef.current) {
-        lenisRef.current.scrollTo(0, { immediate: true });
+        // Force Lenis to update its internal state
+        if (lenisRef.current) {
+          lenisRef.current.scrollTo(0, { immediate: true });
+        }
       }
-    } else {
-      // Optional: logic to scroll to hash using Lenis
-      // const element = document.getElementById(hash.replace('#', ''));
-      // if (element && lenisRef.current) lenisRef.current.scrollTo(element);
-    }
+    };
+
+    handleScroll();
+
+    // Fallback delay to ensure it catches any late renderings or browser restorations
+    const timeoutId = setTimeout(handleScroll, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [pathname, hash]);
 
   return null;
