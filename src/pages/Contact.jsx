@@ -1,6 +1,7 @@
 
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import FunkyMarquee from '../components/FunkyMarquee';
 import {
   Mail,
@@ -61,9 +62,16 @@ const Contact = () => {
             <h1 className="text-7xl md:text-[12vw] leading-[0.8] font-black tracking-tighter text-transparent stroke-text hover:text-brand-yellow transition-colors duration-500 cursor-default">
               GET IN<br /><span className="text-white">TOUCH</span>
             </h1>
-            <p className="text-xl md:text-3xl font-bold max-w-2xl mt-12 pl-4 border-l-8 border-brand-yellow uppercase">
-              Ready to start something <span className="text-brand-yellow underline decoration-wavy">BIG?</span>
-            </p>
+            <div className="mt-12 pl-4 border-l-8 border-brand-yellow flex flex-col md:flex-row md:items-center gap-8">
+              <p className="text-xl md:text-3xl font-bold uppercase">
+                Ready to start something <span className="text-brand-yellow underline decoration-wavy">BIG?</span>
+              </p>
+              <Link to="/apply">
+                <button className="text-lg md:text-xl font-black bg-brand-yellow text-black px-8 py-4 rounded-full border-4 border-black hover:bg-white hover:scale-105 transition-all shadow-[4px_4px_0px_white] whitespace-nowrap">
+                  APPLY NOW
+                </button>
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>
