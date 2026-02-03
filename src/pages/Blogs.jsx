@@ -32,13 +32,13 @@ const Blogs = () => {
     },
     {
       id: 2,
-      title: 'E-Cell DYPIU at CEO Pune E-Cell Meetup',
+      title: 'E-Cell DYPIU at COEP Pune E-Cell Meetup',
       excerpt: 'A collaborative gathering of Pune\'s brightest entrepreneurial minds, fostering connections and sharing innovative ideas across the city\'s startup ecosystem.',
       author: 'E-Cell Team',
       date: 'September 27, 2025',
       readTime: '6 min read',
       category: 'Events',
-      tags: ['Meetup', 'Networking', 'CEO Pune'],
+      tags: ['Meetup', 'Networking', 'COEP Pune'],
       link: '/blogs/ceo-pune-meetup'
     },
     {

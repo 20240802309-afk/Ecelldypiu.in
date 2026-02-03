@@ -37,12 +37,12 @@ const BlogDetail2 = () => {
   }, [currentImageIndex]);
 
   const blog = {
-    title: 'E-Cell DYPIU at CEO Pune E-Cell Meetup: Uniting Entrepreneurial Minds Across Pune',
+    title: 'E-Cell DYPIU at COEP Pune E-Cell Meetup: Uniting Entrepreneurial Minds Across Pune',
     author: 'E-Cell Team',
     date: 'September 27, 2025',
     readTime: '6 min read',
-    tags: ['Meetup', 'Networking', 'CEO Pune'],
-    content: `Entrepreneurship begins with collaboration — and when some of the brightest young innovators gather under one roof, powerful ideas take shape. Team E-Cell DYPIU was recently invited to the CEO Pune E-Cell Meetup, an exclusive convergence of Entrepreneurship Cells from leading institutions across Pune. The event served as a melting pot of ideas, strategies, and partnerships, all centered around one shared mission — strengthening the startup ecosystem among students.
+    tags: ['Meetup', 'Networking', 'COEP Pune'],
+    content: `Entrepreneurship begins with collaboration — and when some of the brightest young innovators gather under one roof, powerful ideas take shape. Team E-Cell DYPIU was recently invited to the COEP Pune E-Cell Meetup, an exclusive convergence of Entrepreneurship Cells from leading institutions across Pune. The event served as a melting pot of ideas, strategies, and partnerships, all centered around one shared mission — strengthening the startup ecosystem among students.
 
 A Gathering of Visionaries
 
@@ -148,8 +148,8 @@ Each of these ideas aligns with E-Cell DYPIU's vision — to create an ecosystem
                   key={idx}
                   onClick={() => setCurrentImageIndex(idx)}
                   className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex
-                      ? 'border-brand-yellow opacity-100 scale-105'
-                      : 'border-zinc-700 opacity-50 hover:opacity-100 hover:border-white'
+                    ? 'border-brand-yellow opacity-100 scale-105'
+                    : 'border-zinc-700 opacity-50 hover:opacity-100 hover:border-white'
                     }`}
                 >
                   <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
