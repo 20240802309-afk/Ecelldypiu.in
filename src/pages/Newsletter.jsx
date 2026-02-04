@@ -51,8 +51,10 @@ const Newsletter = () => {
         setError(null);
 
         try {
-            // Force reCAPTCHA verification
-            await getToken(appCheck, true);
+            // Force reCAPTCHA verification if appCheck is active
+            if (appCheck) {
+                await getToken(appCheck, true);
+            }
 
             await addDoc(collection(db, 'SUBSCRIPTION_REQUESTS'), {
                 ...formData,

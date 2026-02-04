@@ -120,8 +120,10 @@ const ApplyNow = () => {
         setError(null);
 
         try {
-            // Force reCAPTCHA verification
-            await getToken(appCheck, true);
+            // Force reCAPTCHA verification if appCheck is active
+            if (appCheck) {
+                await getToken(appCheck, true);
+            }
 
             await addDoc(collection(db, 'TEAM_APPLICATION_FORM'), {
                 ...formData,

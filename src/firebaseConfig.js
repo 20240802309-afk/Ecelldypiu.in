@@ -41,10 +41,10 @@ if (typeof window !== "undefined") {
         }
     });
 
-    appCheck = initializeAppCheck(app, {
-        provider: customProvider,
-        isTokenAutoRefreshEnabled: false
-    });
+    // appCheck = initializeAppCheck(app, {
+    //     provider: customProvider,
+    //     isTokenAutoRefreshEnabled: false
+    // });
 }
 
 export { appCheck };
