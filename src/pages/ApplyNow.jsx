@@ -108,7 +108,11 @@ const ApplyNow = () => {
 
         setError(null);
         setStep(prev => prev + 1);
-        window.scrollTo(0, 0);
+
+        // Delay scroll to prevent animation conflict on mobile
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 100);
     };
 
     const handleSubmit = async (e) => {
@@ -334,9 +338,9 @@ const ApplyNow = () => {
                                 {step === 3 && (
                                     <motion.div
                                         key="step3"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
                                     >
                                         <button
                                             type="button"
