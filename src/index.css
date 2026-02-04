@@ -43,6 +43,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Mobile Interaction Improvements */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+img,
+a,
+button,
+svg {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 ::selection {
   background-color: var(--color-brand-yellow);
   color: var(--color-black);
