@@ -79,8 +79,15 @@ const InnovateForImpact = () => {
                                 {eventDetails.description}
                             </p>
 
-                            <div className="flex flex-wrap gap-4 mb-12">
-                                <div className="bg-red-600 text-white text-2xl font-black px-8 py-4 rounded-full border-4 border-white transform -rotate-2 cursor-default shadow-[8px_8px_0px_white]">
+                            <div className="flex flex-wrap gap-6 mb-12 items-center">
+                                <button
+                                    onClick={() => document.getElementById('hall-of-fame-results')?.scrollIntoView({ behavior: 'smooth' })}
+                                    className="bg-brand-yellow text-black text-xl md:text-2xl font-black px-8 py-4 rounded-full border-4 border-white transform hover:-translate-y-1 transition-all shadow-[8px_8px_0px_white] hover:shadow-[12px_12px_0px_white] flex items-center gap-3 group"
+                                >
+                                    <Trophy className="w-6 h-6 md:w-8 md:h-8 group-hover:scale-110 transition-transform" />
+                                    WINNERS ANNOUNCED
+                                </button>
+                                <div className="bg-red-600 text-white text-lg md:text-xl font-black px-6 py-3 rounded-full border-4 border-white transform rotate-2 cursor-default shadow-[6px_6px_0px_white] opacity-80 scale-90">
                                     EVENT CLOSED
                                 </div>
                             </div>
