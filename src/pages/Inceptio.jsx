@@ -21,7 +21,7 @@ const Inceptio = () => {
     category: 'Competition',
     image: '/INCEPTIO.png',
     description: 'A distinguished startup pitching competition, drawing inspiration from the dynamic, investor-style pitching approach of Shark Tank, designed to foster innovation, creativity, and entrepreneurial thinking among students.',
-    longDescription: 'In August, the Entrepreneurship Cell (E-Cell) of Dr. D. Y. Patil International University (DYPIU), in collaboration with CIIE (Centre of Innovation and Incubation), successfully organized INCEPTIO 2025. This distinguished startup pitching competition provided participants the opportunity to present their ideas to a panel of experienced mentors and industry professionals, simulating a real-world entrepreneurial pitching environment.',
+    longDescription: 'In August, the Entrepreneurship Cell (E-Cell) of D Y Patil International University (DYPIU), in collaboration with CIIE (Centre of Innovation and Incubation), successfully organized INCEPTIO 2025. This distinguished startup pitching competition provided participants the opportunity to present their ideas to a panel of experienced mentors and industry professionals, simulating a real-world entrepreneurial pitching environment.',
     highlights: [
       '21 student teams participated in the competition',
       'Grand Finale with 9 finalist teams',

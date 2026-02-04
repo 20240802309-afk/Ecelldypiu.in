@@ -21,7 +21,7 @@ const SIH = () => {
         category: 'Hackathon',
         image: '/SIH.png',
         description: 'A prestigious national initiative aimed at fostering innovation and problem-solving among young technologists.',
-        longDescription: 'Dr. D. Y. Patil International University (DYPIU) successfully organized the Internal Round of the Smart India Hackathon (SIH) 2025 — a prestigious national initiative aimed at fostering innovation and problem-solving among young technologists. The event provided a vibrant platform for students to present their innovative ideas and technological solutions addressing real-world challenges.',
+        longDescription: 'D Y Patil International University (DYPIU) successfully organized the Internal Round of the Smart India Hackathon (SIH) 2025 — a prestigious national initiative aimed at fostering innovation and problem-solving among young technologists. The event provided a vibrant platform for students to present their innovative ideas and technological solutions addressing real-world challenges.',
         highlights: [
             {
                 title: 'Student Participation',

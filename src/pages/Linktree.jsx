@@ -23,7 +23,7 @@ const Linktree = () => {
     username: '@ecell.dypiu',
     url: 'https://ecelldypiu.in',
     avatar: '/logonew.png',
-    description: 'Entrepreneurship Cell at DY Patil International University',
+    description: 'Entrepreneurship Cell at D Y Patil International University',
     subdesc: 'Empowering the next generation of entrepreneurs and innovators',
   };
 

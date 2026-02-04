@@ -113,7 +113,7 @@ const Contact = () => {
                   VISIT <span className="text-brand-yellow">HQ</span>
                 </h2>
                 <p className="text-xl md:text-2xl font-bold text-gray-300 mb-8 leading-relaxed">
-                  DY Patil International University<br />
+                  D Y Patil International University<br />
                   Sector 29, Pradhikaran, Nigdi,<br />
                   Akurdi, Pune 411044
                 </p>

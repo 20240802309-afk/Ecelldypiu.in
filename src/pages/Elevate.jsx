@@ -20,7 +20,7 @@ const Elevate = () => {
     category: 'Workshop',
     image: '/ELEVATE.jpeg',
     description: 'A special initiative dedicated to fostering entrepreneurial thinking, innovation, and leadership skills among students.',
-    longDescription: 'On August 21, Dr. D. Y. Patil International University (DYPIU) proudly celebrated World Entrepreneurship Day with Elevate\'25, a special initiative dedicated to fostering entrepreneurial thinking, innovation, and leadership skills among students. The event was graced by distinguished industry leaders and university leadership.',
+    longDescription: 'On August 21, D Y Patil International University (DYPIU) proudly celebrated World Entrepreneurship Day with Elevate\'25, a special initiative dedicated to fostering entrepreneurial thinking, innovation, and leadership skills among students. The event was graced by distinguished industry leaders and university leadership.',
     highlights: [
       {
         title: 'Distinguished Keynote',
