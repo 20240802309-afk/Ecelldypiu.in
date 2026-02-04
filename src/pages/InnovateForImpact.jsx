@@ -33,7 +33,7 @@ const InnovateForImpact = () => {
         longDescription: 'This is a 6-hour high-intensity ideation + buildathon where teams will identify real-world problems, build innovative solutions under time pressure, pitch directly to judges, and compete for national-level recognition and prizes. This is a rare opportunity to compete at a national level, showcase your skills, and represent our college on a bigger stage.',
         highlights: [
             '₹10,000 Cash Prize for Zonal Winners',
-            'Direct Qualification to E-Summit 2026 National Grand Finale',
+            'Direct qualification to E-Summit’26 National Grand Finale | 13–14 March',
             'National Prize Pool Worth ₹3 Lakhs',
             'Participation Certificates (IIIT-Delhi × DYPIU)',
             'Massive value for resumes, internships, and startup exposure'
