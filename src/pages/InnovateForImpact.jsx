@@ -34,7 +34,7 @@ const InnovateForImpact = () => {
         highlights: [
             '₹10,000 Cash Prize for Zonal Winners',
             'Direct Qualification to E-Summit 2026 National Grand Finale',
-            '₹2,00,000 National Cash Pool',
+            'National Prize Pool Worth ₹3 Lakhs',
             'Participation Certificates (IIIT-Delhi × DYPIU)',
             'Massive value for resumes, internships, and startup exposure'
         ],
