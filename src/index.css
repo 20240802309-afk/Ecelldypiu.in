@@ -46,24 +46,14 @@ body {
 /* Mobile Interaction Improvements */
 html,
 body {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 * {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Disallow selection on UI elements */
-img,
-a,
-button,
-svg,
-div[role="button"],
-.no-select {
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
 /* Allow selection on text elements, but prevent tap highlight */
@@ -77,13 +67,28 @@ h6,
 span,
 li,
 td,
-th {
+th,
+blockquote,
+figcaption {
   cursor: text;
-  /* user-select: text is default, but we ensure touch-callout is default for context menu */
   -webkit-user-select: text;
   user-select: text;
   -webkit-touch-callout: default;
 }
+
+/* Ensure UI elements are strictly non-selectable */
+img,
+a,
+button,
+svg,
+div[role="button"],
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  outline: none !important;
+}
+
 
 ::selection {
   background-color: var(--color-brand-yellow);
