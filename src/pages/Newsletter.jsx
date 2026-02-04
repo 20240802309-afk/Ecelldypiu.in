@@ -92,8 +92,8 @@ const Newsletter = () => {
             <section className="min-h-[25vh] md:min-h-[35vh] flex flex-col justify-center pt-28 md:pt-32 pb-8 relative border-b-4 border-white bg-black">
                 <div className="container mx-auto px-4 relative z-10 text-center">
                     <motion.div
-                        initial={{ opacity: 0, y: 50 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{ duration: 0.8 }}
                     >
                         <h1 className="text-3xl md:text-7xl font-black tracking-tighter uppercase mb-2 md:mb-4">
@@ -110,8 +110,8 @@ const Newsletter = () => {
             <section className="py-8 md:py-12 px-4">
                 <div className="container mx-auto max-w-2xl">
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         className="bg-zinc-900 border-2 md:border-4 border-white p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] shadow-[8px_8px_0px_#FFB22C] md:shadow-[12px_12px_0px_#FFB22C] relative"
                     >
                         {error && (

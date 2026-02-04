@@ -92,6 +92,11 @@ const ApplyNow = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Scroll to top when step changes
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    }, [step]);
+
     const handleNext = () => {
         let requiredFields = [];
         if (step === 1) {
@@ -108,11 +113,6 @@ const ApplyNow = () => {
 
         setError(null);
         setStep(prev => prev + 1);
-
-        // Delay scroll to prevent animation conflict on mobile
-        setTimeout(() => {
-            window.scrollTo(0, 0);
-        }, 100);
     };
 
     const handleSubmit = async (e) => {
@@ -171,8 +171,8 @@ const ApplyNow = () => {
             <section className="min-h-[25vh] md:min-h-[35vh] flex flex-col justify-center pt-28 md:pt-32 pb-8 relative border-b-4 border-white bg-black">
                 <div className="container mx-auto px-4 relative z-10 text-center">
                     <motion.div
-                        initial={{ opacity: 0, y: 50 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{ duration: 0.8 }}
                     >
                         <h1 className="text-3xl md:text-7xl font-black tracking-tighter uppercase mb-2 md:mb-4">
@@ -188,8 +188,8 @@ const ApplyNow = () => {
             <section className="py-8 md:py-12 px-4">
                 <div className="container mx-auto max-w-3xl">
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         className="bg-zinc-900 border-2 md:border-4 border-white p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] shadow-[8px_8px_0px_#FFB22C] md:shadow-[12px_12px_0px_#FFB22C] relative"
                     >
                         {/* Progress Bar */}
@@ -220,9 +220,10 @@ const ApplyNow = () => {
                                 {step === 1 && (
                                     <motion.div
                                         key="step1"
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.3 }}
                                         className="space-y-4 md:space-y-6"
                                     >
                                         {renderField('fullName', 'Your Name', 'text', 'John Doe')}
@@ -250,9 +251,11 @@ const ApplyNow = () => {
                                 {step === 2 && (
                                     <motion.div
                                         key="step2"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="space-y-6"
                                     >
                                         <button
                                             type="button"
@@ -341,6 +344,7 @@ const ApplyNow = () => {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.3 }}
                                     >
                                         <button
                                             type="button"
