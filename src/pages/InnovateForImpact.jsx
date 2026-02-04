@@ -12,7 +12,10 @@ import {
     ExternalLink,
     Target,
     Zap,
-    Rocket
+    Rocket,
+    Crown,
+    Medal,
+    Sparkles
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -157,25 +160,131 @@ const InnovateForImpact = () => {
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-20 bg-black text-white">
-                <div className="container mx-auto px-4 text-center">
-                    <h2 className="text-4xl md:text-6xl font-black mb-8 uppercase tracking-tighter">
-                        RESULTS <span className="text-brand-yellow">OUT SOON!!</span>
-                    </h2>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-12">
-                        The competition was fierce, and the ideas were groundbreaking. Stay tuned to find out who takes the crown.
-                    </p>
+            {/* Results Section */}
+            <section className="py-20 bg-black text-white border-t-4 border-white/10 overflow-hidden relative">
+                {/* Background Decorations */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
+                    <div className="absolute top-10 left-10 text-brand-yellow animate-pulse">
+                        <Sparkles className="w-12 h-12" />
+                    </div>
+                    <div className="absolute bottom-10 right-10 text-zinc-500 animate-pulse delay-700">
+                        <Sparkles className="w-16 h-16" />
+                    </div>
+                </div>
 
-                    <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-                        <div className="bg-red-600 text-white text-3xl font-black px-12 py-6 rounded-full border-4 border-white transform -rotate-1 cursor-default shadow-[0_0_40px_rgba(220,38,38,0.6)]">
-                            EVENT CLOSED
+                <div className="container mx-auto px-4 text-center relative z-10">
+                    <div className="inline-block mb-4">
+                        <div className="flex items-center gap-2 text-brand-yellow border border-brand-yellow/30 px-4 py-1 rounded-full bg-brand-yellow/10">
+                            <Crown className="w-5 h-5" />
+                            <span className="font-mono uppercase tracking-widest text-sm font-bold">Hall of Fame</span>
                         </div>
                     </div>
 
-                    <div className="text-center mt-12">
-                        <p className="text-gray-500 font-mono text-sm uppercase tracking-widest mb-2">For Further Queries</p>
-                        <p className="text-2xl font-bold text-white">9021479745</p>
+                    <h2 className="text-5xl md:text-7xl font-black mb-24 uppercase tracking-tighter leading-none">
+                        CHAMPIONS <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-yellow to-white">REVEALED</span>
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-20 items-end">
+                        {/* 2nd Place - Silver */}
+                        <div className="order-2 md:order-1 relative group">
+                            <motion.div
+                                initial={{ opacity: 0, x: -50 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.2 }}
+                                className="flex flex-col items-center"
+                            >
+                                <div className="relative mb-6">
+                                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center border-4 border-white shadow-[0_0_30px_rgba(192,192,192,0.3)] z-10 relative group-hover:scale-110 transition-transform duration-300">
+                                        <Medal className="w-16 h-16 text-white" />
+                                    </div>
+                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-gray-200 text-gray-800 font-black px-4 py-1 rounded-full border-2 border-white shadow-lg whitespace-nowrap z-20">
+                                        2ND PLACE
+                                    </div>
+                                    {/* Ribbon Tail */}
+                                    <div className="absolute -z-10 top-0 left-1/2 -translate-x-1/2 w-20 h-40 bg-gray-800/50 clip-path-ribbon opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                </div>
+
+                                <h3 className="text-2xl md:text-3xl font-black uppercase mb-2 text-gray-300">CODE AND FIRE</h3>
+                                <div className="h-1 w-20 bg-gray-500 rounded-full mb-4"></div>
+                            </motion.div>
+                        </div>
+
+                        {/* 1st Place - Gold */}
+                        <div className="order-1 md:order-2 relative group">
+                            <motion.div
+                                initial={{ opacity: 0, y: 50 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                className="flex flex-col items-center"
+                            >
+                                <div className="relative mb-8">
+                                    <div className="absolute inset-0 bg-brand-yellow blur-[60px] opacity-40 rounded-full animate-pulse"></div>
+                                    <div className="w-48 h-48 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center border-8 border-white shadow-[0_0_50px_rgba(255,215,0,0.5)] z-10 relative group-hover:scale-110 transition-transform duration-300">
+                                        <Trophy className="w-24 h-24 text-black drop-shadow-lg" />
+                                        <div className="absolute -top-6 -right-6 animate-bounce delay-100">
+                                            <Crown className="w-12 h-12 text-white fill-white drop-shadow-md" />
+                                        </div>
+                                    </div>
+                                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-white text-black font-black text-xl px-8 py-2 rounded-full border-4 border-[#FFD700] shadow-xl whitespace-nowrap z-20 tracking-wider">
+                                        WINNER
+                                    </div>
+                                </div>
+
+                                <h3 className="text-4xl md:text-6xl font-black uppercase mb-4 text-white drop-shadow-[0_4px_0_rgba(0,0,0,1)] text-center leading-[0.9]">
+                                    GATISUTRA
+                                </h3>
+                                <div className="h-2 w-32 bg-brand-yellow rounded-full mb-6"></div>
+                                <p className="text-brand-yellow font-bold tracking-widest uppercase text-sm border border-brand-yellow/30 px-4 py-1 rounded-full bg-brand-yellow/5">
+                                    Grand Prize Winner
+                                </p>
+                            </motion.div>
+                        </div>
+
+                        {/* 3rd Place - Bronze */}
+                        <div className="order-3 md:order-3 relative group">
+                            <motion.div
+                                initial={{ opacity: 0, x: 50 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.4 }}
+                                className="flex flex-col items-center"
+                            >
+                                <div className="relative mb-6">
+                                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#CD7F32] to-[#8B4513] flex items-center justify-center border-4 border-white shadow-[0_0_30px_rgba(205,127,50,0.3)] z-10 relative group-hover:scale-110 transition-transform duration-300">
+                                        <Medal className="w-16 h-16 text-white" />
+                                    </div>
+                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-[#572b09] text-[#CD7F32] font-black px-4 py-1 rounded-full border-2 border-[#CD7F32] shadow-lg whitespace-nowrap z-20">
+                                        3RD PLACE
+                                    </div>
+                                </div>
+
+                                <h3 className="text-2xl md:text-3xl font-black uppercase mb-2 text-[#CD7F32]">NEON LOGIC</h3>
+                                <div className="h-1 w-20 bg-[#CD7F32] rounded-full mb-4"></div>
+                            </motion.div>
+                        </div>
+                    </div>
+
+                    <div className="max-w-3xl mx-auto bg-zinc-900/50 border border-white/10 rounded-2xl p-8 backdrop-blur-sm relative overflow-hidden group hover:border-brand-yellow/30 transition-colors">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-brand-yellow"></div>
+                        <h4 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                            <Award className="w-6 h-6 text-brand-yellow" />
+                            Judges' Note
+                        </h4>
+                        <p className="text-zinc-400 text-lg leading-relaxed">
+                            "The level of innovation shown by <span className="text-white font-bold">Gatisutra</span> in solving real-world logistics was unparalleled. <span className="text-white font-bold">Code and Fire</span> impressed with their rapid execution, while <span className="text-white font-bold">Neon Logic</span> brought a unique creative angle that stood out."
+                        </p>
+                    </div>
+
+                    <div className="mt-20 flex flex-col items-center gap-6">
+                        <div className="bg-red-600 text-white text-3xl font-black px-12 py-6 rounded-full border-4 border-white transform -rotate-1 cursor-default shadow-[0_0_40px_rgba(220,38,38,0.6)]">
+                            EVENT CLOSED
+                        </div>
+
+                        <div className="text-center mt-8">
+                            <p className="text-gray-500 font-mono text-sm uppercase tracking-widest mb-2">For Further Queries</p>
+                            <p className="text-2xl font-bold text-white">9021479745</p>
+                        </div>
                     </div>
                 </div>
             </section>
