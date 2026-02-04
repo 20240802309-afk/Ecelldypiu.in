@@ -131,10 +131,19 @@ const ApplyNow = () => {
 
         try {
             console.log('📤 Attempting to write to Firestore...');
-            const docRef = await addDoc(collection(db, 'TEAM_APPLICATION_FORM'), {
+
+            // Create a timeout promise
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Request timeout - please check your internet connection')), 15000)
+            );
+
+            // Race between Firestore write and timeout
+            const writePromise = addDoc(collection(db, 'TEAM_APPLICATION_FORM'), {
                 ...formData,
                 submittedAt: serverTimestamp(),
             });
+
+            const docRef = await Promise.race([writePromise, timeoutPromise]);
             console.log('✅ Successfully written to Firestore, doc ID:', docRef.id);
             setShowSuccess(true);
         } catch (err) {
