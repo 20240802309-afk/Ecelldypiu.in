@@ -2,25 +2,43 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 1. PUBLIC: Keep your existing RSVP form working
+    // Helper function to check if data is new (create only) and has valid timestamp
+    function isNew() {
+      return request.resource.data.submittedAt == request.time;
+    }
+
+    // Helper to validate basic string input to prevent massive payload attacks
+    function isValidString(text, maxLength) {
+      return text is string && text.size() > 0 && text.size() <= maxLength;
+    }
+
+    // 1. PUBLIC: RSVP Form
     match /rsvp_innovate_2026/{document=**} {
-      allow read, write: if true;
+      allow read: if false;
+      allow create: if
+        isValidString(request.resource.data.name, 100) &&
+        isValidString(request.resource.data.email, 100);
     }
 
-    // 2. PUBLIC: Allow anyone to submit a Team Application
+    // 2. PUBLIC: Team Application - RELAXED RULES FOR DEBUGGING
     match /TEAM_APPLICATION_FORM/{document=**} {
-      allow read, write: if true;
+      allow read: if false;
+      allow create: if true; 
     }
 
-    // 3. ADMIN ONLY: Allow YOU (logged in) to edit Events & Import CSVs
+    // 3. PUBLIC: Newsletter Subscription - RELAXED RULES FOR DEBUGGING
+    match /SUBSCRIPTION_REQUESTS/{document=**} {
+      allow read: if false;
+      allow create: if true;
+    }
+
+    // 4. ADMIN ONLY: Events & Management
     match /events/{eventId} {
       allow read, write: if request.auth != null;
       
-      // Specifically allow access to the new attendees subcollection
       match /attendees/{attendeeId} {
         allow read, write: if request.auth != null;
       }
     }
-
   }
 }

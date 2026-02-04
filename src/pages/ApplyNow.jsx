@@ -1,7 +1,9 @@
+import ReCAPTCHA from "react-google-recaptcha";
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+import { db, appCheck, setCaptchaTokenForAppCheck } from '../firebaseConfig';
+import { getToken } from 'firebase/app-check';
 import { Check, Loader2, ArrowRight, ArrowLeft, Star } from 'lucide-react';
 
 const ApplyNow = () => {
@@ -13,6 +15,12 @@ const ApplyNow = () => {
     const [loading, setLoading] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [error, setError] = useState(null);
+    const [captchaToken, setCaptchaToken] = useState(null);
+
+    const onCaptchaChange = (token) => {
+        setCaptchaToken(token);
+        setCaptchaTokenForAppCheck(token);
+    };
 
     const [formData, setFormData] = useState({
         // Step 1: Personal Details
@@ -69,6 +77,18 @@ const ApplyNow = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        // Validation Logic
+        if (name === 'fullName') {
+            // Only allow letters and spaces
+            if (value && !/^[A-Za-z\s]+$/.test(value)) return;
+        }
+
+        if (name === 'prn' || name === 'contactNumber') {
+            // Only allow numbers
+            if (value && !/^\d+$/.test(value)) return;
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -97,6 +117,9 @@ const ApplyNow = () => {
         setError(null);
 
         try {
+            // Force reCAPTCHA verification
+            await getToken(appCheck, true);
+
             await addDoc(collection(db, 'TEAM_APPLICATION_FORM'), {
                 ...formData,
                 submittedAt: serverTimestamp(),
@@ -390,9 +413,17 @@ const ApplyNow = () => {
                                             </>
                                         )}
 
+                                        <div className="flex justify-center mb-6">
+                                            <ReCAPTCHA
+                                                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                                                onChange={onCaptchaChange}
+                                                theme="dark"
+                                            />
+                                        </div>
+
                                         <button
                                             type="submit"
-                                            disabled={loading}
+                                            disabled={loading || !captchaToken}
                                             className="w-full bg-brand-yellow text-black text-xl md:text-2xl font-black uppercase py-4 md:py-6 border-4 border-black hover:bg-white hover:scale-[1.01] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-[4px_4px_0px_#fff]"
                                         >
                                             {loading ? (

@@ -125,8 +125,8 @@ const Blogs = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-6xl font-black text-black mb-6 md:mb-8 uppercase">Stay Updated</h2>
           <div className="flex justify-center gap-4">
-            <Link to="/apply" className="bg-black text-white px-6 py-3 md:px-8 md:py-4 text-lg md:text-xl font-black uppercase border-4 border-transparent hover:border-white hover:bg-zinc-900 transition-all w-full md:w-auto">
-              WANNA JOIN US
+            <Link to="/newsletter" className="bg-black text-white px-6 py-3 md:px-8 md:py-4 text-lg md:text-xl font-black uppercase border-4 border-transparent hover:border-white hover:bg-zinc-900 transition-all w-full md:w-auto">
+              SUBSCRIBE TO NEWSLETTER
             </Link>
           </div>
         </div>

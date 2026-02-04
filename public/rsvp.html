@@ -610,472 +610,422 @@
     </footer>
 
     <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from
+    "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from
+    "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
-        // Firebase config
-        const firebaseConfig = {
-            apiKey: "AIzaSyAeRS2vu_GTpOHBbZFMFEvbwUuGrBaj-Ss",
-            authDomain: "ecell-86bee.firebaseapp.com",
-            projectId: "ecell-86bee",
-            storageBucket: "ecell-86bee.firebasestorage.app",
-            messagingSenderId: "488931917899",
-            appId: "1:488931917899:web:c0563224a39c7448d74dce",
-            measurementId: "G-ZGHDG3SRCQ"
+    // Firebase config
+    const firebaseConfig = {
+    apiKey: "AIzaSyCnnt1a-2tICFfr4OBTUUhHTA7FUcOTh0Y",
+    authDomain: "ecell-86bee.firebaseapp.com",
+    projectId: "ecell-86bee",
+    storageBucket: "ecell-86bee.firebasestorage.app",
+    messagingSenderId: "488931917899",
+    appId: "1:488931917899:web:c0563224a39c7448d74dce",
+    measurementId: "G-ZGHDG3SRCQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    // Initialize App Check
+    const appCheck = initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider('6LfkAWAsAAAAANtYBVUELWkoCVaCWCpbvhC_s6rv'),
+    isTokenAutoRefreshEnabled: false
+    });
+
+    const db = getFirestore(app);
+
+    // State
+    let currentPassData = null;
+
+    // DOM Elements
+    const form = document.getElementById('rsvp-form');
+    const formView = document.getElementById('form-view');
+    const retrieveView = document.getElementById('retrieve-view');
+    const successView = document.getElementById('success-view');
+    const formError = document.getElementById('form-error');
+    const confirmationId = document.getElementById('confirmation-id');
+    const teamSizeSelect = document.getElementById('team-size');
+    const teamMembersContainer = document.getElementById('team-members-container');
+    const membersList = document.getElementById('members-list');
+    const passModal = document.getElementById('pass-modal');
+    const viewPassBtn = document.getElementById('view-pass-btn');
+    const closePassModal = document.getElementById('close-pass-modal');
+    const downloadPassBtn = document.getElementById('download-pass-btn');
+
+    // Tab elements
+    const tabRegister = document.getElementById('tab-register');
+    const tabRetrieve = document.getElementById('tab-retrieve');
+    const retrieveForm = document.getElementById('retrieve-form');
+    const retrieveError = document.getElementById('retrieve-error');
+    const goToRegister = document.getElementById('go-to-register');
+
+    const retrieveInput = document.getElementById('retrieve-input');
+    const suggestionsBox = document.getElementById('suggestions');
+    let allRegisteredNames = []; // Cache for names
+
+    // Helper to toggle button styles
+    function setActiveButton(activeBtn, inactiveBtn) {
+    // Active: Primary
+    activeBtn.className = 'btn-primary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold
+    transition-all transform scale-105 shadow-lg shadow-brand-yellow/20';
+    // Inactive: Secondary
+    inactiveBtn.className = 'btn-secondary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold
+    transition-all';
+    }
+
+    // Prefetch logic function
+    async function prefetchNames() {
+    if (allRegisteredNames.length === 0) {
+    try {
+    const q = query(collection(db, 'rsvp_innovate_2026'));
+    const snap = await getDocs(q);
+    const namesSet = new Set();
+
+    snap.docs.forEach(doc => {
+    const d = doc.data();
+    if (d.name) namesSet.add(d.name);
+    if (d.members) {
+    d.members.forEach(m => {
+    if (m.name) namesSet.add(m.name);
+    });
+    }
+    });
+    allRegisteredNames = Array.from(namesSet);
+    } catch (e) {
+    console.error("Error fetching names:", e);
+    }
+    }
+    }
+
+    // Init: Run prefetch immediately since Retrieve is default
+    prefetchNames();
+
+    // Tab switching
+    tabRegister.addEventListener('click', () => {
+    setActiveButton(tabRegister, tabRetrieve);
+
+    formView.classList.add('active');
+    retrieveView.classList.remove('active');
+    successView.classList.remove('active');
+    });
+
+    tabRetrieve.addEventListener('click', async () => {
+    setActiveButton(tabRetrieve, tabRegister);
+
+    retrieveView.classList.add('active');
+    formView.classList.remove('active');
+    successView.classList.remove('active');
+
+    prefetchNames();
+    });
+
+    // Autocomplete Logic
+    retrieveInput.addEventListener('input', (e) => {
+    const val = e.target.value.toLowerCase();
+    suggestionsBox.innerHTML = '';
+
+    if (val.length < 6) { suggestionsBox.classList.remove('active'); return; } const
+        matches=allRegisteredNames.filter(name=> name.toLowerCase().includes(val));
+
+        if (matches.length > 0) {
+        matches.slice(0, 5).forEach(name => { // Limit to 5
+        const div = document.createElement('div');
+        div.className = 'suggestion-item';
+        div.textContent = name;
+        div.onclick = () => {
+        retrieveInput.value = name;
+        suggestionsBox.classList.remove('active');
         };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // State
-        let currentPassData = null;
-
-        // DOM Elements
-        const form = document.getElementById('rsvp-form');
-        const formView = document.getElementById('form-view');
-        const retrieveView = document.getElementById('retrieve-view');
-        const successView = document.getElementById('success-view');
-        const formError = document.getElementById('form-error');
-        const confirmationId = document.getElementById('confirmation-id');
-        const teamSizeSelect = document.getElementById('team-size');
-        const teamMembersContainer = document.getElementById('team-members-container');
-        const membersList = document.getElementById('members-list');
-        const passModal = document.getElementById('pass-modal');
-        const viewPassBtn = document.getElementById('view-pass-btn');
-        const closePassModal = document.getElementById('close-pass-modal');
-        const downloadPassBtn = document.getElementById('download-pass-btn');
-
-        // Tab elements
-        const tabRegister = document.getElementById('tab-register');
-        const tabRetrieve = document.getElementById('tab-retrieve');
-        const retrieveForm = document.getElementById('retrieve-form');
-        const retrieveError = document.getElementById('retrieve-error');
-        const goToRegister = document.getElementById('go-to-register');
-
-        const retrieveInput = document.getElementById('retrieve-input');
-        const suggestionsBox = document.getElementById('suggestions');
-        let allRegisteredNames = []; // Cache for names
-
-        // Helper to toggle button styles
-        function setActiveButton(activeBtn, inactiveBtn) {
-            // Active: Primary
-            activeBtn.className = 'btn-primary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold transition-all transform scale-105 shadow-lg shadow-brand-yellow/20';
-            // Inactive: Secondary
-            inactiveBtn.className = 'btn-secondary px-6 py-3 rounded-xl text-base md:text-lg uppercase tracking-wider font-bold transition-all';
-        }
-
-        // Prefetch logic function
-        async function prefetchNames() {
-            if (allRegisteredNames.length === 0) {
-                try {
-                    const q = query(collection(db, 'rsvp_innovate_2026'));
-                    const snap = await getDocs(q);
-                    const namesSet = new Set();
-
-                    snap.docs.forEach(doc => {
-                        const d = doc.data();
-                        if (d.name) namesSet.add(d.name);
-                        if (d.members) {
-                            d.members.forEach(m => {
-                                if (m.name) namesSet.add(m.name);
-                            });
-                        }
-                    });
-                    allRegisteredNames = Array.from(namesSet);
-                } catch (e) {
-                    console.error("Error fetching names:", e);
-                }
-            }
-        }
-
-        // Init: Run prefetch immediately since Retrieve is default
-        prefetchNames();
-
-        // Tab switching
-        tabRegister.addEventListener('click', () => {
-            setActiveButton(tabRegister, tabRetrieve);
-
-            formView.classList.add('active');
-            retrieveView.classList.remove('active');
-            successView.classList.remove('active');
+        suggestionsBox.appendChild(div);
         });
-
-        tabRetrieve.addEventListener('click', async () => {
-            setActiveButton(tabRetrieve, tabRegister);
-
-            retrieveView.classList.add('active');
-            formView.classList.remove('active');
-            successView.classList.remove('active');
-
-            prefetchNames();
-        });
-
-        // Autocomplete Logic
-        retrieveInput.addEventListener('input', (e) => {
-            const val = e.target.value.toLowerCase();
-            suggestionsBox.innerHTML = '';
-
-            if (val.length < 6) {
-                suggestionsBox.classList.remove('active');
-                return;
-            }
-
-            const matches = allRegisteredNames.filter(name => name.toLowerCase().includes(val));
-
-            if (matches.length > 0) {
-                matches.slice(0, 5).forEach(name => { // Limit to 5
-                    const div = document.createElement('div');
-                    div.className = 'suggestion-item';
-                    div.textContent = name;
-                    div.onclick = () => {
-                        retrieveInput.value = name;
-                        suggestionsBox.classList.remove('active');
-                    };
-                    suggestionsBox.appendChild(div);
-                });
-                suggestionsBox.classList.add('active');
-            } else {
-                suggestionsBox.classList.remove('active');
-            }
+        suggestionsBox.classList.add('active');
+        } else {
+        suggestionsBox.classList.remove('active');
+        }
         });
 
         // Close suggestions click outside
         document.addEventListener('click', (e) => {
-            if (!retrieveInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
-                suggestionsBox.classList.remove('active');
-            }
+        if (!retrieveInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+        suggestionsBox.classList.remove('active');
+        }
         });
 
         goToRegister.addEventListener('click', () => {
-            tabRegister.click();
+        tabRegister.click();
         });
 
         // Generate unique ID (3 chars from first name + 3 digits)
         function generateId(name) {
-            // Get first name only
-            const firstName = name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
-            const prefix = firstName.length >= 3 ? firstName.substring(0, 3) : firstName.padEnd(3, 'X');
-            const randomNum = Math.floor(100 + Math.random() * 900); // 100-999
-            return `${prefix}${randomNum}`;
+        // Get first name only
+        const firstName = name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
+        const prefix = firstName.length >= 3 ? firstName.substring(0, 3) : firstName.padEnd(3, 'X');
+        const randomNum = Math.floor(100 + Math.random() * 900); // 100-999
+        return `${prefix}${randomNum}`;
         }
 
         // Create member input fields
         function createMemberFields(count) {
-            membersList.innerHTML = '';
+        membersList.innerHTML = '';
 
-            // Create fields for members 2 through count
-            for (let i = 2; i <= count; i++) {
-                const memberDiv = document.createElement('div');
-                memberDiv.className = 'member-field bg-zinc-900 p-4 rounded-xl border border-zinc-700';
-                memberDiv.innerHTML = `
-                    <h4 class="font-bold text-sm text-gray-300 mb-3">Member ${i}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <input type="text" name="member_${i}_name" required maxlength="25"
-                                class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
-                                placeholder="Full Name (Max 25 chars) *">
-                            <p class="text-xs text-red-500 mt-1 hidden input-limit-error">Enter only 25 chars</p>
-                        </div>
-                        <input type="email" name="member_${i}_email" required
-                            class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
-                            placeholder="Email *">
-                        <input type="tel" name="member_${i}_phone" required
-                            class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
-                            placeholder="Phone *">
-                        <input type="text" name="member_${i}_college"
-                            class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
-                            placeholder="College">
-                    </div>
-                `;
-                membersList.appendChild(memberDiv);
+        // Create fields for members 2 through count
+        for (let i = 2; i <= count; i++) { const memberDiv=document.createElement('div');
+            memberDiv.className='member-field bg-zinc-900 p-4 rounded-xl border border-zinc-700' ; memberDiv.innerHTML=`
+            <h4 class="font-bold text-sm text-gray-300 mb-3">Member ${i}</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <input type="text" name="member_${i}_name" required maxlength="25"
+                        class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
+                        placeholder="Full Name (Max 25 chars) *">
+                    <p class="text-xs text-red-500 mt-1 hidden input-limit-error">Enter only 25 chars</p>
+                </div>
+                <input type="email" name="member_${i}_email" required
+                    class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
+                    placeholder="Email *">
+                <input type="tel" name="member_${i}_phone" required
+                    class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
+                    placeholder="Phone *">
+                <input type="text" name="member_${i}_college"
+                    class="input-field w-full px-3 py-2 rounded-lg text-white placeholder-gray-500 text-sm"
+                    placeholder="College">
+            </div>
+            `;
+            membersList.appendChild(memberDiv);
             }
-        }
+            }
 
-        // Handle team size changes
-        teamSizeSelect.addEventListener('change', (e) => {
+            // Handle team size changes
+            teamSizeSelect.addEventListener('change', (e) => {
             const size = parseInt(e.target.value);
 
             if (size > 1) {
-                teamMembersContainer.classList.remove('hidden');
-                createMemberFields(size);
+            teamMembersContainer.classList.remove('hidden');
+            createMemberFields(size);
             } else {
-                teamMembersContainer.classList.add('hidden');
-                membersList.innerHTML = '';
+            teamMembersContainer.classList.add('hidden');
+            membersList.innerHTML = '';
             }
-        });
+            });
 
-        // Draw Event Pass
-        function drawEventPass(data) {
+            // Draw Event Pass
+            function drawEventPass(data) {
             const canvas = document.getElementById('pass-canvas');
             const ctx = canvas.getContext('2d');
 
             const img = new Image();
             img.onload = () => {
-                // Set canvas size to match image
-                canvas.width = img.width;
-                canvas.height = img.height;
+            // Set canvas size to match image
+            canvas.width = img.width;
+            canvas.height = img.height;
 
-                // Draw background template
-                ctx.drawImage(img, 0, 0);
+            // Draw background template
+            ctx.drawImage(img, 0, 0);
 
-                // --- 1. Participant Name ---
-                // Style: Very Large, White, Bold.
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#FFFFFF';
+            // --- 1. Participant Name ---
+            // Style: Very Large, White, Bold.
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#FFFFFF';
 
-                // Font scaling
-                let nameFontSize = Math.floor(canvas.width * 0.05);
-                if (data.name.length > 15) nameFontSize *= 0.8;
-                if (data.name.length > 25) nameFontSize *= 0.7;
+            // Font scaling
+            let nameFontSize = Math.floor(canvas.width * 0.05);
+            if (data.name.length > 15) nameFontSize *= 0.8;
+            if (data.name.length > 25) nameFontSize *= 0.7;
 
-                ctx.font = `700 ${nameFontSize}px "Inter", "Space Grotesk", sans-serif`;
+            ctx.font = `700 ${nameFontSize}px "Inter", "Space Grotesk", sans-serif`;
 
-                // Position: Shifted LEFT (0.028)
-                const nameX = canvas.width * 0.028;
-                const nameY = canvas.height * 0.45;
+            // Position: Shifted LEFT (0.028)
+            const nameX = canvas.width * 0.028;
+            const nameY = canvas.height * 0.45;
 
-                // Truncate name to max 25 characters
-                let displayName = data.name;
-                if (displayName.length > 25) {
-                    displayName = displayName.substring(0, 25) + '...';
-                }
+            // Truncate name to max 25 characters
+            let displayName = data.name;
+            if (displayName.length > 25) {
+            displayName = displayName.substring(0, 25) + '...';
+            }
 
-                ctx.fillText(displayName, nameX, nameY);
+            ctx.fillText(displayName, nameX, nameY);
 
-                // --- 1.1 Team Name (New) ---
-                // Position: Below Name
-                ctx.fillStyle = '#FFB22C'; // Brand Yellow
-                const teamFontSize = Math.floor(canvas.width * 0.025);
-                ctx.font = `600 ${teamFontSize}px "Inter", "Space Grotesk", sans-serif`;
+            // --- 1.1 Team Name (New) ---
+            // Position: Below Name
+            ctx.fillStyle = '#FFB22C'; // Brand Yellow
+            const teamFontSize = Math.floor(canvas.width * 0.025);
+            ctx.font = `600 ${teamFontSize}px "Inter", "Space Grotesk", sans-serif`;
 
-                const teamY = canvas.height * 0.58; // Below name
-                ctx.fillText(`TEAM: ${data.team.toUpperCase()}`, nameX, teamY);
+            const teamY = canvas.height * 0.58; // Below name
+            ctx.fillText(`TEAM: ${data.team.toUpperCase()}`, nameX, teamY);
 
-                // --- 2. QR Code (Right Side, Top) ---
-                // Shifted RIGHT (Center at 0.875)
-                const qrSize = Math.floor(canvas.height * 0.45);
-                const qrX = canvas.width * 0.875 - (qrSize / 2);
-                const qrY = canvas.height * 0.15;
+            // --- 2. QR Code (Right Side, Top) ---
+            // Shifted RIGHT (Center at 0.875)
+            const qrSize = Math.floor(canvas.height * 0.45);
+            const qrX = canvas.width * 0.875 - (qrSize / 2);
+            const qrY = canvas.height * 0.15;
 
-                // Draw White Background for QR
-                ctx.fillStyle = '#FFFFFF';
+            // Draw White Background for QR
+            ctx.fillStyle = '#FFFFFF';
 
-                // --- 3. Ticket ID Formatting & Display ---
-                let displayId = data.ticketId;
+            // --- 3. Ticket ID Formatting & Display ---
+            let displayId = data.ticketId;
 
-                // Ensure ID exists (for legacy members who might not have one)
-                if (!displayId) {
-                    displayId = generateId(data.name);
-                }
+            // Ensure ID exists (for legacy members who might not have one)
+            if (!displayId) {
+            displayId = generateId(data.name);
+            }
 
-                // If legacy ID (long number) or not matching format, reformat for display
-                // REVISION: Disabled reformatting to allow custom Team IDs to be displayed exactly as fetched
-                // const needsFormatting = !/^[A-Z]{3}\d{3}$/.test(displayId);
+            // If legacy ID (long number) or not matching format, reformat for display
+            // REVISION: Disabled reformatting to allow custom Team IDs to be displayed exactly as fetched
+            // const needsFormatting = !/^[A-Z]{3}\d{3}$/.test(displayId);
 
-                // if (needsFormatting) {
-                //    const firstName = data.name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
-                //    const prefix = firstName.length >= 3 ? firstName.substring(0, 3) : firstName.padEnd(3, 'X');
-                //    // Use last 3 digits of legacy ID if possible, else random
-                //    const nums = displayId.replace(/\D/g, '');
-                //    const suffix = nums.length >= 3 ? nums.substring(nums.length - 3) : Math.floor(Math.random() * 900 + 100);
-                //    displayId = `${prefix}${suffix}`;
-                // }
+            // if (needsFormatting) {
+            // const firstName = data.name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
+            // const prefix = firstName.length >= 3 ? firstName.substring(0, 3) : firstName.padEnd(3, 'X');
+            // // Use last 3 digits of legacy ID if possible, else random
+            // const nums = displayId.replace(/\D/g, '');
+            // const suffix = nums.length >= 3 ? nums.substring(nums.length - 3) : Math.floor(Math.random() * 900 +
+            100);
+            // displayId = `${prefix}${suffix}`;
+            // }
 
-                // Generate QR
-                const qrTemp = document.getElementById('qr-temp');
-                qrTemp.innerHTML = '';
+            // Generate QR
+            const qrTemp = document.getElementById('qr-temp');
+            qrTemp.innerHTML = '';
 
-                // Ensure element is rendered for library to work (fix for mobile)
-                qrTemp.classList.remove('hidden');
-                qrTemp.style.position = 'absolute';
-                qrTemp.style.left = '-9999px';
-                qrTemp.style.top = '-9999px';
+            // Ensure element is rendered for library to work (fix for mobile)
+            qrTemp.classList.remove('hidden');
+            qrTemp.style.position = 'absolute';
+            qrTemp.style.left = '-9999px';
+            qrTemp.style.top = '-9999px';
 
-                new QRCode(qrTemp, {
-                    text: `IFI2026-${displayId}`,
-                    width: qrSize,
-                    height: qrSize,
-                    colorDark: '#000000',
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.H
-                });
+            new QRCode(qrTemp, {
+            text: `IFI2026-${displayId}`,
+            width: qrSize,
+            height: qrSize,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+            });
 
-                // --- 4. Ticket Number (Inside pre-drawn pill) ---
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#0d3872';
+            // --- 4. Ticket Number (Inside pre-drawn pill) ---
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#0d3872';
 
-                // Adjusted Font Size
-                const idSize = Math.floor(canvas.height * 0.032);
-                ctx.font = `800 ${idSize}px "Inter", sans-serif`;
+            // Adjusted Font Size
+            const idSize = Math.floor(canvas.height * 0.032);
+            ctx.font = `800 ${idSize}px "Inter", sans-serif`;
 
-                // Position: Adjusted for better alignment
-                const idX = canvas.width * 0.88;
-                const idY = canvas.height * 0.915;
+            // Position: Adjusted for better alignment
+            const idX = canvas.width * 0.88;
+            const idY = canvas.height * 0.915;
 
-                ctx.fillText(displayId, idX, idY);
+            ctx.fillText(displayId, idX, idY);
 
-                // Wait for QR to be fully generated with retry logic
-                const checkAndDrawQR = (attempts = 0) => {
-                    // Stop after 2 seconds (20 * 100ms)
-                    if (attempts > 20) {
-                        qrTemp.classList.add('hidden');
-                        return;
-                    }
+            // Wait for QR to be fully generated with retry logic
+            const checkAndDrawQR = (attempts = 0) => {
+            // Stop after 2 seconds (20 * 100ms)
+            if (attempts > 20) {
+            qrTemp.classList.add('hidden');
+            return;
+            }
 
-                    const qrCanvas = qrTemp.querySelector('canvas');
-                    const qrImg = qrTemp.querySelector('img');
+            const qrCanvas = qrTemp.querySelector('canvas');
+            const qrImg = qrTemp.querySelector('img');
 
-                    if (qrCanvas) {
-                        // Preferred: Draw directly from the library's canvas (Reliable on mobile)
-                        ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
-                        ctx.strokeStyle = '#FFFFFF';
-                        ctx.lineWidth = 4;
-                        ctx.strokeRect(qrX, qrY, qrSize, qrSize);
-                        qrTemp.classList.add('hidden');
-                    } else if (qrImg && qrImg.src && qrImg.src.length > 100) {
-                        // Fallback: Draw from generated image source
-                        const imgQR = new Image();
-                        imgQR.onload = () => {
-                            ctx.drawImage(imgQR, qrX, qrY, qrSize, qrSize);
-                            ctx.strokeStyle = '#FFFFFF';
-                            ctx.lineWidth = 4;
-                            ctx.strokeRect(qrX, qrY, qrSize, qrSize);
-                            qrTemp.classList.add('hidden');
-                        };
-                        imgQR.src = qrImg.src;
-                    } else {
-                        // Retry if neither is ready
-                        setTimeout(() => checkAndDrawQR(attempts + 1), 100);
-                    }
-                };
+            if (qrCanvas) {
+            // Preferred: Draw directly from the library's canvas (Reliable on mobile)
+            ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(qrX, qrY, qrSize, qrSize);
+            qrTemp.classList.add('hidden');
+            } else if (qrImg && qrImg.src && qrImg.src.length > 100) {
+            // Fallback: Draw from generated image source
+            const imgQR = new Image();
+            imgQR.onload = () => {
+            ctx.drawImage(imgQR, qrX, qrY, qrSize, qrSize);
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(qrX, qrY, qrSize, qrSize);
+            qrTemp.classList.add('hidden');
+            };
+            imgQR.src = qrImg.src;
+            } else {
+            // Retry if neither is ready
+            setTimeout(() => checkAndDrawQR(attempts + 1), 100);
+            }
+            };
 
-                // Start checking
-                checkAndDrawQR();
+            // Start checking
+            checkAndDrawQR();
             };
             img.src = '/event-pass-template.png';
-        }
-
-        // Form submission
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Submitting...';
-            submitBtn.disabled = true;
-            formError.classList.add('hidden');
-
-            try {
-                // Get team size
-                const teamSize = parseInt(teamSizeSelect.value);
-                const leaderName = document.getElementById('name').value.trim();
-
-                // Collect team members data
-                const members = [];
-                if (teamSize > 1) {
-                    for (let i = 2; i <= teamSize; i++) {
-                        const memberName = document.querySelector(`[name="member_${i}_name"]`)?.value?.trim();
-                        const memberEmail = document.querySelector(`[name="member_${i}_email"]`)?.value?.trim();
-                        const memberPhone = document.querySelector(`[name="member_${i}_phone"]`)?.value?.trim();
-                        const memberCollege = document.querySelector(`[name="member_${i}_college"]`)?.value?.trim();
-
-                        if (!memberName || !memberEmail || !memberPhone) {
-                            throw new Error(`Please fill all required fields for Member ${i}`);
-                        }
-
-                        members.push({
-                            memberNumber: i,
-                            name: memberName,
-                            email: memberEmail,
-                            phone: memberPhone,
-                            college: memberCollege || '',
-                            ticketId: generateId(memberName) // Generate ID for member
-                        });
-                    }
-                }
-
-                // Updated ID Generation call (pass name)
-                const ticketId = generateId(leaderName);
-                const leaderEmail = document.getElementById('email').value.trim().toLowerCase();
-
-                const data = {
-                    name: leaderName,
-                    email: leaderEmail,
-                    phone: document.getElementById('phone').value.trim(),
-                    college: document.getElementById('college').value.trim(),
-                    year: document.getElementById('year').value,
-                    team: document.getElementById('team').value.trim(),
-                    teamSize: teamSize,
-                    members: members,
-                    ticketId: ticketId,
-                    event: 'Innovate For Impact 2026',
-                    status: 'confirmed',
-                    createdAt: serverTimestamp()
-                };
-
-                // Validate phone
-                if (!/^\d{10}$/.test(data.phone)) {
-                    throw new Error('Please enter a valid 10-digit phone number');
-                }
-
-                // Validate email
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-                    throw new Error('Please enter a valid email address');
-                }
-
-                // Check if email already registered
-                const existingQuery = query(collection(db, 'rsvp_innovate_2026'), where('email', '==', leaderEmail));
-                const existingDocs = await getDocs(existingQuery);
-
-                if (!existingDocs.empty) {
-                    throw new Error('This email is already registered. Use "Retrieve Pass" to get your pass.');
-                }
-
-                // Save to Firestore
-                await addDoc(collection(db, 'rsvp_innovate_2026'), data);
-
-                // Store for pass generation
-                currentPassData = data;
-
-                // Show success
-                confirmationId.textContent = ticketId;
-                formView.classList.remove('active');
-                retrieveView.classList.remove('active');
-                successView.classList.add('active');
-                tabRegister.classList.remove('active');
-                tabRetrieve.classList.remove('active');
-
-                // Scroll to top
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            } catch (error) {
-                console.error('Error:', error);
-                formError.textContent = error.message || 'Something went wrong. Please try again.';
-                formError.classList.remove('hidden');
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
             }
-        });
 
-        // Retrieve Pass form submission
-        retrieveForm.addEventListener('submit', async (e) => {
+            // Form submission
+            form.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const submitBtn = retrieveForm.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Searching...';
+            formError.classList.add('hidden');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
             submitBtn.disabled = true;
-            retrieveError.classList.add('hidden');
+            submitBtn.innerText = 'Verifying & Submitting...';
 
             try {
+            // FORCE RECAPTCHA CHECK
+            await getToken(appCheck, true);
+
+            // 1. Gather Leader Data
+            const teamSize = parseInt(teamSizeSelect.value);
+            const leaderName = document.getElementById('name').value.trim();
+
+            // Collect team members data
+            const members = [];
+            if (teamSize > 1) {
+            for (let i = 2; i <= teamSize; i++) { const memberName=document.querySelector(`[name="member_${i}_name"
+                ]`)?.value?.trim(); const memberEmail=document.querySelector(`[name="member_${i}_email"
+                ]`)?.value?.trim(); const memberPhone=document.querySelector(`[name="member_${i}_phone"
+                ]`)?.value?.trim(); const memberCollege=document.querySelector(`[name="member_${i}_college"
+                ]`)?.value?.trim(); if (!memberName || !memberEmail || !memberPhone) { throw new Error(`Please fill all
+                required fields for Member ${i}`); } members.push({ memberNumber: i, name: memberName, email:
+                memberEmail, phone: memberPhone, college: memberCollege || '' , ticketId: generateId(memberName) //
+                Generate ID for member }); } } // Updated ID Generation call (pass name) const
+                ticketId=generateId(leaderName); const
+                leaderEmail=document.getElementById('email').value.trim().toLowerCase(); const data={ name: leaderName,
+                email: leaderEmail, phone: document.getElementById('phone').value.trim(), college:
+                document.getElementById('college').value.trim(), year: document.getElementById('year').value, team:
+                document.getElementById('team').value.trim(), teamSize: teamSize, members: members, ticketId: ticketId,
+                event: 'Innovate For Impact 2026' , status: 'confirmed' , createdAt: serverTimestamp() }; // Validate
+                phone if (!/^\d{10}$/.test(data.phone)) { throw new Error('Please enter a valid 10-digit phone number');
+                } // Validate email if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) { throw new Error('Please enter
+                a valid email address'); } // Check if email already registered const
+                existingQuery=query(collection(db, 'rsvp_innovate_2026' ), where('email', '==' , leaderEmail)); const
+                existingDocs=await getDocs(existingQuery); if (!existingDocs.empty) { throw new Error('This email is
+                already registered. Use "Retrieve Pass" to get your pass.'); } // Save to Firestore await
+                addDoc(collection(db, 'rsvp_innovate_2026' ), data); // Store for pass generation currentPassData=data;
+                // Show success confirmationId.textContent=ticketId; formView.classList.remove('active');
+                retrieveView.classList.remove('active'); successView.classList.add('active');
+                tabRegister.classList.remove('active'); tabRetrieve.classList.remove('active'); // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (error) { console.error('Error:', error);
+                formError.textContent=error.message || 'Something went wrong. Please try again.' ;
+                formError.classList.remove('hidden'); submitBtn.textContent=originalText; submitBtn.disabled=false; }
+                }); // Retrieve Pass form submission retrieveForm.addEventListener('submit', async (e)=> {
+                e.preventDefault();
+
+                const submitBtn = retrieveForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = 'Searching...';
+                submitBtn.disabled = true;
+                retrieveError.classList.add('hidden');
+
+                try {
                 // Modified: Single input logic
                 const inputVal = document.getElementById('retrieve-input').value.trim();
 
                 if (!inputVal) {
-                    throw new Error('Please enter your Name or Email');
+                throw new Error('Please enter your Name or Email');
                 }
 
                 let foundDoc = null;
@@ -1083,123 +1033,123 @@
                 const isEmail = inputVal.includes('@');
 
                 if (isEmail) {
-                    // 1. Search by Email
-                    const email = inputVal.toLowerCase();
+                // 1. Search by Email
+                const email = inputVal.toLowerCase();
 
-                    // Search as leader
-                    const leaderQuery = query(collection(db, 'rsvp_innovate_2026'), where('email', '==', email));
-                    const leaderSnapshot = await getDocs(leaderQuery);
+                // Search as leader
+                const leaderQuery = query(collection(db, 'rsvp_innovate_2026'), where('email', '==', email));
+                const leaderSnapshot = await getDocs(leaderQuery);
 
-                    if (!leaderSnapshot.empty) {
-                        foundDoc = leaderSnapshot.docs[0].data();
-                        foundPerson = {
-                            name: foundDoc.name,
-                            ticketId: foundDoc.ticketId
-                        };
-                    } else {
-                        // Search in members
-                        const allDocsQuery = query(collection(db, 'rsvp_innovate_2026'));
-                        const allDocsSnapshot = await getDocs(allDocsQuery);
-
-                        for (const doc of allDocsSnapshot.docs) {
-                            const docData = doc.data();
-
-                            // Check leader email manually (case-insensitive fallback)
-                            if (docData.email && docData.email.toLowerCase() === email) {
-                                foundDoc = docData;
-                                foundPerson = {
-                                    name: docData.name,
-                                    ticketId: docData.ticketId
-                                };
-                                break;
-                            }
-
-                            // Check members
-                            if (docData.members && docData.members.some(m => m.email.toLowerCase() === email)) {
-                                foundDoc = docData;
-                                // Find specific member
-                                const member = docData.members.find(m => m.email.toLowerCase() === email);
-                                foundPerson = {
-                                    name: member.name,
-                                    ticketId: member.ticketId || generateId(member.name) // Handle legacy (no ID)
-                                };
-                                break;
-                            }
-                        }
-                    }
+                if (!leaderSnapshot.empty) {
+                foundDoc = leaderSnapshot.docs[0].data();
+                foundPerson = {
+                name: foundDoc.name,
+                ticketId: foundDoc.ticketId
+                };
                 } else {
-                    // 2. Search by Name
-                    const searchName = inputVal.toLowerCase();
-                    const allDocsQuery = query(collection(db, 'rsvp_innovate_2026'));
-                    const allDocsSnapshot = await getDocs(allDocsQuery);
+                // Search in members
+                const allDocsQuery = query(collection(db, 'rsvp_innovate_2026'));
+                const allDocsSnapshot = await getDocs(allDocsQuery);
 
-                    for (const doc of allDocsSnapshot.docs) {
-                        const docData = doc.data();
+                for (const doc of allDocsSnapshot.docs) {
+                const docData = doc.data();
 
-                        // Check leader name (Partial match allowed)
-                        if (docData.name && docData.name.toLowerCase().includes(searchName)) {
-                            foundDoc = docData;
-                            foundPerson = {
-                                name: docData.name,
-                                ticketId: docData.ticketId
-                            };
-                            break;
-                        }
+                // Check leader email manually (case-insensitive fallback)
+                if (docData.email && docData.email.toLowerCase() === email) {
+                foundDoc = docData;
+                foundPerson = {
+                name: docData.name,
+                ticketId: docData.ticketId
+                };
+                break;
+                }
 
-                        // Check members names (Partial match allowed)
-                        if (docData.members && docData.members.some(m => m.name && m.name.toLowerCase().includes(searchName))) {
-                            foundDoc = docData;
-                            const member = docData.members.find(m => m.name && m.name.toLowerCase().includes(searchName));
-                            foundPerson = {
-                                name: member.name,
-                                ticketId: member.ticketId || generateId(member.name)
-                            };
-                            break;
-                        }
-                    }
+                // Check members
+                if (docData.members && docData.members.some(m => m.email.toLowerCase() === email)) {
+                foundDoc = docData;
+                // Find specific member
+                const member = docData.members.find(m => m.email.toLowerCase() === email);
+                foundPerson = {
+                name: member.name,
+                ticketId: member.ticketId || generateId(member.name) // Handle legacy (no ID)
+                };
+                break;
+                }
+                }
+                }
+                } else {
+                // 2. Search by Name
+                const searchName = inputVal.toLowerCase();
+                const allDocsQuery = query(collection(db, 'rsvp_innovate_2026'));
+                const allDocsSnapshot = await getDocs(allDocsQuery);
+
+                for (const doc of allDocsSnapshot.docs) {
+                const docData = doc.data();
+
+                // Check leader name (Partial match allowed)
+                if (docData.name && docData.name.toLowerCase().includes(searchName)) {
+                foundDoc = docData;
+                foundPerson = {
+                name: docData.name,
+                ticketId: docData.ticketId
+                };
+                break;
+                }
+
+                // Check members names (Partial match allowed)
+                if (docData.members && docData.members.some(m => m.name && m.name.toLowerCase().includes(searchName))) {
+                foundDoc = docData;
+                const member = docData.members.find(m => m.name && m.name.toLowerCase().includes(searchName));
+                foundPerson = {
+                name: member.name,
+                ticketId: member.ticketId || generateId(member.name)
+                };
+                break;
+                }
+                }
                 }
 
                 if (!foundDoc || !foundPerson) {
-                    throw new Error('No registration found with these details.');
+                throw new Error('No registration found with these details.');
                 }
 
                 // --- NEW LOGIC: Fetch Team ID from 'events' collection ---
                 let finalTicketId = foundPerson.ticketId;
                 try {
-                    const teamName = foundDoc.team;
-                    if (teamName) {
-                        const eventsRef = collection(db, 'events');
-                        // Try matching by 'team' field or 'teamName' field
-                        const q1 = query(eventsRef, where('team', '==', teamName));
-                        const snap1 = await getDocs(q1);
+                const teamName = foundDoc.team;
+                if (teamName) {
+                const eventsRef = collection(db, 'events');
+                // Try matching by 'team' field or 'teamName' field
+                const q1 = query(eventsRef, where('team', '==', teamName));
+                const snap1 = await getDocs(q1);
 
-                        let eventDoc = null;
-                        if (!snap1.empty) {
-                            eventDoc = snap1.docs[0].data();
-                        } else {
-                            const q2 = query(eventsRef, where('teamName', '==', teamName));
-                            const snap2 = await getDocs(q2);
-                            if (!snap2.empty) eventDoc = snap2.docs[0].data();
-                        }
+                let eventDoc = null;
+                if (!snap1.empty) {
+                eventDoc = snap1.docs[0].data();
+                } else {
+                const q2 = query(eventsRef, where('teamName', '==', teamName));
+                const snap2 = await getDocs(q2);
+                if (!snap2.empty) eventDoc = snap2.docs[0].data();
+                }
 
-                        if (eventDoc && eventDoc.teamId) {
-                            finalTicketId = eventDoc.teamId;
-                        } else if (foundDoc.teamId) {
-                            // Check local doc if not found in events
-                            finalTicketId = foundDoc.teamId;
-                        }
-                    }
+                if (eventDoc && eventDoc.teamId) {
+                finalTicketId = eventDoc.teamId;
+                } else if (foundDoc.teamId) {
+                // Check local doc if not found in events
+                finalTicketId = foundDoc.teamId;
+                }
+                }
                 } catch (err) {
-                    console.warn("Team ID lookup in events collection failed:", err);
+                console.warn("Team ID lookup in events collection failed:", err);
                 }
 
                 // Store for pass generation - Merge specific person data with Team data
                 currentPassData = {
-                    name: foundPerson.name,      // Correct Person Name
-                    email: foundDoc.email,       // Leader email (for contact ref) or general
-                    team: foundDoc.team,
-                    ticketId: finalTicketId, // Using fetched teamId
-                    members: foundDoc.members || []
+                name: foundPerson.name, // Correct Person Name
+                email: foundDoc.email, // Leader email (for contact ref) or general
+                team: foundDoc.team,
+                ticketId: finalTicketId, // Using fetched teamId
+                members: foundDoc.members || []
                 };
 
                 confirmationId.textContent = finalTicketId;
@@ -1212,181 +1162,200 @@
                 // Scroll to top
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            } catch (error) {
+                } catch (error) {
                 console.error('Error:', error);
                 retrieveError.textContent = error.message || 'Something went wrong. Please try again.';
                 retrieveError.classList.remove('hidden');
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
-            }
-        });
+                }
+                });
 
-        // View Pass button
-        viewPassBtn.addEventListener('click', () => {
-            if (currentPassData) {
+                // View Pass button
+                viewPassBtn.addEventListener('click', () => {
+                if (currentPassData) {
                 passModal.classList.add('active');
                 drawEventPass(currentPassData);
-            }
-        });
+                }
+                });
 
-        // Close Pass Modal
-        closePassModal.addEventListener('click', () => {
-            passModal.classList.remove('active');
-        });
-
-        // Download Pass
-        downloadPassBtn.addEventListener('click', () => {
-            const canvas = document.getElementById('pass-canvas');
-            const link = document.createElement('a');
-            link.download = `EventPass_${currentPassData.ticketId}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        });
-
-        // Close modal on escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
+                // Close Pass Modal
+                closePassModal.addEventListener('click', () => {
                 passModal.classList.remove('active');
-            }
-        });
+                });
 
-        // Phone number formatting
-        document.getElementById('phone').addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
-        });
+                // Download Pass
+                downloadPassBtn.addEventListener('click', () => {
+                const canvas = document.getElementById('pass-canvas');
+                const link = document.createElement('a');
+                link.download = `EventPass_${currentPassData.ticketId}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                });
 
-        // Character limit warning (Flash red on attempt to cross limit)
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' && e.target.getAttribute('maxlength') === '25') {
+                // Close modal on escape
+                document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                passModal.classList.remove('active');
+                }
+                });
+
+                // Phone number formatting
+                document.getElementById('phone').addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                });
+
+                // Leader Name Validation (Characters Only)
+                document.getElementById('name').addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                });
+
+                // Dynamic Member Fields Validation
+                // Uses event delegation for dynamically added members
+                teamMembersContainer.addEventListener('input', (e) => {
+                if (e.target.name && e.target.name.includes('_phone')) {
+                // Phone fields: Numbers only, max 10
+                e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                }
+                if (e.target.name && e.target.name.includes('_name')) {
+                // Name fields: Letters only
+                e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                }
+                });
+
+                // Character limit warning (Flash red on attempt to cross limit)
+                document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' && e.target.getAttribute('maxlength') === '25') {
                 // Check if user tries to type a printable character when already at limit
                 // Allow control keys: Backspace, Delete, Arrows, Tab, Ctrl/Cmd+A/C/V/X etc.
                 const isControl = e.key.length > 1 || e.ctrlKey || e.metaKey || e.altKey;
 
                 if (e.target.value.length >= 25 && !isControl) {
-                    e.target.classList.add('input-error');
+                e.target.classList.add('input-error');
 
-                    // Find specific inline error message
-                    // For Leader: It's a sibling. For Member: It's a sibling in the same container div
-                    let errorMsg = e.target.parentNode.querySelector('.input-limit-error');
+                // Find specific inline error message
+                // For Leader: It's a sibling. For Member: It's a sibling in the same container div
+                let errorMsg = e.target.parentNode.querySelector('.input-limit-error');
 
-                    // Fallback if structure is slightly different (e.g. strict sibling)
-                    if (!errorMsg) {
-                        errorMsg = e.target.nextElementSibling;
-                    }
-
-                    if (errorMsg && errorMsg.classList.contains('input-limit-error')) {
-                        errorMsg.classList.remove('hidden');
-                        setTimeout(() => {
-                            errorMsg.classList.add('hidden');
-                        }, 2000);
-                    }
-
-                    setTimeout(() => {
-                        e.target.classList.remove('input-error');
-                    }, 300);
+                // Fallback if structure is slightly different (e.g. strict sibling)
+                if (!errorMsg) {
+                errorMsg = e.target.nextElementSibling;
                 }
-            }
-        });
 
-        // Send to Team button
-        const sendToTeamBtn = document.getElementById('send-to-team-btn');
-        const sendInstructions = document.getElementById('send-instructions');
+                if (errorMsg && errorMsg.classList.contains('input-limit-error')) {
+                errorMsg.classList.remove('hidden');
+                setTimeout(() => {
+                errorMsg.classList.add('hidden');
+                }, 2000);
+                }
 
-        sendToTeamBtn.addEventListener('click', () => {
-            if (!currentPassData) return;
-
-            // Collect all email addresses
-            const emails = [currentPassData.email]; // This is Leader's email from foundDoc because we mapped it
-            // Wait, in retrieval we mapped foundDoc.email to currentPassData.email
-            // If foundDoc was the full document, it has leader email.
-
-            if (currentPassData.members && currentPassData.members.length > 0) {
-                currentPassData.members.forEach(member => {
-                    if (member.email && !emails.includes(member.email)) {
-                        emails.push(member.email);
-                    }
+                setTimeout(() => {
+                e.target.classList.remove('input-error');
+                }, 300);
+                }
+                }
                 });
-            }
 
-            // Create email subject
-            const subject = `Your Event Pass - Innovate For Impact 2026`;
+                // Send to Team button
+                const sendToTeamBtn = document.getElementById('send-to-team-btn');
+                const sendInstructions = document.getElementById('send-instructions');
 
-            // Create detailed email body as requested
-            const retrievePassUrl = window.location.origin + '/rsvp.html';
-            const body = `Hi Team ${currentPassData.team}! 👋
+                sendToTeamBtn.addEventListener('click', () => {
+                if (!currentPassData) return;
 
-Great news! Your registration for Innovate For Impact 2026 has been confirmed! 🎉
+                // Collect all email addresses
+                const emails = [currentPassData.email]; // This is Leader's email from foundDoc because we mapped it
+                // Wait, in retrieval we mapped foundDoc.email to currentPassData.email
+                // If foundDoc was the full document, it has leader email.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-GET YOUR EVENT PASS (IMPORTANT)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                if (currentPassData.members && currentPassData.members.length > 0) {
+                currentPassData.members.forEach(member => {
+                if (member.email && !emails.includes(member.email)) {
+                emails.push(member.email);
+                }
+                });
+                }
 
-To download your Event Pass, please follow these steps:
+                // Create email subject
+                const subject = `Your Event Pass - Innovate For Impact 2026`;
 
-1️⃣ Visit: ${retrievePassUrl}
-2️⃣ *CLICK ON "RETRIEVE PASS" TAB*
-3️⃣ *ENTER YOUR NAME OR EMAIL*
-4️⃣ *CLICK SEARCH & DOWNLOAD YOUR PASS*
+                // Create detailed email body as requested
+                const retrievePassUrl = window.location.origin + '/rsvp.html';
+                const body = `Hi Team ${currentPassData.team}! 👋
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 REGISTRATION DETAILS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                Great news! Your registration for Innovate For Impact 2026 has been confirmed! 🎉
 
-🎫 Ticket ID: ${currentPassData.ticketId}
-👤 Team Leader: ${currentPassData.name}
-👥 Team Name: ${currentPassData.team}
-📧 Registered Email: ${currentPassData.email}
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                GET YOUR EVENT PASS (IMPORTANT)
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📍 EVENT DETAILS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                To download your Event Pass, please follow these steps:
 
-📅 Date: 01 February 2026
-⏰ Duration: 6 Hours
-📍 Venue: DYPIU, Akurdi, Pune
-🏆 Prize Pool: ₹10,000
+                1️⃣ Visit: ${retrievePassUrl}
+                2️⃣ *CLICK ON "RETRIEVE PASS" TAB*
+                3️⃣ *ENTER YOUR NAME OR EMAIL*
+                4️⃣ *CLICK SEARCH & DOWNLOAD YOUR PASS*
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ IMPORTANT INSTRUCTIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                📋 REGISTRATION DETAILS
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1️⃣ Save this pass on your phone - you'll need it for entry
-2️⃣ Arrive 30 minutes before the event for smooth check-in
-3️⃣ Bring a valid college ID card
+                🎫 Ticket ID: ${currentPassData.ticketId}
+                👤 Team Leader: ${currentPassData.name}
+                👥 Team Name: ${currentPassData.team}
+                📧 Registered Email: ${currentPassData.email}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📞 CONTACT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                📍 EVENT DETAILS
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-For any queries, contact: 9021479745
+                📅 Date: 01 February 2026
+                ⏰ Duration: 6 Hours
+                📍 Venue: DYPIU, Akurdi, Pune
+                🏆 Prize Pool: ₹10,000
 
-We're excited to see you at the event! 🚀
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                ✅ IMPORTANT INSTRUCTIONS
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Best regards,
-E-Cell DYPIU Team`;
+                1️⃣ Save this pass on your phone - you'll need it for entry
+                2️⃣ Arrive 30 minutes before the event for smooth check-in
+                3️⃣ Bring a valid college ID card
 
-            // Encode for URL
-            const encodedSubject = encodeURIComponent(subject);
-            const encodedBody = encodeURIComponent(body);
-            const emailList = emails.join(',');
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                📞 CONTACT
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-            // Detect if mobile device
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                For any queries, contact: 9021479745
 
-            if (isMobile) {
+                We're excited to see you at the event! 🚀
+
+                Best regards,
+                E-Cell DYPIU Team`;
+
+                // Encode for URL
+                const encodedSubject = encodeURIComponent(subject);
+                const encodedBody = encodeURIComponent(body);
+                const emailList = emails.join(',');
+
+                // Detect if mobile device
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                if (isMobile) {
                 // Mobile: Use mailto: to open default app (Gmail/Apple Mail)
                 const mailtoUrl = `mailto:${emailList}?subject=${encodedSubject}&body=${encodedBody}`;
                 window.location.href = mailtoUrl;
-            } else {
+                } else {
                 // Desktop: Open Gmail Web in new tab (Reliable for PC users)
-                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${emailList}&su=${encodedSubject}&body=${encodedBody}`;
+                const gmailUrl =
+                `https://mail.google.com/mail/?view=cm&fs=1&to=${emailList}&su=${encodedSubject}&body=${encodedBody}`;
                 window.open(gmailUrl, '_blank');
-            }
+                }
 
-            // Show instructions
-            sendInstructions.classList.remove('hidden');
-        });
-    </script>
+                // Show instructions
+                sendInstructions.classList.remove('hidden');
+                });
+                </script>
 
 </body>
 

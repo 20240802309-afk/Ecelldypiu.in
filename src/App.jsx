@@ -22,6 +22,7 @@ import BlogDetail2 from './pages/BlogDetail2';
 import BlogDetail3 from './pages/BlogDetail3';
 import Linktree from './pages/Linktree';
 import ApplyNow from './pages/ApplyNow';
+import Newsletter from './pages/Newsletter';
 import './App.css';
 // import { useEffect } from 'react';
 // import Lenis from 'lenis';
@@ -56,6 +57,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/ourlinks" element={<Linktree />} />
             <Route path="/apply" element={<ApplyNow />} />
+            <Route path="/newsletter" element={<Newsletter />} />
             {/* Backward compatibility: redirect old path */}
             <Route path="/linktree" element={<Navigate to="/ourlinks" replace />} />
           </Routes>
