@@ -1,5 +1,5 @@
 import ReCAPTCHA from "react-google-recaptcha";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Check, Loader2, ArrowRight, ArrowLeft, Star } from 'lucide-react';
@@ -14,6 +14,7 @@ const ApplyNow = () => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [error, setError] = useState(null);
     const [captchaToken, setCaptchaToken] = useState(null);
+    const recaptchaRef = useRef(null);
 
     const onCaptchaChange = (token) => {
         setCaptchaToken(token);
@@ -114,6 +115,12 @@ const ApplyNow = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!captchaToken) {
+            setError('Please complete the reCAPTCHA verification');
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -125,7 +132,12 @@ const ApplyNow = () => {
             setShowSuccess(true);
         } catch (err) {
             console.error("Firebase Error:", err);
-            setError(`Error: ${err.message} `);
+            setError(`Error: ${err.message}`);
+            // Reset reCAPTCHA on error
+            if (recaptchaRef.current) {
+                recaptchaRef.current.reset();
+            }
+            setCaptchaToken(null);
         } finally {
             setLoading(false);
         }
@@ -392,6 +404,7 @@ const ApplyNow = () => {
 
                                     <div className="flex justify-center mb-6">
                                         <ReCAPTCHA
+                                            ref={recaptchaRef}
                                             sitekey="6LfkAWAsAAAAANtYBVUELWkoCVaCWCpbvhC_s6rv"
                                             onChange={onCaptchaChange}
                                             theme="dark"

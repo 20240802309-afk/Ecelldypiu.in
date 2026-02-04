@@ -1,5 +1,5 @@
 import ReCAPTCHA from "react-google-recaptcha";
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Loader2, ArrowRight, Check } from 'lucide-react';
@@ -10,6 +10,7 @@ const Newsletter = () => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [error, setError] = useState(null);
     const [captchaToken, setCaptchaToken] = useState(null);
+    const recaptchaRef = useRef(null);
 
     const onCaptchaChange = (token) => {
         setCaptchaToken(token);
@@ -40,6 +41,12 @@ const Newsletter = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!captchaToken) {
+            setError('Please complete the reCAPTCHA verification');
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -52,7 +59,12 @@ const Newsletter = () => {
             setFormData({ name: '', email: '', phone: '' });
         } catch (err) {
             console.error('Firebase Error:', err);
-            setError(`Error: ${err.message} `);
+            setError(`Error: ${err.message}`);
+            // Reset reCAPTCHA on error
+            if (recaptchaRef.current) {
+                recaptchaRef.current.reset();
+            }
+            setCaptchaToken(null);
         } finally {
             setLoading(false);
         }
@@ -112,6 +124,7 @@ const Newsletter = () => {
 
                             <div className="flex justify-center mb-6 min-h-[78px]">
                                 <ReCAPTCHA
+                                    ref={recaptchaRef}
                                     sitekey="6LfkAWAsAAAAANtYBVUELWkoCVaCWCpbvhC_s6rv"
                                     onChange={onCaptchaChange}
                                     theme="dark"
