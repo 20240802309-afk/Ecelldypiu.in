@@ -158,7 +158,7 @@ const Events = () => {
                 whileHover={{ y: -10 }}
                 className="group bg-zinc-900 border-4 border-zinc-700 hover:border-brand-yellow rounded-[2rem] overflow-hidden transition-all duration-300 h-full flex flex-col"
               >
-                <div className="h-64 bg-white p-8 border-b-4 border-black relative overflow-hidden">
+                <div className="h-64 bg-white p-2 border-b-4 border-black relative overflow-hidden">
                   <img src={event.image} alt={event.title} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div className="p-8 flex flex-col flex-1">
