@@ -1,8 +1,7 @@
 import ReCAPTCHA from "react-google-recaptcha";
 import { useState, useEffect } from 'react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db, appCheck, setCaptchaTokenForAppCheck } from '../firebaseConfig';
-import { getToken } from 'firebase/app-check';
+import { db } from '../firebaseConfig';
 import { Check, Loader2, ArrowRight, ArrowLeft, Star } from 'lucide-react';
 
 const ApplyNow = () => {
@@ -18,7 +17,6 @@ const ApplyNow = () => {
 
     const onCaptchaChange = (token) => {
         setCaptchaToken(token);
-        setCaptchaTokenForAppCheck(token);
     };
 
     const [formData, setFormData] = useState({
@@ -120,11 +118,6 @@ const ApplyNow = () => {
         setError(null);
 
         try {
-            // Force reCAPTCHA verification if appCheck is active
-            if (appCheck) {
-                await getToken(appCheck, true);
-            }
-
             await addDoc(collection(db, 'TEAM_APPLICATION_FORM'), {
                 ...formData,
                 submittedAt: serverTimestamp(),
