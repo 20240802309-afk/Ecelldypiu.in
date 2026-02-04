@@ -161,7 +161,7 @@ const InnovateForImpact = () => {
             </section>
 
             {/* Results Section */}
-            <section className="py-20 bg-black text-white border-t-4 border-white/10 overflow-hidden relative">
+            <section id="hall-of-fame-results" className="py-20 bg-black text-white border-t-4 border-white/10 overflow-hidden relative">
                 {/* Background Decorations */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
                     <div className="absolute top-10 left-10 text-brand-yellow animate-pulse">
