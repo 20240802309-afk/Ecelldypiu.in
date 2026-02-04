@@ -44,17 +44,45 @@ body {
 }
 
 /* Mobile Interaction Improvements */
+html,
+body {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Disallow selection on UI elements */
 img,
 a,
 button,
-svg {
+svg,
+div[role="button"],
+.no-select {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+}
+
+/* Allow selection on text elements, but prevent tap highlight */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+span,
+li,
+td,
+th {
+  cursor: text;
+  /* user-select: text is default, but we ensure touch-callout is default for context menu */
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 ::selection {
