@@ -6,7 +6,9 @@ import {
   Trophy,
   Award,
   Star,
-  ArrowLeft
+  ArrowLeft,
+  Linkedin,
+  Medal
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -61,8 +63,8 @@ const Inceptio = () => {
       { position: '2nd Runner-Up (Tie)', amount: '₹2,000', description: 'The Copilots - Technical Excellence' }
     ],
     judges: [
-      { name: 'Mr. Santosh Ranjan', role: 'Industry Expert', image: '/Santosh Ranjan.png' },
-      { name: 'Mr. Sanjay Jagtap', role: 'Industry Professional', image: '/Sanjay Jagtap.png' }
+      { name: 'Mr. Santosh Ranjan', role: 'Industry Expert', image: '/Santosh Ranjan.png', linkedin: 'https://www.linkedin.com/in/santoshranjan/' },
+      { name: 'Mr. Sanjay Jagtap', role: 'Industry Professional', image: '/Sanjay Jagtap.png', linkedin: 'https://www.linkedin.com/in/sanjay-jagtap-06775a151/' }
     ]
   };
 
@@ -128,6 +130,52 @@ const Inceptio = () => {
         </div>
       </section>
 
+      {/* Winners (Moved) */}
+      <section className="py-20 border-b-4 border-white bg-black relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <h2 className="text-5xl md:text-8xl font-black mb-20 uppercase tracking-tighter text-center">
+            <span className="text-brand-yellow">WIN</span>NERS
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {eventDetails.prizes.map((prize, i) => {
+              let medalColor = "bg-orange-700 border-orange-500";
+              let iconColor = "text-orange-200";
+              let label = "3RD PLACE";
+
+              if (i === 0) {
+                medalColor = "bg-yellow-500 border-yellow-300";
+                iconColor = "text-yellow-100";
+                label = "1ST PLACE";
+              } else if (i === 1) {
+                medalColor = "bg-gray-400 border-gray-300";
+                iconColor = "text-gray-100";
+                label = "2ND PLACE";
+              }
+
+              return (
+                <div key={i} className={`group relative bg-zinc-900 border-4 ${i === 0 ? 'border-brand-yellow scale-105 z-10 shadow-[0_0_20px_rgba(255,178,44,0.3)]' : 'border-zinc-700'} p-8 rounded-[2rem] hover:border-brand-yellow transition-all duration-300 hover:-translate-y-2 flex flex-col items-center text-center`}>
+                  <div className={`w-24 h-24 rounded-full border-4 ${medalColor} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
+                    <Medal className={`w-12 h-12 ${iconColor}`} />
+                  </div>
+
+                  <div className="bg-black px-4 py-1 rounded-full border border-zinc-700 mb-6">
+                    <span className={`font-mono font-bold text-sm tracking-widest ${i === 0 ? 'text-brand-yellow' : 'text-gray-400'}`}>{label}</span>
+                  </div>
+
+                  <h3 className="text-2xl font-black uppercase text-white mb-2 leading-tight">{prize.description.split(' - ')[0]}</h3>
+                  <p className="text-sm font-mono text-gray-400 mb-8">{prize.description.split(' - ')[1]}</p>
+
+                  <div className="mt-auto w-full pt-6 border-t border-zinc-800">
+                    <p className="text-4xl font-black text-brand-yellow">{prize.amount}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Highlights */}
       <section className="py-20 border-b-4 border-white bg-brand-yellow text-black">
         <div className="container mx-auto px-4">
@@ -151,21 +199,19 @@ const Inceptio = () => {
           <h2 className="text-5xl md:text-8xl font-black mb-20 uppercase tracking-tighter text-center text-transparent stroke-text hover:text-white transition-colors cursor-default">
             TIMELINE
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 relative">
-            {/* Decorative Line (Hidden on mobile) */}
-            <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-1 bg-white/20 -translate-x-1/2"></div>
-
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {eventDetails.schedule.map((day, i) => (
-              <div key={i} className={`bg-zinc-900 border-4 border-white rounded-[2rem] overflow-hidden relative z-10 ${i % 2 === 1 ? 'lg:mt-32' : ''}`}>
-                <div className="bg-brand-yellow text-black p-8 border-b-4 border-white flex justify-between items-center">
-                  <h3 className="text-3xl md:text-4xl font-black uppercase text-center w-full">{day.day.split('-')[0]}</h3>
+              <div key={i} className="bg-zinc-900 border-4 border-white rounded-[2rem] overflow-hidden h-full">
+                <div className="bg-brand-yellow text-black p-6 border-b-4 border-white">
+                  <h3 className="text-3xl font-black uppercase text-center">{day.day.split(' - ')[0]}</h3>
+                  <p className="text-black text-center font-mono font-bold">{day.day.split(' - ')[1]}</p>
                 </div>
-                <div className="p-8 space-y-8">
+                <div className="p-0">
                   {day.events.map((event, j) => (
-                    <div key={j} className="flex gap-6 items-start group">
-                      <span className="font-mono text-brand-yellow shrink-0 text-lg bg-black px-2 py-1 -mt-1 rounded border border-white/20 group-hover:bg-brand-yellow group-hover:text-black transition-colors">{event.time}</span>
+                    <div key={j} className="flex border-b border-zinc-700 last:border-0 p-6 hover:bg-white/5 transition-colors">
+                      <div className="w-24 shrink-0 font-mono text-brand-yellow text-sm pt-1">{event.time}</div>
                       <div>
-                        <p className="font-bold text-xl uppercase leading-tight group-hover:text-brand-yellow transition-colors">{event.activity}</p>
+                        <p className="font-bold text-lg leading-tight">{event.activity}</p>
                       </div>
                     </div>
                   ))}
@@ -187,12 +233,18 @@ const Inceptio = () => {
             {eventDetails.judges.map((judge, i) => (
               <div key={i} className="group relative">
                 <div className="bg-black border-4 border-white p-8 rounded-[2rem] flex items-center gap-8 shadow-[12px_12px_0px_#fff] group-hover:shadow-[8px_8px_0px_#fff] group-hover:translate-x-1 group-hover:translate-y-1 transition-all">
-                  <div className="w-24 h-24 shrink-0 rounded-full border-4 border-brand-yellow overflow-hidden">
-                    <img src={judge.image} alt={judge.name} className="w-full h-full object-cover transition-all" />
+                  <div className="w-24 h-24 shrink-0 rounded-full border-4 border-brand-yellow overflow-hidden flex justify-center items-center bg-zinc-800">
+                    <img src={judge.image} alt={judge.name} className="w-full h-full object-cover object-top transition-transform duration-500" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-black uppercase mb-1">{judge.name}</h3>
-                    <p className="text-brand-yellow font-mono text-sm tracking-wider uppercase border-l-2 border-brand-yellow pl-2">{judge.role}</p>
+                    <p className="text-brand-yellow font-mono text-sm tracking-wider uppercase border-l-2 border-brand-yellow pl-2 mb-2">{judge.role}</p>
+                    {judge.linkedin && (
+                      <a href={judge.linkedin} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-gray-400 hover:text-brand-yellow transition-colors text-sm font-mono uppercase tracking-wide">
+                        <Linkedin className="w-4 h-4" />
+                        <span>Connect</span>
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
@@ -201,27 +253,7 @@ const Inceptio = () => {
         </div>
       </section>
 
-      {/* Prizes */}
-      <section className="py-20 bg-black overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-zinc-900 to-transparent pointer-events-none"></div>
-        <div className="container mx-auto px-4">
-          <h2 className="text-5xl md:text-8xl font-black mb-20 uppercase tracking-tighter text-center">
-            <span className="text-brand-yellow">WIN</span>NERS
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {eventDetails.prizes.map((prize, i) => (
-              <div key={i} className="group bg-zinc-900 border-4 border-zinc-700 p-8 rounded-[2rem] hover:border-brand-yellow transition-all duration-300">
-                <div className="w-16 h-16 bg-black rounded-full border-2 border-white flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">
-                  {i + 1}
-                </div>
-                <h3 className="text-xl font-black uppercase text-gray-400 mb-2 group-hover:text-white">{prize.position}</h3>
-                <p className="text-4xl font-black text-brand-yellow mb-4">{prize.amount}</p>
-                <p className="font-mono text-sm text-gray-500 uppercase tracking-wide border-t border-zinc-700 pt-4 group-hover:border-brand-yellow/50 group-hover:text-gray-300 transition-colors">{prize.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       <style>{`
         .stroke-text {
