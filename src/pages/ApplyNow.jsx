@@ -399,7 +399,7 @@ const ApplyNow = () => {
 
                                     <div className="flex justify-center mb-6">
                                         <ReCAPTCHA
-                                            sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                                            sitekey="6LfkAWAsAAAAANtYBVUELWkoCVaCWCpbvhC_s6rv"
                                             onChange={onCaptchaChange}
                                             theme="dark"
                                         />

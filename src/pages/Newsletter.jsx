@@ -128,7 +128,7 @@ const Newsletter = () => {
 
                             <div className="flex justify-center mb-6 min-h-[78px]">
                                 <ReCAPTCHA
-                                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                                    sitekey="6LfkAWAsAAAAANtYBVUELWkoCVaCWCpbvhC_s6rv"
                                     onChange={onCaptchaChange}
                                     theme="dark"
                                 />
