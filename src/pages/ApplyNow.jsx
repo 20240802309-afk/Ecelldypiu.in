@@ -187,9 +187,7 @@ const ApplyNow = () => {
 
             <section className="py-8 md:py-12 px-4">
                 <div className="container mx-auto max-w-3xl">
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+                    <div
                         className="bg-zinc-900 border-2 md:border-4 border-white p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] shadow-[8px_8px_0px_#FFB22C] md:shadow-[12px_12px_0px_#FFB22C] relative"
                     >
                         {/* Progress Bar */}
@@ -449,7 +447,7 @@ const ApplyNow = () => {
                                 )}
                             </AnimatePresence>
                         </form>
-                    </motion.div>
+                    </div>
                 </div>
             </section>
 
