@@ -41,31 +41,43 @@ const Newsletter = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('🚀 Form submission started');
+        console.log('📝 Form data:', formData);
+        console.log('🔐 Captcha token:', captchaToken ? 'Present' : 'Missing');
 
         if (!captchaToken) {
+            console.error('❌ No captcha token');
             setError('Please complete the reCAPTCHA verification');
             return;
         }
 
+        console.log('✅ Captcha validated, starting submission...');
         setLoading(true);
         setError(null);
 
         try {
-            await addDoc(collection(db, 'SUBSCRIPTION_REQUESTS'), {
+            console.log('📤 Attempting to write to Firestore...');
+            const docRef = await addDoc(collection(db, 'SUBSCRIPTION_REQUESTS'), {
                 ...formData,
                 submittedAt: serverTimestamp(),
             });
+            console.log('✅ Successfully written to Firestore, doc ID:', docRef.id);
             setShowSuccess(true);
             setFormData({ name: '', email: '', phone: '' });
         } catch (err) {
-            console.error('Firebase Error:', err);
+            console.error('❌ Firebase Error:', err);
+            console.error('Error code:', err.code);
+            console.error('Error message:', err.message);
+            console.error('Full error:', JSON.stringify(err, null, 2));
             setError(`Error: ${err.message}`);
             // Reset reCAPTCHA on error
             if (recaptchaRef.current) {
+                console.log('🔄 Resetting reCAPTCHA...');
                 recaptchaRef.current.reset();
             }
             setCaptchaToken(null);
         } finally {
+            console.log('🏁 Submission complete, setting loading to false');
             setLoading(false);
         }
     };
