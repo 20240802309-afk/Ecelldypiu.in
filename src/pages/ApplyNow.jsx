@@ -130,27 +130,28 @@ const ApplyNow = () => {
         setError(null);
 
         try {
-            console.log('📤 Attempting to write to Firestore...');
+            console.log('📤 Attempting to submit via API...');
 
-            // Create a timeout promise
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Request timeout - please check your internet connection')), 15000)
-            );
-
-            // Race between Firestore write and timeout
-            const writePromise = addDoc(collection(db, 'TEAM_APPLICATION_FORM'), {
-                ...formData,
-                submittedAt: serverTimestamp(),
+            // Use fetch API instead of Firestore SDK (better mobile compatibility)
+            const response = await fetch('/api/submit-application', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
             });
 
-            const docRef = await Promise.race([writePromise, timeoutPromise]);
-            console.log('✅ Successfully written to Firestore, doc ID:', docRef.id);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Submission failed');
+            }
+
+            const result = await response.json();
+            console.log('✅ Successfully submitted, response:', result);
             setShowSuccess(true);
         } catch (err) {
-            console.error("❌ Firebase Error:", err);
-            console.error('Error code:', err.code);
+            console.error("❌ Submission Error:", err);
             console.error('Error message:', err.message);
-            console.error('Full error:', JSON.stringify(err, null, 2));
             setError(`Error: ${err.message}`);
             // Reset reCAPTCHA on error
             if (recaptchaRef.current) {
