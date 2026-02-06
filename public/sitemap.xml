@@ -4,11 +4,134 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
 
+<!-- Main Pages -->
 <url>
   <loc>https://ecelldypiu.in/</loc>
-  <lastmod>2025-10-18T13:21:52+00:00</lastmod>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>1.0</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/about</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.9</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/events</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.9</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/team</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.8</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/blogs</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.8</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/contact</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/sponsors</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/apply</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.8</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/newsletter</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.7</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/ourlinks</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.6</priority>
+</url>
+
+<!-- Event Pages -->
+<url>
+  <loc>https://ecelldypiu.in/events/inceptio</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.8</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/events/elevate</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.8</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/events/sih</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.8</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/events/finbiz</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.8</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/events/innovate-for-impact</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.8</priority>
+</url>
+
+<!-- Blog Posts -->
+<url>
+  <loc>https://ecelldypiu.in/blogs/where-ideas-meet-impact</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/blogs/ceo-pune-meetup</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
+</url>
+
+<url>
+  <loc>https://ecelldypiu.in/blogs/entrepreneurship-awareness-drive</loc>
+  <lastmod>2026-02-06T08:46:57+00:00</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
 </url>
 
 </urlset>
