@@ -56,10 +56,39 @@ export default async function handler(req, res) {
         }
 
         // Get all published blogs, ordered by creation date
-        const blogsSnapshot = await db.collection('BLOGS')
-            .where('published', '==', true)
-            .orderBy('createdAt', 'desc')
-            .get();
+        // Note: This may need a composite index in Firestore
+        let blogsSnapshot;
+        try {
+            blogsSnapshot = await db.collection('BLOGS')
+                .where('published', '==', true)
+                .orderBy('createdAt', 'desc')
+                .get();
+        } catch (indexError) {
+            // Fallback: if composite index not available, get all and filter/sort in memory
+            console.log('Index error, using fallback:', indexError.message);
+            const allBlogsSnapshot = await db.collection('BLOGS').get();
+            const allBlogs = [];
+            allBlogsSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.published === true) {
+                    allBlogs.push({
+                        id: doc.id,
+                        ...data
+                    });
+                }
+            });
+            // Sort by createdAt descending
+            allBlogs.sort((a, b) => {
+                const aTime = a.createdAt?.toMillis?.() || 0;
+                const bTime = b.createdAt?.toMillis?.() || 0;
+                return bTime - aTime;
+            });
+            return res.status(200).json({
+                success: true,
+                blogs: allBlogs,
+                total: allBlogs.length
+            });
+        }
 
         const blogs = [];
         blogsSnapshot.forEach(doc => {
