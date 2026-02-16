@@ -3,7 +3,7 @@ import {
     Loader2, Send, AlertCircle, CheckCircle2, Lock, 
     PlusCircle, List, Bell, LogOut, Image, X, Upload,
     Calendar, Clock, Tag, User, Eye, Trash2, BookOpen,
-    ChevronDown, ChevronRight, FileText
+    ChevronDown, ChevronRight, FileText, Users, CheckSquare, Square, Mail, Phone
 } from 'lucide-react';
 
 const AdminPortal = () => {
@@ -16,6 +16,12 @@ const AdminPortal = () => {
     const [error, setError] = useState(null);
     const [blogs, setBlogs] = useState([]);
     const [loadingBlogs, setLoadingBlogs] = useState(false);
+
+    // Subscriber modal state
+    const [showSubscriberModal, setShowSubscriberModal] = useState(false);
+    const [subscribers, setSubscribers] = useState([]);
+    const [selectedSubscribers, setSelectedSubscribers] = useState([]);
+    const [loadingSubscribers, setLoadingSubscribers] = useState(false);
 
     // Blog form state
     const [blogData, setBlogData] = useState({
@@ -191,11 +197,66 @@ const AdminPortal = () => {
         }
     };
 
+    // Fetch subscribers for selection modal
+    const fetchSubscribers = async () => {
+        setLoadingSubscribers(true);
+        try {
+            const response = await fetch('/api/get-subscribers', {
+                headers: {
+                    'Authorization': `Bearer ${adminKey}`
+                }
+            });
+            const data = await response.json();
+            if (data.subscribers) {
+                setSubscribers(data.subscribers);
+                setSelectedSubscribers(data.subscribers.map(s => s.email)); // Select all by default
+            }
+        } catch (err) {
+            console.error('Failed to fetch subscribers:', err);
+        } finally {
+            setLoadingSubscribers(false);
+        }
+    };
+
+    // Open subscriber selection modal
+    const openSubscriberModal = async () => {
+        setShowSubscriberModal(true);
+        await fetchSubscribers();
+    };
+
+    // Toggle individual subscriber selection
+    const toggleSubscriber = (email) => {
+        setSelectedSubscribers(prev => 
+            prev.includes(email) 
+                ? prev.filter(e => e !== email)
+                : [...prev, email]
+        );
+    };
+
+    // Select all subscribers
+    const selectAllSubscribers = () => {
+        setSelectedSubscribers(subscribers.map(s => s.email));
+    };
+
+    // Deselect all subscribers
+    const deselectAllSubscribers = () => {
+        setSelectedSubscribers([]);
+    };
+
     const handleSendNotification = async () => {
+        if (selectedSubscribers.length === 0) {
+            setError('Please select at least one subscriber');
+            return;
+        }
+        
+        setShowSubscriberModal(false);
         setLoading(true);
         setError(null);
 
         try {
+            // Get the selected subscriber objects with name and email
+            const selectedSubs = subscribers.filter(s => selectedSubscribers.includes(s.email));
+            
             const response = await fetch('/api/send-blog-notification', {
                 method: 'POST',
                 headers: {
@@ -206,7 +267,8 @@ const AdminPortal = () => {
                     title: notifyData.title,
                     excerpt: notifyData.excerpt,
                     url: notifyData.url,
-                    category: notifyData.category || 'Blog'
+                    category: notifyData.category || 'Blog',
+                    selectedSubscribers: selectedSubs
                 })
             });
 
@@ -481,7 +543,7 @@ const AdminPortal = () => {
                                     <p className="text-brand-yellow text-xs font-mono">{notifyData.url}</p>
                                 </div>
                                 <button
-                                    onClick={handleSendNotification}
+                                    onClick={openSubscriberModal}
                                     disabled={loading}
                                     className="w-full bg-brand-yellow text-black py-4 rounded-xl font-black uppercase text-lg flex items-center justify-center gap-3 hover:bg-white transition-colors disabled:opacity-50"
                                 >
@@ -492,8 +554,8 @@ const AdminPortal = () => {
                                         </>
                                     ) : (
                                         <>
-                                            <Send className="w-5 h-5" />
-                                            Send Notification to All Subscribers
+                                            <Users className="w-5 h-5" />
+                                            Select Subscribers & Send
                                         </>
                                     )}
                                 </button>
@@ -1018,7 +1080,7 @@ More content..."
                                 </div>
 
                                 <button
-                                    onClick={handleSendNotification}
+                                    onClick={openSubscriberModal}
                                     disabled={loading || !notifyData.title}
                                     className="w-full bg-brand-yellow text-black text-xl font-black uppercase py-4 border-4 border-black hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl mt-4"
                                 >
@@ -1029,8 +1091,8 @@ More content..."
                                         </>
                                     ) : (
                                         <>
-                                            <Send className="w-6 h-6" />
-                                            Send to All Subscribers
+                                            <Users className="w-6 h-6" />
+                                            Select Subscribers & Send
                                         </>
                                     )}
                                 </button>
@@ -1039,6 +1101,155 @@ More content..."
                     </div>
                 )}
             </div>
+
+            {/* Subscriber Selection Modal */}
+            {showSubscriberModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-zinc-900 border-4 border-white rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-[8px_8px_0px_#FFB22C]">
+                        {/* Modal Header */}
+                        <div className="p-6 border-b-2 border-zinc-700 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-xl font-black uppercase flex items-center gap-3">
+                                    <Users className="w-6 h-6 text-brand-yellow" />
+                                    Select <span className="text-brand-yellow">Subscribers</span>
+                                </h2>
+                                <p className="text-gray-400 text-sm mt-1">
+                                    Choose who receives the notification
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowSubscriberModal(false)}
+                                className="text-gray-400 hover:text-white p-2"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Selection Controls */}
+                        <div className="p-4 bg-zinc-800 border-b border-zinc-700 flex items-center justify-between flex-wrap gap-3">
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={selectAllSubscribers}
+                                    className="px-4 py-2 bg-brand-yellow text-black font-bold text-sm rounded-lg hover:bg-white transition-colors flex items-center gap-2"
+                                >
+                                    <CheckSquare className="w-4 h-4" />
+                                    Select All
+                                </button>
+                                <button
+                                    onClick={deselectAllSubscribers}
+                                    className="px-4 py-2 bg-zinc-700 text-white font-bold text-sm rounded-lg hover:bg-zinc-600 transition-colors flex items-center gap-2"
+                                >
+                                    <Square className="w-4 h-4" />
+                                    Deselect All
+                                </button>
+                            </div>
+                            <div className="text-sm text-gray-400">
+                                <span className="text-brand-yellow font-bold">{selectedSubscribers.length}</span> of {subscribers.length} selected
+                            </div>
+                        </div>
+
+                        {/* Subscribers List */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                            {loadingSubscribers ? (
+                                <div className="flex items-center justify-center py-10">
+                                    <Loader2 className="w-8 h-8 animate-spin text-brand-yellow" />
+                                </div>
+                            ) : subscribers.length === 0 ? (
+                                <div className="text-center py-10 text-gray-400">
+                                    No subscribers found
+                                </div>
+                            ) : (
+                                subscribers.map((subscriber) => (
+                                    <div
+                                        key={subscriber.id}
+                                        className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                                            selectedSubscribers.includes(subscriber.email)
+                                                ? 'bg-brand-yellow/10 border-brand-yellow'
+                                                : 'bg-zinc-800 border-zinc-700 hover:border-zinc-500'
+                                        }`}
+                                        onClick={() => toggleSubscriber(subscriber.email)}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            {/* Checkbox */}
+                                            <div className={`w-6 h-6 rounded flex items-center justify-center ${
+                                                selectedSubscribers.includes(subscriber.email)
+                                                    ? 'bg-brand-yellow text-black'
+                                                    : 'bg-zinc-700 border border-zinc-600'
+                                            }`}>
+                                                {selectedSubscribers.includes(subscriber.email) && (
+                                                    <CheckSquare className="w-4 h-4" />
+                                                )}
+                                            </div>
+                                            
+                                            {/* User Info */}
+                                            <div>
+                                                <p className="text-white font-bold">{subscriber.name}</p>
+                                                <div className="flex items-center gap-4 text-sm text-gray-400 mt-1">
+                                                    <span className="flex items-center gap-1">
+                                                        <Mail className="w-3 h-3" />
+                                                        {subscriber.email}
+                                                    </span>
+                                                    {subscriber.phone && (
+                                                        <span className="flex items-center gap-1">
+                                                            <Phone className="w-3 h-3" />
+                                                            {subscriber.phone}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {subscriber.college && (
+                                                    <p className="text-xs text-gray-500 mt-1">{subscriber.college}</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Remove Button */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleSubscriber(subscriber.email);
+                                            }}
+                                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors ${
+                                                selectedSubscribers.includes(subscriber.email)
+                                                    ? 'bg-red-900/50 text-red-400 hover:bg-red-900'
+                                                    : 'bg-green-900/50 text-green-400 hover:bg-green-900'
+                                            }`}
+                                        >
+                                            {selectedSubscribers.includes(subscriber.email) ? 'Remove' : 'Add'}
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t-2 border-zinc-700 bg-zinc-800 flex items-center justify-between gap-4">
+                            <button
+                                onClick={() => setShowSubscriberModal(false)}
+                                className="px-6 py-3 bg-zinc-700 text-white font-bold rounded-xl hover:bg-zinc-600 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSendNotification}
+                                disabled={selectedSubscribers.length === 0 || loading}
+                                className="flex-1 bg-brand-yellow text-black py-3 rounded-xl font-black uppercase flex items-center justify-center gap-3 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Sending...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="w-5 h-5" />
+                                        Send to {selectedSubscribers.length} Subscriber{selectedSubscribers.length !== 1 ? 's' : ''}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
