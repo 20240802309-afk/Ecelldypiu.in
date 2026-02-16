@@ -90,8 +90,8 @@ function generateBlogEmailHTML(blogData, subscriberName) {
                                             ${blogData.title}
                                         </h2>
                                         
-                                        <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
-                                            ${blogData.excerpt || blogData.description || ''}
+                                        <p style="color: #FFB22C; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0; font-weight: bold;">
+                                            🔥 Tap the button below to read this exciting new post!
                                         </p>
                                         
                                         <p style="color: #71717a; font-size: 13px; margin: 0;">
