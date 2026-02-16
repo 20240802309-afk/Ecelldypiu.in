@@ -1,5 +1,5 @@
 ﻿
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Calendar,
@@ -8,17 +8,37 @@ import {
   BookOpen,
   TrendingUp,
   Lightbulb,
-  Users
+  Users,
+  Loader2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import FunkyMarquee from '../components/FunkyMarquee';
 
 const Blogs = () => {
+  const [dynamicBlogs, setDynamicBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     window.scrollTo(0, 0);
+    fetchBlogs();
   }, []);
 
-  const blogPosts = [
+  const fetchBlogs = async () => {
+    try {
+      const response = await fetch('/api/get-blogs');
+      const data = await response.json();
+      if (data.blogs) {
+        setDynamicBlogs(data.blogs);
+      }
+    } catch (err) {
+      console.error('Failed to fetch blogs:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Static blogs (legacy - keep for backward compatibility)
+  const staticBlogPosts = [
     {
       id: 1,
       title: 'E-Cell DYPIU Blog: Where Ideas Meet Impact',
@@ -28,7 +48,8 @@ const Blogs = () => {
       readTime: '5 min read',
       category: 'Entrepreneurship',
       tags: ['E-Cell', 'Innovation', 'Impact'],
-      link: '/blogs/where-ideas-meet-impact'
+      link: '/blogs/where-ideas-meet-impact',
+      isStatic: true
     },
     {
       id: 2,
@@ -39,7 +60,8 @@ const Blogs = () => {
       readTime: '6 min read',
       category: 'Events',
       tags: ['Meetup', 'Networking', 'COEP Pune'],
-      link: '/blogs/ceo-pune-meetup'
+      link: '/blogs/ceo-pune-meetup',
+      isStatic: true
     },
     {
       id: 3,
@@ -50,8 +72,19 @@ const Blogs = () => {
       readTime: '7 min read',
       category: 'Events',
       tags: ['Awareness', 'Startup Ecosystem', 'Pune'],
-      link: '/blogs/entrepreneurship-awareness-drive'
+      link: '/blogs/entrepreneurship-awareness-drive',
+      isStatic: true
     }
+  ];
+
+  // Combine dynamic blogs (newest first) with static blogs
+  const allBlogPosts = [
+    ...dynamicBlogs.map(blog => ({
+      ...blog,
+      link: `/blogs/${blog.slug}`,
+      isStatic: false
+    })),
+    ...staticBlogPosts
   ];
 
   return (
@@ -84,40 +117,49 @@ const Blogs = () => {
             FEATURED <span className="text-brand-yellow">POSTS</span>
           </h2>
 
-          <div className="grid grid-cols-1 gap-8 md:gap-12">
-            {blogPosts.map((blog, index) => (
-              <motion.div
-                key={blog.id}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-black border-4 border-white rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-12 shadow-[8px_8px_0px_#FFB22C] md:shadow-[12px_12px_0px_#FFB22C] hover:shadow-[4px_4px_0px_#FFB22C] md:hover:shadow-[8px_8px_0px_#FFB22C] hover:translate-x-1 hover:translate-y-1 transition-all group"
-              >
-                <div className="flex flex-col md:flex-row justify-between items-start gap-6 md:gap-8">
-                  <div className="flex-1">
-                    <div className="flex flex-wrap gap-2 md:gap-4 mb-4 md:mb-6">
-                      <span className="bg-zinc-800 text-white px-3 py-1 rounded-full font-mono text-xs md:text-sm border border-zinc-600">{blog.category}</span>
-                      <span className="bg-brand-yellow text-black px-3 py-1 rounded-full font-mono font-bold text-xs md:text-sm">{blog.readTime}</span>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-12 h-12 animate-spin text-brand-yellow" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-8 md:gap-12">
+              {allBlogPosts.map((blog, index) => (
+                <motion.div
+                  key={blog.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-black border-4 border-white rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-12 shadow-[8px_8px_0px_#FFB22C] md:shadow-[12px_12px_0px_#FFB22C] hover:shadow-[4px_4px_0px_#FFB22C] md:hover:shadow-[8px_8px_0px_#FFB22C] hover:translate-x-1 hover:translate-y-1 transition-all group"
+                >
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-6 md:gap-8">
+                    <div className="flex-1">
+                      <div className="flex flex-wrap gap-2 md:gap-4 mb-4 md:mb-6">
+                        <span className="bg-zinc-800 text-white px-3 py-1 rounded-full font-mono text-xs md:text-sm border border-zinc-600">{blog.category}</span>
+                        <span className="bg-brand-yellow text-black px-3 py-1 rounded-full font-mono font-bold text-xs md:text-sm">{blog.readTime}</span>
+                        {!blog.isStatic && (
+                          <span className="bg-green-900 text-green-400 px-3 py-1 rounded-full font-mono text-xs md:text-sm border border-green-600">NEW</span>
+                        )}
+                      </div>
+                      <h3 className="text-2xl md:text-5xl font-black mb-4 md:mb-6 uppercase leading-tight group-hover:text-brand-yellow transition-colors">
+                        {blog.title}
+                      </h3>
+                      <p className="text-base md:text-xl text-gray-400 font-bold mb-6 md:mb-8 leading-relaxed max-w-3xl">
+                        {blog.excerpt}
+                      </p>
+                      <Link to={blog.link} className="inline-flex items-center text-lg md:text-xl font-black uppercase hover:underline decoration-4 decoration-brand-yellow underline-offset-4">
+                        READ ARTICLE <ArrowRight className="ml-2 w-5 h-5 md:w-6 md:h-6" />
+                      </Link>
                     </div>
-                    <h3 className="text-2xl md:text-5xl font-black mb-4 md:mb-6 uppercase leading-tight group-hover:text-brand-yellow transition-colors">
-                      {blog.title}
-                    </h3>
-                    <p className="text-base md:text-xl text-gray-400 font-bold mb-6 md:mb-8 leading-relaxed max-w-3xl">
-                      {blog.excerpt}
-                    </p>
-                    <Link to={blog.link} className="inline-flex items-center text-lg md:text-xl font-black uppercase hover:underline decoration-4 decoration-brand-yellow underline-offset-4">
-                      READ ARTICLE <ArrowRight className="ml-2 w-5 h-5 md:w-6 md:h-6" />
-                    </Link>
-                  </div>
-                  <div className="hidden lg:block">
-                    <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center border-4 border-black animate-spin-slow">
-                      <BookOpen className="w-16 h-16 text-black" />
+                    <div className="hidden lg:block">
+                      <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center border-4 border-black animate-spin-slow">
+                        <BookOpen className="w-16 h-16 text-black" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

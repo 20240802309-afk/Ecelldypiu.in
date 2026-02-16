@@ -124,7 +124,7 @@ function generateBlogEmailHTML(blogData, subscriberName) {
                             </p>
                             <p style="color: #52525b; font-size: 12px; margin: 0;">
                                 © ${new Date().getFullYear()} E-Cell DYPIU. All rights reserved.<br>
-                                Dr. D. Y. Patil International University, Pune
+                                D. Y. Patil International University, Pune
                             </p>
                         </td>
                     </tr>

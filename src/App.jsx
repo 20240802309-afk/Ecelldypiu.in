@@ -23,7 +23,8 @@ import BlogDetail3 from './pages/BlogDetail3';
 import Linktree from './pages/Linktree';
 import ApplyNow from './pages/ApplyNow';
 import Newsletter from './pages/Newsletter';
-import AdminBlogNotify from './pages/AdminBlogNotify';
+import AdminPortal from './pages/AdminPortal';
+import BlogDetail from './pages/BlogDetail';
 import './App.css';
 // import { useEffect } from 'react';
 // import Lenis from 'lenis';
@@ -55,11 +56,12 @@ function App() {
             <Route path="/blogs/where-ideas-meet-impact" element={<BlogDetail1 />} />
             <Route path="/blogs/ceo-pune-meetup" element={<BlogDetail2 />} />
             <Route path="/blogs/entrepreneurship-awareness-drive" element={<BlogDetail3 />} />
+            <Route path="/blogs/:slug" element={<BlogDetail />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/ourlinks" element={<Linktree />} />
             <Route path="/apply" element={<ApplyNow />} />
             <Route path="/newsletter" element={<Newsletter />} />
-            <Route path="/admin/blog-notify" element={<AdminBlogNotify />} />
+            <Route path="/admin" element={<AdminPortal />} />
             {/* Backward compatibility: redirect old path */}
             <Route path="/linktree" element={<Navigate to="/ourlinks" replace />} />
           </Routes>
