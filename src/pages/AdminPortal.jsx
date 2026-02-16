@@ -36,6 +36,10 @@ const AdminPortal = () => {
     const [addingSubscriber, setAddingSubscriber] = useState(false);
     const [deletingSubscriber, setDeletingSubscriber] = useState(null);
 
+    // Login state
+    const [loginError, setLoginError] = useState('');
+    const [loginLoading, setLoginLoading] = useState(false);
+
     // Filter subscribers based on search
     const filteredSubscribers = subscribers.filter(sub => 
         sub.name.toLowerCase().includes(subscriberSearch.toLowerCase()) ||
@@ -132,13 +136,38 @@ const AdminPortal = () => {
         category: ''
     });
 
-    // Check for saved auth
+    // Check for saved auth and verify it's still valid
     useEffect(() => {
-        const savedKey = sessionStorage.getItem('adminKey');
-        if (savedKey) {
-            setAdminKey(savedKey);
-            setIsAuthenticated(true);
-        }
+        const verifyAndRestoreSession = async () => {
+            const savedKey = sessionStorage.getItem('adminKey');
+            if (savedKey) {
+                setAdminKey(savedKey);
+                setLoginLoading(true);
+                try {
+                    const response = await fetch('/api/verify-admin', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${savedKey}`
+                        }
+                    });
+                    if (response.ok) {
+                        setIsAuthenticated(true);
+                    } else {
+                        // Saved key is no longer valid
+                        sessionStorage.removeItem('adminKey');
+                        setAdminKey('');
+                        setLoginError('Session expired. Please login again.');
+                    }
+                } catch (err) {
+                    // Network error - still try to authenticate
+                    setIsAuthenticated(true);
+                } finally {
+                    setLoginLoading(false);
+                }
+            }
+        };
+        verifyAndRestoreSession();
     }, []);
 
     // Load blogs when authenticated
@@ -163,11 +192,35 @@ const AdminPortal = () => {
         }
     };
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (adminKey.trim()) {
+        if (!adminKey.trim()) return;
+
+        setLoginLoading(true);
+        setLoginError('');
+
+        try {
+            const response = await fetch('/api/verify-admin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminKey}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || data.error || 'Invalid admin key');
+            }
+
+            // Success - save key and authenticate
             sessionStorage.setItem('adminKey', adminKey);
             setIsAuthenticated(true);
+        } catch (err) {
+            setLoginError(err.message || 'Unauthorized - Invalid admin key');
+        } finally {
+            setLoginLoading(false);
         }
     };
 
@@ -519,19 +572,36 @@ const AdminPortal = () => {
                         E-Cell DYPIU Blog Management
                     </p>
                     <form onSubmit={handleLogin}>
+                        {loginError && (
+                            <div className="bg-red-900/50 border-2 border-red-500 text-red-400 p-4 rounded-lg mb-4 flex items-center gap-3">
+                                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                                <span className="font-bold text-sm">{loginError}</span>
+                            </div>
+                        )}
                         <input
                             type="password"
                             value={adminKey}
-                            onChange={(e) => setAdminKey(e.target.value)}
+                            onChange={(e) => { setAdminKey(e.target.value); setLoginError(''); }}
                             placeholder="Enter Admin API Key"
-                            className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-lg mb-4 focus:border-brand-yellow focus:outline-none"
+                            className={`w-full bg-black border-2 p-4 text-white rounded-lg mb-4 focus:border-brand-yellow focus:outline-none ${
+                                loginError ? 'border-red-500' : 'border-zinc-700'
+                            }`}
                             required
+                            disabled={loginLoading}
                         />
                         <button
                             type="submit"
-                            className="w-full bg-brand-yellow text-black font-black py-4 rounded-lg uppercase hover:bg-white transition-colors"
+                            disabled={loginLoading}
+                            className="w-full bg-brand-yellow text-black font-black py-4 rounded-lg uppercase hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            Login
+                            {loginLoading ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    Verifying...
+                                </>
+                            ) : (
+                                'Login'
+                            )}
                         </button>
                     </form>
                 </div>
