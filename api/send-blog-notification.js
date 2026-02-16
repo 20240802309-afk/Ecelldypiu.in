@@ -181,26 +181,33 @@ export default async function handler(req, res) {
         // Fetch all newsletter subscribers from Firebase
         const subscribersSnapshot = await db.collection('SUBSCRIPTION_REQUESTS').get();
 
+        console.log(`Total documents in SUBSCRIPTION_REQUESTS: ${subscribersSnapshot.size}`);
+
         if (subscribersSnapshot.empty) {
             return res.status(200).json({
                 success: true,
                 message: 'No subscribers to notify',
-                sentCount: 0
+                sentCount: 0,
+                debug: { totalDocs: 0 }
             });
         }
 
         const subscribers = [];
+        const skippedDocs = [];
         subscribersSnapshot.forEach(doc => {
             const data = doc.data();
+            console.log(`Doc ${doc.id}: email="${data.email}", name="${data.name}"`);
             if (data.email) {
                 subscribers.push({
-                    name: data.name,
+                    name: data.name || 'Subscriber',
                     email: data.email
                 });
+            } else {
+                skippedDocs.push({ id: doc.id, fields: Object.keys(data) });
             }
         });
 
-        console.log(`Found ${subscribers.length} subscribers to notify`);
+        console.log(`Found ${subscribers.length} subscribers with email field, skipped ${skippedDocs.length}`);
 
         // Send emails to all subscribers
         const emailSubject = `📢 New Blog: ${title} | E-Cell DYPIU`;
@@ -252,10 +259,13 @@ export default async function handler(req, res) {
             message: `Blog notification sent`,
             blog: blogData,
             results: {
-                totalSubscribers: subscribers.length,
+                totalDocs: subscribersSnapshot.size,
+                validSubscribers: subscribers.length,
+                skippedDocs: skippedDocs.length,
                 sent: results.sent,
                 failed: results.failed,
-                details: results.details
+                details: results.details,
+                skipped: skippedDocs
             }
         });
 

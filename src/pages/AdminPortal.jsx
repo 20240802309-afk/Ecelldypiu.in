@@ -216,11 +216,14 @@ const AdminPortal = () => {
 
             setResult({
                 type: 'notification',
-                message: `Notifications sent to ${data.results?.sent || 0} of ${data.results?.totalSubscribers || 0} subscribers!`,
+                message: `Notifications sent to ${data.results?.sent || 0} of ${data.results?.validSubscribers || 0} subscribers!`,
                 details: data.results?.details || [],
                 sent: data.results?.sent || 0,
                 failed: data.results?.failed || 0,
-                total: data.results?.totalSubscribers || 0
+                total: data.results?.validSubscribers || 0,
+                totalDocs: data.results?.totalDocs || 0,
+                skipped: data.results?.skippedDocs || 0,
+                skippedDetails: data.results?.skipped || []
             });
 
         } catch (err) {
@@ -358,12 +361,32 @@ const AdminPortal = () => {
                             <div className="border-t border-blue-500/30 p-4 bg-black/30 max-h-96 overflow-y-auto">
                                 <div className="flex items-center justify-between mb-4">
                                     <h4 className="text-white font-bold uppercase text-sm">Delivery Report</h4>
-                                    <div className="flex gap-4 text-xs">
+                                    <div className="flex gap-4 text-xs flex-wrap">
                                         <span className="text-green-400">✓ Sent: {result.sent}</span>
                                         {result.failed > 0 && <span className="text-red-400">✗ Failed: {result.failed}</span>}
-                                        <span className="text-gray-400">Total: {result.total}</span>
+                                        <span className="text-gray-400">Valid: {result.total}</span>
+                                        {result.skipped > 0 && <span className="text-yellow-400">⚠ Skipped: {result.skipped}</span>}
+                                        <span className="text-zinc-500">Total Docs: {result.totalDocs}</span>
                                     </div>
                                 </div>
+                                
+                                {/* Skipped documents warning */}
+                                {result.skipped > 0 && (
+                                    <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-3 mb-4">
+                                        <p className="text-yellow-400 text-sm font-bold mb-2">⚠️ {result.skipped} documents skipped (no email field)</p>
+                                        <p className="text-yellow-500/70 text-xs mb-2">These documents in your Firebase don't have an 'email' field:</p>
+                                        {result.skippedDetails && result.skippedDetails.length > 0 && (
+                                            <ul className="text-xs text-yellow-400/80 space-y-1 max-h-24 overflow-y-auto">
+                                                {result.skippedDetails.map((doc, idx) => (
+                                                    <li key={idx} className="font-mono">
+                                                        • {doc.id} (fields: {doc.fields.join(', ') || 'none'})
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                )}
+                                
                                 <div className="space-y-2">
                                     {result.details.map((item, idx) => (
                                         <div 
