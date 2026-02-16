@@ -143,9 +143,6 @@ const Blogs = () => {
                       <h3 className="text-2xl md:text-5xl font-black mb-4 md:mb-6 uppercase leading-tight group-hover:text-brand-yellow transition-colors">
                         {blog.title}
                       </h3>
-                      <p className="text-base md:text-xl text-gray-400 font-bold mb-6 md:mb-8 leading-relaxed max-w-3xl">
-                        {blog.excerpt}
-                      </p>
                       <Link to={blog.link} className="inline-flex items-center text-lg md:text-xl font-black uppercase hover:underline decoration-4 decoration-brand-yellow underline-offset-4">
                         READ ARTICLE <ArrowRight className="ml-2 w-5 h-5 md:w-6 md:h-6" />
                       </Link>
