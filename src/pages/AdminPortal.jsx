@@ -4,7 +4,7 @@ import {
     PlusCircle, List, Bell, LogOut, Image, X, Upload,
     Calendar, Clock, Tag, User, Eye, Trash2, BookOpen,
     FileText, Users, CheckSquare, Square, Mail, Phone, Search,
-    ArrowLeft
+    ArrowLeft, Sparkles, Archive, ArrowUpDown
 } from 'lucide-react';
 
 const AdminPortal = () => {
@@ -16,6 +16,8 @@ const AdminPortal = () => {
     const [error, setError] = useState(null);
     const [blogs, setBlogs] = useState([]);
     const [loadingBlogs, setLoadingBlogs] = useState(false);
+    const [blogFilter, setBlogFilter] = useState('all'); // 'all', 'new', 'old'
+    const [blogSortOrder, setBlogSortOrder] = useState('newest'); // 'newest', 'oldest'
 
     // Subscriber modal state
     const [showSubscriberModal, setShowSubscriberModal] = useState(false);
@@ -31,6 +33,68 @@ const AdminPortal = () => {
         (sub.phone && sub.phone.includes(subscriberSearch)) ||
         (sub.college && sub.college.toLowerCase().includes(subscriberSearch.toLowerCase()))
     );
+
+    // Helper function to check if a blog is "new" (created within last 7 days)
+    const isBlogNew = (blog) => {
+        if (!blog.createdAt) return false;
+        const createdTime = blog.createdAt?.toMillis?.() || blog.createdAt?._seconds * 1000 || 0;
+        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        return createdTime > sevenDaysAgo;
+    };
+
+    // Static/Legacy blogs data
+    const legacyBlogs = [
+        {
+            id: 'static-1',
+            title: 'E-Cell DYPIU Blog: Where Ideas Meet Impact',
+            slug: 'where-ideas-meet-impact',
+            category: 'Entrepreneurship',
+            date: 'September 20, 2025',
+            excerpt: 'Discover how E-Cell DYPIU is transforming entrepreneurial dreams into reality through innovative programs, events, and community building.',
+            isLegacy: true
+        },
+        {
+            id: 'static-2',
+            title: 'E-Cell DYPIU at COEP Pune E-Cell Meetup',
+            slug: 'ceo-pune-meetup',
+            category: 'Events',
+            date: 'September 27, 2025',
+            excerpt: 'A collaborative gathering of Pune\'s brightest entrepreneurial minds, fostering connections and sharing innovative ideas.',
+            isLegacy: true
+        },
+        {
+            id: 'static-3',
+            title: 'E-Cell DYPIU at Entrepreneurship Awareness Drive',
+            slug: 'entrepreneurship-awareness-drive',
+            category: 'Events',
+            date: 'October 1, 2025',
+            excerpt: 'E-Cell DYPIU takes the lead in spreading entrepreneurship awareness across Pune.',
+            isLegacy: true
+        }
+    ];
+
+    // Combined and filtered blogs
+    const getAllBlogs = () => {
+        const dynamicBlogs = blogs.map(b => ({ ...b, isLegacy: false }));
+        let allBlogs = [...dynamicBlogs, ...legacyBlogs];
+        
+        // Filter
+        if (blogFilter === 'new') {
+            allBlogs = dynamicBlogs.filter(b => isBlogNew(b));
+        } else if (blogFilter === 'old') {
+            allBlogs = [...dynamicBlogs.filter(b => !isBlogNew(b)), ...legacyBlogs];
+        }
+        
+        // Sort (only for dynamic, legacy always at end)
+        if (blogSortOrder === 'oldest') {
+            const dynamic = allBlogs.filter(b => !b.isLegacy);
+            const legacy = allBlogs.filter(b => b.isLegacy);
+            dynamic.reverse();
+            return [...dynamic, ...legacy];
+        }
+        
+        return allBlogs;
+    };
 
     // Blog form state
     const [blogData, setBlogData] = useState({
@@ -803,47 +867,136 @@ More content..."
                             Manage <span className="text-brand-yellow">Blogs</span>
                         </h2>
 
-                        {/* Dynamic Blogs from Firebase */}
-                        <h3 className="text-xl font-bold text-brand-yellow mb-4 flex items-center gap-2">
-                            <PlusCircle className="w-5 h-5" />
-                            Dynamic Blogs (Firebase)
-                        </h3>
+                        {/* Filter and Sort Controls */}
+                        <div className="flex flex-wrap gap-4 mb-6">
+                            {/* Filter Buttons */}
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setBlogFilter('all')}
+                                    className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                                        blogFilter === 'all'
+                                            ? 'bg-brand-yellow text-black'
+                                            : 'bg-zinc-800 text-gray-400 hover:bg-zinc-700'
+                                    }`}
+                                >
+                                    All Blogs
+                                </button>
+                                <button
+                                    onClick={() => setBlogFilter('new')}
+                                    className={`px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${
+                                        blogFilter === 'new'
+                                            ? 'bg-green-500 text-black'
+                                            : 'bg-zinc-800 text-gray-400 hover:bg-zinc-700'
+                                    }`}
+                                >
+                                    <Sparkles className="w-4 h-4" />
+                                    New
+                                </button>
+                                <button
+                                    onClick={() => setBlogFilter('old')}
+                                    className={`px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${
+                                        blogFilter === 'old'
+                                            ? 'bg-zinc-500 text-white'
+                                            : 'bg-zinc-800 text-gray-400 hover:bg-zinc-700'
+                                    }`}
+                                >
+                                    <Archive className="w-4 h-4" />
+                                    Old
+                                </button>
+                            </div>
+
+                            {/* Sort Button */}
+                            <button
+                                onClick={() => setBlogSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest')}
+                                className="px-4 py-2 bg-zinc-800 text-gray-400 rounded-lg font-bold text-sm hover:bg-zinc-700 transition-all flex items-center gap-2"
+                            >
+                                <ArrowUpDown className="w-4 h-4" />
+                                {blogSortOrder === 'newest' ? 'Newest First' : 'Oldest First'}
+                            </button>
+                        </div>
+
+                        {/* Blog Stats */}
+                        <div className="flex gap-4 mb-6 text-sm">
+                            <span className="text-gray-400">
+                                Total: <span className="text-white font-bold">{blogs.length + legacyBlogs.length}</span>
+                            </span>
+                            <span className="text-gray-400">
+                                Dynamic: <span className="text-brand-yellow font-bold">{blogs.length}</span>
+                            </span>
+                            <span className="text-gray-400">
+                                Legacy: <span className="text-zinc-500 font-bold">{legacyBlogs.length}</span>
+                            </span>
+                            <span className="text-gray-400">
+                                Showing: <span className="text-white font-bold">{getAllBlogs().length}</span>
+                            </span>
+                        </div>
 
                         {loadingBlogs ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 className="w-8 h-8 animate-spin text-brand-yellow" />
                             </div>
-                        ) : blogs.length === 0 ? (
+                        ) : getAllBlogs().length === 0 ? (
                             <div className="text-center py-8 text-gray-400 bg-zinc-900/50 rounded-xl border border-zinc-800 mb-8">
                                 <List className="w-10 h-10 mx-auto mb-3 opacity-50" />
-                                <p>No dynamic blogs yet. Create one above!</p>
+                                <p>No blogs match the current filter.</p>
                             </div>
                         ) : (
-                            <div className="space-y-4 mb-8">
-                                {blogs.map((blog) => (
+                            <div className="space-y-4">
+                                {getAllBlogs().map((blog) => (
                                     <div
                                         key={blog.id}
-                                        className="bg-zinc-900 border-2 border-zinc-700 rounded-xl p-6 hover:border-brand-yellow transition-colors"
+                                        className={`border-2 rounded-xl p-6 transition-colors ${
+                                            blog.isLegacy 
+                                                ? 'bg-zinc-900/50 border-zinc-800 opacity-80' 
+                                                : 'bg-zinc-900 border-zinc-700 hover:border-brand-yellow'
+                                        }`}
                                     >
                                         <div className="flex justify-between items-start gap-4">
                                             <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="bg-brand-yellow text-black px-2 py-1 rounded text-xs font-bold">
+                                                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                                        blog.isLegacy 
+                                                            ? 'bg-zinc-700 text-gray-300' 
+                                                            : 'bg-brand-yellow text-black'
+                                                    }`}>
                                                         {blog.category}
                                                     </span>
+                                                    {/* NEW Badge */}
+                                                    {!blog.isLegacy && isBlogNew(blog) && (
+                                                        <span className="bg-green-500 text-black px-2 py-1 rounded text-xs font-bold flex items-center gap-1 animate-pulse">
+                                                            <Sparkles className="w-3 h-3" />
+                                                            NEW
+                                                        </span>
+                                                    )}
+                                                    {/* OLD Badge for dynamic blogs older than 7 days */}
+                                                    {!blog.isLegacy && !isBlogNew(blog) && (
+                                                        <span className="bg-zinc-600 text-zinc-300 px-2 py-1 rounded text-xs font-bold">
+                                                            OLD
+                                                        </span>
+                                                    )}
+                                                    {/* LEGACY Badge */}
+                                                    {blog.isLegacy && (
+                                                        <span className="bg-zinc-800 text-zinc-500 px-2 py-1 rounded text-xs font-bold">
+                                                            LEGACY
+                                                        </span>
+                                                    )}
                                                     <span className="text-gray-500 text-xs">
                                                         {blog.date}
                                                     </span>
                                                 </div>
-                                                <h3 className="text-xl font-black mb-2">{blog.title}</h3>
-                                                <p className="text-gray-400 text-sm line-clamp-2">{blog.excerpt}</p>
+                                                <h3 className={`text-xl font-black mb-2 ${blog.isLegacy ? 'text-gray-300' : 'text-white'}`}>
+                                                    {blog.title}
+                                                </h3>
+                                                <p className={`text-sm line-clamp-2 ${blog.isLegacy ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                    {blog.excerpt}
+                                                </p>
                                             </div>
                                             <div className="flex gap-2">
                                                 <a
                                                     href={`/blogs/${blog.slug}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="p-2 bg-zinc-800 text-white rounded-lg hover:bg-brand-yellow hover:text-black transition-colors"
+                                                    className="p-2 bg-zinc-800 text-gray-400 rounded-lg hover:bg-brand-yellow hover:text-black transition-colors"
                                                     title="View"
                                                 >
                                                     <Eye className="w-5 h-5" />
@@ -863,10 +1016,23 @@ More content..."
                                                 >
                                                     <Bell className="w-5 h-5" />
                                                 </button>
+                                                {/* Delete button for all blogs (including legacy) */}
                                                 <button
-                                                    onClick={() => handleDeleteBlog(blog.id, blog.slug)}
-                                                    className="p-2 bg-red-900/50 text-red-400 rounded-lg hover:bg-red-900 transition-colors"
-                                                    title="Delete"
+                                                    onClick={() => {
+                                                        if (blog.isLegacy) {
+                                                            // For legacy blogs, we can't delete from Firebase
+                                                            // Instead show an info message
+                                                            alert('Legacy blogs are hardcoded and cannot be deleted from here. Please remove them from the source code.');
+                                                        } else {
+                                                            handleDeleteBlog(blog.id, blog.slug);
+                                                        }
+                                                    }}
+                                                    className={`p-2 rounded-lg transition-colors ${
+                                                        blog.isLegacy 
+                                                            ? 'bg-zinc-800 text-zinc-600 hover:bg-zinc-700 cursor-not-allowed' 
+                                                            : 'bg-red-900/50 text-red-400 hover:bg-red-900'
+                                                    }`}
+                                                    title={blog.isLegacy ? "Cannot delete legacy blogs" : "Delete"}
                                                 >
                                                     <Trash2 className="w-5 h-5" />
                                                 </button>
@@ -876,93 +1042,6 @@ More content..."
                                 ))}
                             </div>
                         )}
-
-                        {/* Static/Legacy Blogs */}
-                        <h3 className="text-xl font-bold text-gray-400 mb-4 flex items-center gap-2 mt-8">
-                            <BookOpen className="w-5 h-5" />
-                            Legacy Blogs (Static)
-                        </h3>
-                        <p className="text-gray-500 text-sm mb-4">
-                            These blogs are hardcoded in the codebase and cannot be edited from here.
-                        </p>
-
-                        <div className="space-y-4">
-                            {[
-                                {
-                                    id: 'static-1',
-                                    title: 'E-Cell DYPIU Blog: Where Ideas Meet Impact',
-                                    slug: 'where-ideas-meet-impact',
-                                    category: 'Entrepreneurship',
-                                    date: 'September 20, 2025',
-                                    excerpt: 'Discover how E-Cell DYPIU is transforming entrepreneurial dreams into reality through innovative programs, events, and community building.'
-                                },
-                                {
-                                    id: 'static-2',
-                                    title: 'E-Cell DYPIU at COEP Pune E-Cell Meetup',
-                                    slug: 'ceo-pune-meetup',
-                                    category: 'Events',
-                                    date: 'September 27, 2025',
-                                    excerpt: 'A collaborative gathering of Pune\'s brightest entrepreneurial minds, fostering connections and sharing innovative ideas.'
-                                },
-                                {
-                                    id: 'static-3',
-                                    title: 'E-Cell DYPIU at Entrepreneurship Awareness Drive',
-                                    slug: 'entrepreneurship-awareness-drive',
-                                    category: 'Events',
-                                    date: 'October 1, 2025',
-                                    excerpt: 'E-Cell DYPIU takes the lead in spreading entrepreneurship awareness across Pune.'
-                                }
-                            ].map((blog) => (
-                                <div
-                                    key={blog.id}
-                                    className="bg-zinc-900/50 border-2 border-zinc-800 rounded-xl p-6 opacity-80"
-                                >
-                                    <div className="flex justify-between items-start gap-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="bg-zinc-700 text-gray-300 px-2 py-1 rounded text-xs font-bold">
-                                                    {blog.category}
-                                                </span>
-                                                <span className="bg-zinc-800 text-zinc-500 px-2 py-1 rounded text-xs">
-                                                    STATIC
-                                                </span>
-                                                <span className="text-gray-500 text-xs">
-                                                    {blog.date}
-                                                </span>
-                                            </div>
-                                            <h3 className="text-xl font-black mb-2 text-gray-300">{blog.title}</h3>
-                                            <p className="text-gray-500 text-sm line-clamp-2">{blog.excerpt}</p>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <a
-                                                href={`/blogs/${blog.slug}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="p-2 bg-zinc-800 text-gray-400 rounded-lg hover:bg-brand-yellow hover:text-black transition-colors"
-                                                title="View"
-                                            >
-                                                <Eye className="w-5 h-5" />
-                                            </a>
-                                            <button
-                                                onClick={() => {
-                                                    setNotifyData({
-                                                        title: blog.title,
-                                                        excerpt: blog.excerpt,
-                                                        url: `https://ecelldypiu.in/blogs/${blog.slug}`,
-                                                        category: blog.category
-                                                    });
-                                                    setActiveTab('notify');
-                                                }}
-                                                className="p-2 bg-blue-900/50 text-blue-400 rounded-lg hover:bg-blue-900 transition-colors"
-                                                title="Send Notification"
-                                            >
-                                                <Bell className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 )}
 
