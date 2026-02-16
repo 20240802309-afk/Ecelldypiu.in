@@ -200,6 +200,7 @@ const AdminPortal = () => {
     // Fetch subscribers for selection modal
     const fetchSubscribers = async () => {
         setLoadingSubscribers(true);
+        setError(null);
         try {
             const response = await fetch('/api/get-subscribers', {
                 headers: {
@@ -207,12 +208,18 @@ const AdminPortal = () => {
                 }
             });
             const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to fetch subscribers');
+            }
+            
             if (data.subscribers) {
                 setSubscribers(data.subscribers);
                 setSelectedSubscribers(data.subscribers.map(s => s.email)); // Select all by default
             }
         } catch (err) {
             console.error('Failed to fetch subscribers:', err);
+            setError(`Failed to load subscribers: ${err.message}`);
         } finally {
             setLoadingSubscribers(false);
         }
@@ -1151,8 +1158,20 @@ More content..."
                         {/* Subscribers List */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
                             {loadingSubscribers ? (
-                                <div className="flex items-center justify-center py-10">
-                                    <Loader2 className="w-8 h-8 animate-spin text-brand-yellow" />
+                                <div className="flex flex-col items-center justify-center py-10">
+                                    <Loader2 className="w-8 h-8 animate-spin text-brand-yellow mb-3" />
+                                    <p className="text-gray-400 text-sm">Loading subscribers...</p>
+                                </div>
+                            ) : error && subscribers.length === 0 ? (
+                                <div className="text-center py-10">
+                                    <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+                                    <p className="text-red-400">{error}</p>
+                                    <button 
+                                        onClick={fetchSubscribers}
+                                        className="mt-4 px-4 py-2 bg-zinc-700 text-white rounded-lg hover:bg-zinc-600"
+                                    >
+                                        Retry
+                                    </button>
                                 </div>
                             ) : subscribers.length === 0 ? (
                                 <div className="text-center py-10 text-gray-400">
