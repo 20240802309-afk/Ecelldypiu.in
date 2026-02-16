@@ -217,40 +217,35 @@ export default async function handler(req, res) {
             details: [] // Detailed results for each subscriber
         };
 
-        // Process emails in batches to avoid rate limits
-        const BATCH_SIZE = 10;
-        for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
-            const batch = subscribers.slice(i, i + BATCH_SIZE);
+        // Send emails ONE AT A TIME with delay to avoid rate limits
+        for (let i = 0; i < subscribers.length; i++) {
+            const subscriber = subscribers[i];
             
-            await Promise.all(
-                batch.map(async (subscriber) => {
-                    try {
-                        const htmlContent = generateBlogEmailHTML(blogData, subscriber.name);
-                        await sendEmail(subscriber.email, emailSubject, htmlContent);
-                        results.sent++;
-                        results.details.push({
-                            name: subscriber.name,
-                            email: subscriber.email,
-                            status: 'sent',
-                            error: null
-                        });
-                        console.log(`✅ Email sent to: ${subscriber.email}`);
-                    } catch (error) {
-                        results.failed++;
-                        results.details.push({
-                            name: subscriber.name,
-                            email: subscriber.email,
-                            status: 'failed',
-                            error: error.message
-                        });
-                        console.error(`❌ Failed to send to ${subscriber.email}:`, error.message);
-                    }
-                })
-            );
+            try {
+                const htmlContent = generateBlogEmailHTML(blogData, subscriber.name);
+                await sendEmail(subscriber.email, emailSubject, htmlContent);
+                results.sent++;
+                results.details.push({
+                    name: subscriber.name,
+                    email: subscriber.email,
+                    status: 'sent',
+                    error: null
+                });
+                console.log(`✅ Email sent to: ${subscriber.email}`);
+            } catch (error) {
+                results.failed++;
+                results.details.push({
+                    name: subscriber.name,
+                    email: subscriber.email,
+                    status: 'failed',
+                    error: error.message
+                });
+                console.error(`❌ Failed to send to ${subscriber.email}:`, error.message);
+            }
 
-            // Add small delay between batches to respect rate limits
-            if (i + BATCH_SIZE < subscribers.length) {
-                await new Promise(resolve => setTimeout(resolve, 500));
+            // Wait 1 second between each email to avoid rate limits
+            if (i < subscribers.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
         }
 

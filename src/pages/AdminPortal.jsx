@@ -398,7 +398,7 @@ const AdminPortal = () => {
                                             }`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                                                     item.status === 'sent' ? 'bg-green-500 text-black' : 'bg-red-500 text-white'
                                                 }`}>
                                                     {item.status === 'sent' ? '✓' : '✗'}
@@ -406,9 +406,12 @@ const AdminPortal = () => {
                                                 <div>
                                                     <p className="text-white font-bold text-sm">{item.name || 'Unknown'}</p>
                                                     <p className="text-gray-400 text-xs">{item.email}</p>
+                                                    {item.error && (
+                                                        <p className="text-red-400 text-xs mt-1 font-mono">{item.error}</p>
+                                                    )}
                                                 </div>
                                             </div>
-                                            <span className={`text-xs font-bold uppercase ${
+                                            <span className={`text-xs font-bold uppercase flex-shrink-0 ${
                                                 item.status === 'sent' ? 'text-green-400' : 'text-red-400'
                                             }`}>
                                                 {item.status === 'sent' ? 'Delivered' : 'Failed'}
