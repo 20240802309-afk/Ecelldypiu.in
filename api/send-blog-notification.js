@@ -180,6 +180,7 @@ export default async function handler(req, res) {
 
         let subscribers = [];
         let skippedDocs = [];
+        let totalDocs = 0;
 
         // If selectedSubscribers is provided, use that list
         if (selectedSubscribers && Array.isArray(selectedSubscribers) && selectedSubscribers.length > 0) {
@@ -187,12 +188,14 @@ export default async function handler(req, res) {
                 name: sub.name || 'Subscriber',
                 email: sub.email
             }));
+            totalDocs = selectedSubscribers.length;
             console.log(`Using ${subscribers.length} selected subscribers`);
         } else {
             // Fetch all newsletter subscribers from Firebase
             const subscribersSnapshot = await db.collection('SUBSCRIPTION_REQUESTS').get();
 
             console.log(`Total documents in SUBSCRIPTION_REQUESTS: ${subscribersSnapshot.size}`);
+            totalDocs = subscribersSnapshot.size;
 
             if (subscribersSnapshot.empty) {
                 return res.status(200).json({
@@ -272,7 +275,7 @@ export default async function handler(req, res) {
             message: `Blog notification sent`,
             blog: blogData,
             results: {
-                totalDocs: subscribersSnapshot.size,
+                totalDocs: totalDocs,
                 validSubscribers: subscribers.length,
                 skippedDocs: skippedDocs.length,
                 sent: results.sent,
