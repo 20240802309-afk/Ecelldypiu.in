@@ -216,7 +216,11 @@ const AdminPortal = () => {
 
             setResult({
                 type: 'notification',
-                message: `Notifications sent to ${data.results?.sent || 0} subscribers!`
+                message: `Notifications sent to ${data.results?.sent || 0} of ${data.results?.totalSubscribers || 0} subscribers!`,
+                details: data.results?.details || [],
+                sent: data.results?.sent || 0,
+                failed: data.results?.failed || 0,
+                total: data.results?.totalSubscribers || 0
             });
 
         } catch (err) {
@@ -348,6 +352,54 @@ const AdminPortal = () => {
                             <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
                             <p className="font-bold">{result.message}</p>
                         </div>
+
+                        {/* Notification Results Checklist */}
+                        {result.type === 'notification' && result.details && result.details.length > 0 && (
+                            <div className="border-t border-blue-500/30 p-4 bg-black/30 max-h-96 overflow-y-auto">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-white font-bold uppercase text-sm">Delivery Report</h4>
+                                    <div className="flex gap-4 text-xs">
+                                        <span className="text-green-400">✓ Sent: {result.sent}</span>
+                                        {result.failed > 0 && <span className="text-red-400">✗ Failed: {result.failed}</span>}
+                                        <span className="text-gray-400">Total: {result.total}</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    {result.details.map((item, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            className={`flex items-center justify-between p-3 rounded-lg ${
+                                                item.status === 'sent' 
+                                                    ? 'bg-green-900/20 border border-green-800' 
+                                                    : 'bg-red-900/20 border border-red-800'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                                    item.status === 'sent' ? 'bg-green-500 text-black' : 'bg-red-500 text-white'
+                                                }`}>
+                                                    {item.status === 'sent' ? '✓' : '✗'}
+                                                </div>
+                                                <div>
+                                                    <p className="text-white font-bold text-sm">{item.name || 'Unknown'}</p>
+                                                    <p className="text-gray-400 text-xs">{item.email}</p>
+                                                </div>
+                                            </div>
+                                            <span className={`text-xs font-bold uppercase ${
+                                                item.status === 'sent' ? 'text-green-400' : 'text-red-400'
+                                            }`}>
+                                                {item.status === 'sent' ? 'Delivered' : 'Failed'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                {result.failed > 0 && (
+                                    <p className="text-yellow-400 text-xs mt-4">
+                                        ⚠️ Some emails failed. This could be due to invalid email addresses or rate limiting.
+                                    </p>
+                                )}
+                            </div>
+                        )}
                         
                         {result.type === 'success' && notifyData.title && (
                             <div className="border-t border-green-500/30 p-6 bg-black/30">

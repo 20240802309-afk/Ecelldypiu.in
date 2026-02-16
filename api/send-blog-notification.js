@@ -207,7 +207,7 @@ export default async function handler(req, res) {
         const results = {
             sent: 0,
             failed: 0,
-            errors: []
+            details: [] // Detailed results for each subscriber
         };
 
         // Process emails in batches to avoid rate limits
@@ -221,11 +221,19 @@ export default async function handler(req, res) {
                         const htmlContent = generateBlogEmailHTML(blogData, subscriber.name);
                         await sendEmail(subscriber.email, emailSubject, htmlContent);
                         results.sent++;
+                        results.details.push({
+                            name: subscriber.name,
+                            email: subscriber.email,
+                            status: 'sent',
+                            error: null
+                        });
                         console.log(`✅ Email sent to: ${subscriber.email}`);
                     } catch (error) {
                         results.failed++;
-                        results.errors.push({
+                        results.details.push({
+                            name: subscriber.name,
                             email: subscriber.email,
+                            status: 'failed',
                             error: error.message
                         });
                         console.error(`❌ Failed to send to ${subscriber.email}:`, error.message);
@@ -235,7 +243,7 @@ export default async function handler(req, res) {
 
             // Add small delay between batches to respect rate limits
             if (i + BATCH_SIZE < subscribers.length) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
         }
 
@@ -247,7 +255,7 @@ export default async function handler(req, res) {
                 totalSubscribers: subscribers.length,
                 sent: results.sent,
                 failed: results.failed,
-                errors: results.errors.length > 0 ? results.errors : undefined
+                details: results.details
             }
         });
 
