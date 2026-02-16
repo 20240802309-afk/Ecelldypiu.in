@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { 
     Loader2, Send, AlertCircle, CheckCircle2, Lock, 
     PlusCircle, List, Bell, LogOut, Image, X, Upload,
-    Calendar, Clock, Tag, User, Eye, Trash2, BookOpen
+    Calendar, Clock, Tag, User, Eye, Trash2, BookOpen,
+    ChevronDown, ChevronRight, FileText
 } from 'lucide-react';
 
 const AdminPortal = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [adminKey, setAdminKey] = useState('');
-    const [activeTab, setActiveTab] = useState('create-blog');
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [blogMenuOpen, setBlogMenuOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
@@ -52,7 +54,7 @@ const AdminPortal = () => {
 
     // Load blogs when authenticated
     useEffect(() => {
-        if (isAuthenticated && activeTab === 'manage-blogs') {
+        if (isAuthenticated && (activeTab === 'manage-blogs' || activeTab === 'dashboard')) {
             fetchBlogs();
         }
     }, [isAuthenticated, activeTab]);
@@ -309,32 +311,72 @@ const AdminPortal = () => {
                 </div>
             </div>
 
-            {/* Navigation Tabs */}
+            {/* Navigation */}
             <div className="bg-zinc-800 border-b-2 border-zinc-700">
                 <div className="container mx-auto px-4">
-                    <div className="flex gap-1 overflow-x-auto">
-                        {[
-                            { id: 'create-blog', label: 'Create Blog', icon: PlusCircle },
-                            { id: 'manage-blogs', label: 'Manage Blogs', icon: List },
-                            { id: 'notify', label: 'Send Notification', icon: Bell }
-                        ].map(tab => (
+                    <div className="flex gap-1 overflow-x-auto items-center">
+                        {/* Dashboard Button */}
+                        <button
+                            onClick={() => {
+                                setActiveTab('dashboard');
+                                setBlogMenuOpen(false);
+                                setError(null);
+                                setResult(null);
+                            }}
+                            className={`flex items-center gap-2 px-6 py-4 font-bold uppercase text-sm transition-colors whitespace-nowrap ${
+                                activeTab === 'dashboard' 
+                                    ? 'bg-black text-brand-yellow border-t-4 border-brand-yellow' 
+                                    : 'text-gray-400 hover:text-white border-t-4 border-transparent'
+                            }`}
+                        >
+                            <Eye className="w-4 h-4" />
+                            Dashboard
+                        </button>
+
+                        {/* Blog Dropdown */}
+                        <div className="relative">
                             <button
-                                key={tab.id}
-                                onClick={() => {
-                                    setActiveTab(tab.id);
-                                    setError(null);
-                                    setResult(null);
-                                }}
+                                onClick={() => setBlogMenuOpen(!blogMenuOpen)}
                                 className={`flex items-center gap-2 px-6 py-4 font-bold uppercase text-sm transition-colors whitespace-nowrap ${
-                                    activeTab === tab.id 
+                                    ['create-blog', 'manage-blogs', 'notify'].includes(activeTab)
                                         ? 'bg-black text-brand-yellow border-t-4 border-brand-yellow' 
                                         : 'text-gray-400 hover:text-white border-t-4 border-transparent'
                                 }`}
                             >
-                                <tab.icon className="w-4 h-4" />
-                                {tab.label}
+                                <FileText className="w-4 h-4" />
+                                Blog
+                                {blogMenuOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                             </button>
-                        ))}
+                            
+                            {/* Blog Submenu */}
+                            {blogMenuOpen && (
+                                <div className="absolute top-full left-0 bg-zinc-900 border-2 border-zinc-700 rounded-b-xl shadow-xl z-50 min-w-[200px] overflow-hidden">
+                                    {[
+                                        { id: 'create-blog', label: 'Push Blog', icon: PlusCircle },
+                                        { id: 'manage-blogs', label: 'Manage Blogs', icon: List },
+                                        { id: 'notify', label: 'Send Notification', icon: Bell }
+                                    ].map(item => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => {
+                                                setActiveTab(item.id);
+                                                setBlogMenuOpen(false);
+                                                setError(null);
+                                                setResult(null);
+                                            }}
+                                            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors ${
+                                                activeTab === item.id 
+                                                    ? 'bg-brand-yellow text-black' 
+                                                    : 'text-gray-300 hover:bg-zinc-800 hover:text-white'
+                                            }`}
+                                        >
+                                            <item.icon className="w-4 h-4" />
+                                            {item.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -457,6 +499,74 @@ const AdminPortal = () => {
                                 </button>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* Dashboard Tab */}
+                {activeTab === 'dashboard' && (
+                    <div className="max-w-4xl mx-auto">
+                        <h2 className="text-3xl font-black uppercase mb-6">
+                            Welcome to <span className="text-brand-yellow">Admin Portal</span>
+                        </h2>
+                        
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Blog Section Card */}
+                            <div 
+                                onClick={() => setBlogMenuOpen(true)}
+                                className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6 cursor-pointer hover:border-brand-yellow transition-colors group"
+                            >
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-14 h-14 bg-brand-yellow rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <FileText className="w-7 h-7 text-black" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black uppercase">Blog Management</h3>
+                                        <p className="text-gray-400 text-sm">Create, manage & notify</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-2 text-sm">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); setActiveTab('create-blog'); }}
+                                        className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors text-left"
+                                    >
+                                        <PlusCircle className="w-4 h-4 text-brand-yellow" />
+                                        <span>Push New Blog</span>
+                                    </button>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); setActiveTab('manage-blogs'); }}
+                                        className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors text-left"
+                                    >
+                                        <List className="w-4 h-4 text-brand-yellow" />
+                                        <span>Manage Blogs</span>
+                                    </button>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); setActiveTab('notify'); }}
+                                        className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors text-left"
+                                    >
+                                        <Bell className="w-4 h-4 text-brand-yellow" />
+                                        <span>Send Notification</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Quick Stats Card */}
+                            <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
+                                <h3 className="text-xl font-black uppercase mb-4 flex items-center gap-3">
+                                    <Eye className="w-5 h-5 text-brand-yellow" />
+                                    Quick Stats
+                                </h3>
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center p-3 bg-zinc-800 rounded-lg">
+                                        <span className="text-gray-400">Total Blogs (Dynamic)</span>
+                                        <span className="text-brand-yellow font-black text-xl">{blogs.length}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center p-3 bg-zinc-800 rounded-lg">
+                                        <span className="text-gray-400">Legacy Blogs</span>
+                                        <span className="text-white font-black text-xl">3</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
 
