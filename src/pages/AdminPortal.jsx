@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
     Loader2, Send, AlertCircle, CheckCircle2, Lock, 
     PlusCircle, List, Bell, LogOut, Image, X, Upload,
-    Calendar, Clock, Tag, User, Eye, Trash2
+    Calendar, Clock, Tag, User, Eye, Trash2, BookOpen
 } from 'lucide-react';
 
 const AdminPortal = () => {
@@ -595,17 +595,23 @@ More content..."
                             Manage <span className="text-brand-yellow">Blogs</span>
                         </h2>
 
+                        {/* Dynamic Blogs from Firebase */}
+                        <h3 className="text-xl font-bold text-brand-yellow mb-4 flex items-center gap-2">
+                            <PlusCircle className="w-5 h-5" />
+                            Dynamic Blogs (Firebase)
+                        </h3>
+
                         {loadingBlogs ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 className="w-8 h-8 animate-spin text-brand-yellow" />
                             </div>
                         ) : blogs.length === 0 ? (
-                            <div className="text-center py-12 text-gray-400">
-                                <List className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                <p>No blogs found. Create your first blog!</p>
+                            <div className="text-center py-8 text-gray-400 bg-zinc-900/50 rounded-xl border border-zinc-800 mb-8">
+                                <List className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                                <p>No dynamic blogs yet. Create one above!</p>
                             </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-4 mb-8">
                                 {blogs.map((blog) => (
                                     <div
                                         key={blog.id}
@@ -635,6 +641,21 @@ More content..."
                                                     <Eye className="w-5 h-5" />
                                                 </a>
                                                 <button
+                                                    onClick={() => {
+                                                        setNotifyData({
+                                                            title: blog.title,
+                                                            excerpt: blog.excerpt,
+                                                            url: `https://ecelldypiu.in/blogs/${blog.slug}`,
+                                                            category: blog.category
+                                                        });
+                                                        setActiveTab('notify');
+                                                    }}
+                                                    className="p-2 bg-blue-900/50 text-blue-400 rounded-lg hover:bg-blue-900 transition-colors"
+                                                    title="Send Notification"
+                                                >
+                                                    <Bell className="w-5 h-5" />
+                                                </button>
+                                                <button
                                                     onClick={() => handleDeleteBlog(blog.id, blog.slug)}
                                                     className="p-2 bg-red-900/50 text-red-400 rounded-lg hover:bg-red-900 transition-colors"
                                                     title="Delete"
@@ -647,6 +668,93 @@ More content..."
                                 ))}
                             </div>
                         )}
+
+                        {/* Static/Legacy Blogs */}
+                        <h3 className="text-xl font-bold text-gray-400 mb-4 flex items-center gap-2 mt-8">
+                            <BookOpen className="w-5 h-5" />
+                            Legacy Blogs (Static)
+                        </h3>
+                        <p className="text-gray-500 text-sm mb-4">
+                            These blogs are hardcoded in the codebase and cannot be edited from here.
+                        </p>
+
+                        <div className="space-y-4">
+                            {[
+                                {
+                                    id: 'static-1',
+                                    title: 'E-Cell DYPIU Blog: Where Ideas Meet Impact',
+                                    slug: 'where-ideas-meet-impact',
+                                    category: 'Entrepreneurship',
+                                    date: 'September 20, 2025',
+                                    excerpt: 'Discover how E-Cell DYPIU is transforming entrepreneurial dreams into reality through innovative programs, events, and community building.'
+                                },
+                                {
+                                    id: 'static-2',
+                                    title: 'E-Cell DYPIU at COEP Pune E-Cell Meetup',
+                                    slug: 'ceo-pune-meetup',
+                                    category: 'Events',
+                                    date: 'September 27, 2025',
+                                    excerpt: 'A collaborative gathering of Pune\'s brightest entrepreneurial minds, fostering connections and sharing innovative ideas.'
+                                },
+                                {
+                                    id: 'static-3',
+                                    title: 'E-Cell DYPIU at Entrepreneurship Awareness Drive',
+                                    slug: 'entrepreneurship-awareness-drive',
+                                    category: 'Events',
+                                    date: 'October 1, 2025',
+                                    excerpt: 'E-Cell DYPIU takes the lead in spreading entrepreneurship awareness across Pune.'
+                                }
+                            ].map((blog) => (
+                                <div
+                                    key={blog.id}
+                                    className="bg-zinc-900/50 border-2 border-zinc-800 rounded-xl p-6 opacity-80"
+                                >
+                                    <div className="flex justify-between items-start gap-4">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="bg-zinc-700 text-gray-300 px-2 py-1 rounded text-xs font-bold">
+                                                    {blog.category}
+                                                </span>
+                                                <span className="bg-zinc-800 text-zinc-500 px-2 py-1 rounded text-xs">
+                                                    STATIC
+                                                </span>
+                                                <span className="text-gray-500 text-xs">
+                                                    {blog.date}
+                                                </span>
+                                            </div>
+                                            <h3 className="text-xl font-black mb-2 text-gray-300">{blog.title}</h3>
+                                            <p className="text-gray-500 text-sm line-clamp-2">{blog.excerpt}</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <a
+                                                href={`/blogs/${blog.slug}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-2 bg-zinc-800 text-gray-400 rounded-lg hover:bg-brand-yellow hover:text-black transition-colors"
+                                                title="View"
+                                            >
+                                                <Eye className="w-5 h-5" />
+                                            </a>
+                                            <button
+                                                onClick={() => {
+                                                    setNotifyData({
+                                                        title: blog.title,
+                                                        excerpt: blog.excerpt,
+                                                        url: `https://ecelldypiu.in/blogs/${blog.slug}`,
+                                                        category: blog.category
+                                                    });
+                                                    setActiveTab('notify');
+                                                }}
+                                                className="p-2 bg-blue-900/50 text-blue-400 rounded-lg hover:bg-blue-900 transition-colors"
+                                                title="Send Notification"
+                                            >
+                                                <Bell className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
