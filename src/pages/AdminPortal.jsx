@@ -4,7 +4,7 @@ import {
     PlusCircle, List, Bell, LogOut, Image, X, Upload,
     Calendar, Clock, Tag, User, Eye, Trash2, BookOpen,
     FileText, Users, CheckSquare, Square, Mail, Phone, Search,
-    ArrowLeft, Sparkles, Archive, ArrowUpDown
+    ArrowLeft, Sparkles, Archive, ArrowUpDown, UserPlus, UserMinus
 } from 'lucide-react';
 
 const AdminPortal = () => {
@@ -25,6 +25,16 @@ const AdminPortal = () => {
     const [selectedSubscribers, setSelectedSubscribers] = useState([]);
     const [loadingSubscribers, setLoadingSubscribers] = useState(false);
     const [subscriberSearch, setSubscriberSearch] = useState('');
+
+    // New subscriber form state
+    const [newSubscriber, setNewSubscriber] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        college: ''
+    });
+    const [addingSubscriber, setAddingSubscriber] = useState(false);
+    const [deletingSubscriber, setDeletingSubscriber] = useState(null);
 
     // Filter subscribers based on search
     const filteredSubscribers = subscribers.filter(sub => 
@@ -401,6 +411,99 @@ const AdminPortal = () => {
         }
     };
 
+    // Fetch subscribers for manage-subscribers tab
+    const fetchSubscribersForManagement = async () => {
+        setLoadingSubscribers(true);
+        try {
+            const response = await fetch('/api/get-subscribers', {
+                headers: {
+                    'Authorization': `Bearer ${adminKey}`
+                }
+            });
+            const data = await response.json();
+            if (data.subscribers) {
+                setSubscribers(data.subscribers);
+            }
+        } catch (err) {
+            console.error('Failed to fetch subscribers:', err);
+            setError('Failed to load subscribers');
+        } finally {
+            setLoadingSubscribers(false);
+        }
+    };
+
+    // Add new subscriber
+    const handleAddSubscriber = async (e) => {
+        e.preventDefault();
+        setAddingSubscriber(true);
+        setError(null);
+
+        try {
+            const response = await fetch('/api/add-subscriber', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminKey}`
+                },
+                body: JSON.stringify(newSubscriber)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to add subscriber');
+            }
+
+            // Reset form and refresh list
+            setNewSubscriber({ name: '', email: '', phone: '', college: '' });
+            fetchSubscribersForManagement();
+            setResult({ type: 'success', message: 'Subscriber added successfully!' });
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setAddingSubscriber(false);
+        }
+    };
+
+    // Delete subscriber
+    const handleDeleteSubscriber = async (subscriberId) => {
+        if (!confirm('Are you sure you want to remove this subscriber?')) return;
+
+        setDeletingSubscriber(subscriberId);
+        setError(null);
+
+        try {
+            const response = await fetch('/api/delete-subscriber', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminKey}`
+                },
+                body: JSON.stringify({ id: subscriberId })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to delete subscriber');
+            }
+
+            // Refresh list
+            fetchSubscribersForManagement();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setDeletingSubscriber(null);
+        }
+    };
+
+    // Load subscribers when manage-subscribers tab is active
+    useEffect(() => {
+        if (isAuthenticated && activeTab === 'manage-subscribers') {
+            fetchSubscribersForManagement();
+        }
+    }, [isAuthenticated, activeTab]);
+
     // Login Screen
     if (!isAuthenticated) {
         return (
@@ -619,6 +722,26 @@ const AdminPortal = () => {
                                 </div>
                             </div>
 
+                            {/* Subscriber Management Card */}
+                            <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-14 h-14 bg-green-500 rounded-xl flex items-center justify-center">
+                                        <Users className="w-7 h-7 text-black" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black uppercase">Subscriber Management</h3>
+                                        <p className="text-gray-400 text-sm">View, add & remove subscribers</p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => { setActiveTab('manage-subscribers'); setError(null); setResult(null); }}
+                                    className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-green-500 hover:text-black transition-colors text-left group"
+                                >
+                                    <List className="w-4 h-4 text-green-500 group-hover:text-black" />
+                                    <span>Manage Subscribers</span>
+                                </button>
+                            </div>
+
                             {/* Quick Stats Card */}
                             <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
                                 <h3 className="text-xl font-black uppercase mb-4 flex items-center gap-3">
@@ -633,6 +756,10 @@ const AdminPortal = () => {
                                     <div className="flex justify-between items-center p-3 bg-zinc-800 rounded-lg">
                                         <span className="text-gray-400">Legacy Blogs</span>
                                         <span className="text-white font-black text-xl">3</span>
+                                    </div>
+                                    <div className="flex justify-between items-center p-3 bg-zinc-800 rounded-lg">
+                                        <span className="text-gray-400">Newsletter Subscribers</span>
+                                        <span className="text-green-500 font-black text-xl">{subscribers.length}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1141,6 +1268,198 @@ More content..."
                                     )}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Manage Subscribers Tab */}
+                {activeTab === 'manage-subscribers' && (
+                    <div className="max-w-4xl mx-auto">
+                        <button 
+                            onClick={() => { setActiveTab('dashboard'); setError(null); setResult(null); }}
+                            className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                            <span>Back to Dashboard</span>
+                        </button>
+                        <h2 className="text-3xl font-black uppercase mb-6">
+                            Manage <span className="text-green-500">Subscribers</span>
+                        </h2>
+
+                        {/* Stats Bar */}
+                        <div className="bg-zinc-900 border-2 border-zinc-700 rounded-xl p-4 mb-6 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Users className="w-6 h-6 text-green-500" />
+                                <span className="text-gray-400">Total Subscribers:</span>
+                                <span className="text-green-500 font-black text-2xl">{subscribers.length}</span>
+                            </div>
+                            <button
+                                onClick={fetchSubscribersForManagement}
+                                className="flex items-center gap-2 px-4 py-2 bg-zinc-800 text-gray-400 rounded-lg hover:bg-zinc-700 transition-colors"
+                            >
+                                <Loader2 className={`w-4 h-4 ${loadingSubscribers ? 'animate-spin' : ''}`} />
+                                Refresh
+                            </button>
+                        </div>
+
+                        {/* Add New Subscriber Form */}
+                        <div className="bg-zinc-900 border-4 border-green-500/30 rounded-2xl p-6 mb-6">
+                            <h3 className="text-xl font-black uppercase mb-4 flex items-center gap-3">
+                                <UserPlus className="w-5 h-5 text-green-500" />
+                                Add New Subscriber
+                            </h3>
+                            <form onSubmit={handleAddSubscriber} className="space-y-4">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold uppercase mb-2">
+                                            Name <span className="text-green-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newSubscriber.name}
+                                            onChange={(e) => setNewSubscriber(prev => ({ ...prev, name: e.target.value }))}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-green-500 focus:outline-none"
+                                            placeholder="John Doe"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold uppercase mb-2">
+                                            Email <span className="text-green-500">*</span>
+                                        </label>
+                                        <input
+                                            type="email"
+                                            value={newSubscriber.email}
+                                            onChange={(e) => setNewSubscriber(prev => ({ ...prev, email: e.target.value }))}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-green-500 focus:outline-none"
+                                            placeholder="john@example.com"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold uppercase mb-2">
+                                            Phone
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            value={newSubscriber.phone}
+                                            onChange={(e) => setNewSubscriber(prev => ({ ...prev, phone: e.target.value }))}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-green-500 focus:outline-none"
+                                            placeholder="+91 9876543210"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold uppercase mb-2">
+                                            College/Organization
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newSubscriber.college}
+                                            onChange={(e) => setNewSubscriber(prev => ({ ...prev, college: e.target.value }))}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-green-500 focus:outline-none"
+                                            placeholder="DYPIU"
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={addingSubscriber}
+                                    className="w-full bg-green-500 text-black py-3 rounded-xl font-black uppercase flex items-center justify-center gap-3 hover:bg-green-400 transition-colors disabled:opacity-50"
+                                >
+                                    {addingSubscriber ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Adding...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <UserPlus className="w-5 h-5" />
+                                            Add Subscriber
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* Search Box */}
+                        <div className="mb-4">
+                            <div className="relative">
+                                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+                                <input
+                                    type="text"
+                                    value={subscriberSearch}
+                                    onChange={(e) => setSubscriberSearch(e.target.value)}
+                                    placeholder="Search by name, email, phone..."
+                                    className="w-full bg-zinc-900 border-2 border-zinc-700 pl-12 pr-4 py-3 text-white rounded-xl focus:border-green-500 focus:outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Subscriber List */}
+                        <div className="bg-zinc-900 border-2 border-zinc-700 rounded-xl overflow-hidden">
+                            <div className="bg-zinc-800 p-4 border-b border-zinc-700 flex items-center justify-between">
+                                <h3 className="font-bold uppercase text-sm text-gray-400">
+                                    Subscriber List ({filteredSubscribers.length})
+                                </h3>
+                            </div>
+                            
+                            {loadingSubscribers ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <Loader2 className="w-8 h-8 animate-spin text-green-500" />
+                                </div>
+                            ) : filteredSubscribers.length === 0 ? (
+                                <div className="text-center py-12 text-gray-400">
+                                    <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                    <p>{subscriberSearch ? 'No subscribers match your search' : 'No subscribers yet'}</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-zinc-800 max-h-[400px] overflow-y-auto custom-scrollbar">
+                                    {filteredSubscribers.map((subscriber, index) => (
+                                        <div
+                                            key={subscriber.id}
+                                            className="p-4 hover:bg-zinc-800/50 transition-colors flex items-center justify-between"
+                                        >
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-green-500 font-bold">
+                                                    {index + 1}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-white">{subscriber.name}</p>
+                                                    <p className="text-green-500 text-sm flex items-center gap-1">
+                                                        <Mail className="w-3 h-3" />
+                                                        {subscriber.email}
+                                                    </p>
+                                                    <div className="flex items-center gap-3 mt-1 text-gray-500 text-xs">
+                                                        {subscriber.phone && (
+                                                            <span className="flex items-center gap-1">
+                                                                <Phone className="w-3 h-3" />
+                                                                {subscriber.phone}
+                                                            </span>
+                                                        )}
+                                                        {subscriber.college && (
+                                                            <span>{subscriber.college}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleDeleteSubscriber(subscriber.id)}
+                                                disabled={deletingSubscriber === subscriber.id}
+                                                className="p-2 bg-red-900/50 text-red-400 rounded-lg hover:bg-red-900 transition-colors disabled:opacity-50"
+                                                title="Remove Subscriber"
+                                            >
+                                                {deletingSubscriber === subscriber.id ? (
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                ) : (
+                                                    <UserMinus className="w-5 h-5" />
+                                                )}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
