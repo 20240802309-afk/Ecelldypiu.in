@@ -3,7 +3,7 @@ import {
     Loader2, Send, AlertCircle, CheckCircle2, Lock, 
     PlusCircle, List, Bell, LogOut, Image, X, Upload,
     Calendar, Clock, Tag, User, Eye, Trash2, BookOpen,
-    ChevronDown, ChevronRight, FileText, Users, CheckSquare, Square, Mail, Phone
+    ChevronDown, ChevronRight, FileText, Users, CheckSquare, Square, Mail, Phone, Search
 } from 'lucide-react';
 
 const AdminPortal = () => {
@@ -22,6 +22,15 @@ const AdminPortal = () => {
     const [subscribers, setSubscribers] = useState([]);
     const [selectedSubscribers, setSelectedSubscribers] = useState([]);
     const [loadingSubscribers, setLoadingSubscribers] = useState(false);
+    const [subscriberSearch, setSubscriberSearch] = useState('');
+
+    // Filter subscribers based on search
+    const filteredSubscribers = subscribers.filter(sub => 
+        sub.name.toLowerCase().includes(subscriberSearch.toLowerCase()) ||
+        sub.email.toLowerCase().includes(subscriberSearch.toLowerCase()) ||
+        (sub.phone && sub.phone.includes(subscriberSearch)) ||
+        (sub.college && sub.college.toLowerCase().includes(subscriberSearch.toLowerCase()))
+    );
 
     // Blog form state
     const [blogData, setBlogData] = useState({
@@ -257,6 +266,7 @@ const AdminPortal = () => {
         }
         
         setShowSubscriberModal(false);
+        setSubscriberSearch('');
         setLoading(true);
         setError(null);
 
@@ -1125,11 +1135,33 @@ More content..."
                                 </p>
                             </div>
                             <button
-                                onClick={() => setShowSubscriberModal(false)}
+                                onClick={() => { setShowSubscriberModal(false); setSubscriberSearch(''); }}
                                 className="text-gray-400 hover:text-white p-2"
                             >
                                 <X className="w-6 h-6" />
                             </button>
+                        </div>
+
+                        {/* Search Box */}
+                        <div className="p-4 bg-zinc-900 border-b border-zinc-700">
+                            <div className="relative">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by name, email, phone, or college..."
+                                    value={subscriberSearch}
+                                    onChange={(e) => setSubscriberSearch(e.target.value)}
+                                    className="w-full bg-zinc-800 border-2 border-zinc-700 pl-12 pr-4 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none placeholder-gray-500"
+                                />
+                                {subscriberSearch && (
+                                    <button
+                                        onClick={() => setSubscriberSearch('')}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         {/* Selection Controls */}
@@ -1152,11 +1184,12 @@ More content..."
                             </div>
                             <div className="text-sm text-gray-400">
                                 <span className="text-brand-yellow font-bold">{selectedSubscribers.length}</span> of {subscribers.length} selected
+                                {subscriberSearch && <span className="ml-2 text-zinc-500">({filteredSubscribers.length} shown)</span>}
                             </div>
                         </div>
 
                         {/* Subscribers List */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar" style={{ scrollbarWidth: 'thin', scrollbarColor: '#FFB22C #27272a' }}>
                             {loadingSubscribers ? (
                                 <div className="flex flex-col items-center justify-center py-10">
                                     <Loader2 className="w-8 h-8 animate-spin text-brand-yellow mb-3" />
@@ -1177,8 +1210,19 @@ More content..."
                                 <div className="text-center py-10 text-gray-400">
                                     No subscribers found
                                 </div>
+                            ) : filteredSubscribers.length === 0 ? (
+                                <div className="text-center py-10 text-gray-400">
+                                    <Search className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                                    <p>No subscribers match "{subscriberSearch}"</p>
+                                    <button 
+                                        onClick={() => setSubscriberSearch('')}
+                                        className="mt-3 text-brand-yellow hover:underline"
+                                    >
+                                        Clear search
+                                    </button>
+                                </div>
                             ) : (
-                                subscribers.map((subscriber) => (
+                                filteredSubscribers.map((subscriber) => (
                                     <div
                                         key={subscriber.id}
                                         className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
@@ -1243,7 +1287,7 @@ More content..."
                         {/* Modal Footer */}
                         <div className="p-4 border-t-2 border-zinc-700 bg-zinc-800 flex items-center justify-between gap-4">
                             <button
-                                onClick={() => setShowSubscriberModal(false)}
+                                onClick={() => { setShowSubscriberModal(false); setSubscriberSearch(''); }}
                                 className="px-6 py-3 bg-zinc-700 text-white font-bold rounded-xl hover:bg-zinc-600 transition-colors"
                             >
                                 Cancel
