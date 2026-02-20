@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { organization, contactName, email, phone, proposal, externalLink, image } = req.body;
+        const { organization, contactName, email, phone, proposal, externalLink, image, ...dynamicAnswers } = req.body;
 
         if (!organization || !contactName || !email || !proposal) {
             return res.status(400).json({ error: 'Missing required fields' });
@@ -46,7 +46,8 @@ export default async function handler(req, res) {
             externalLink: externalLink || '',
             image: image || '',
             status: 'pending', // Pending admin approval
-            createdAt: FieldValue.serverTimestamp()
+            createdAt: FieldValue.serverTimestamp(),
+            ...dynamicAnswers // Capture all additional fields
         };
 
         const docRef = await db.collection('COLLABORATIONS').add(newCollab);
