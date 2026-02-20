@@ -1,4 +1,4 @@
-# E-Cell DYPIUI Website
+# E-Cell DYPIU Website
 
 A modern, responsive website for the Entrepreneurship Cell of Dr. D. Y. Patil Institute of Engineering, Management & Research, Akurdi.
 
