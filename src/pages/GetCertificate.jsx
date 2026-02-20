@@ -486,22 +486,8 @@ const GetCertificate = () => {
                                             <div className="w-6 h-6 rounded-full bg-[#0077b5] text-white font-bold flex items-center justify-center text-sm">2</div>
                                             <h4 className="font-bold text-white">Add & Upload</h4>
                                         </div>
-                                        <div
-                                            onClick={handleCopyId}
-                                            className="bg-black/80 border border-zinc-700 p-3 rounded-lg flex items-center justify-between group cursor-pointer hover:border-brand-yellow/50 transition-colors mb-3 ml-9"
-                                            title="Click to Copy Credential ID"
-                                        >
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Credential ID (Click to Copy)</span>
-                                                <code className="text-white font-mono text-sm select-all">{attendee?.id}</code>
-                                            </div>
-                                            <div className="p-2 bg-zinc-800 rounded-md text-zinc-400 group-hover:text-white transition-colors">
-                                                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-                                            </div>
-                                        </div>
-
                                         <p className="text-zinc-400 text-sm mb-3 pl-9 leading-relaxed">
-                                            <span className="text-brand-yellow font-black">IMPORTANT:</span> Scroll to <b>"Media"</b> section and <span className="text-white font-bold underline decoration-brand-yellow/50">upload the file</span> yourself.
+                                            <span className="text-brand-yellow font-black">IMPORTANT:</span> The form will auto-fill your details. Just scroll down to the <b>"Media"</b> section and <span className="text-white font-bold underline decoration-brand-yellow/50">upload the image</span> yourself.
                                         </p>
                                         <a
                                             href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(config?.eventName || 'Event Certificate')}&organizationName=E-Cell%20DYPIU&issueYear=${new Date().getFullYear()}&issueMonth=${new Date().getMonth() + 1}&certId=${encodeURIComponent(attendee?.id || '')}&certUrl=${encodeURIComponent(window.location.href)}`}

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle2, AlertCircle, Loader2, Building, Mail, User, Link as LinkIcon, FileText } from 'lucide-react';
+import { Building, ArrowRight, Loader2, AlertCircle, FileText, CheckCircle2, User, Mail, Link } from 'lucide-react';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const Collaborations = () => {
     const [activeTab, setActiveTab] = useState('past'); // 'past' or 'apply'
@@ -8,20 +10,17 @@ const Collaborations = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Dynamic Questions state
-    const [dynamicQuestions, setDynamicQuestions] = useState([]);
-    const [dynamicAnswers, setDynamicAnswers] = useState({});
-    const [loadingQuestions, setLoadingQuestions] = useState(false);
-
-    // Form state
-    const [formData, setFormData] = useState({
+    // Form states
+    const [coreAnswers, setCoreAnswers] = useState({
         organization: '',
         contactName: '',
         email: '',
-        phone: '',
-        externalLink: '',
+        website: '',
         proposal: ''
     });
+    const [dynamicQuestions, setDynamicQuestions] = useState([]);
+    const [dynamicAnswers, setDynamicAnswers] = useState({});
+    const [loadingQuestions, setLoadingQuestions] = useState(false);
     const [submitLoading, setSubmitLoading] = useState(false);
     const [submitResult, setSubmitResult] = useState(null);
 
@@ -73,13 +72,19 @@ const Collaborations = () => {
         }
     };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+    // Change handlers
+    const handleCoreInputChange = (field, value) => {
+        setCoreAnswers(prev => ({
+            ...prev,
+            [field]: value
+        }));
     };
 
     const handleDynamicInputChange = (label, value) => {
-        setDynamicAnswers(prev => ({ ...prev, [label]: value }));
+        setDynamicAnswers(prev => ({
+            ...prev,
+            [label]: value
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -88,8 +93,8 @@ const Collaborations = () => {
         setSubmitResult(null);
 
         try {
-            // Combine base form data with dynamic answers
-            const submissionData = { ...formData, ...dynamicAnswers };
+            // Combine core answers and dynamic answers
+            const submissionData = { ...coreAnswers, ...dynamicAnswers };
 
             const response = await fetch('/api/submit-collaboration', {
                 method: 'POST',
@@ -107,24 +112,23 @@ const Collaborations = () => {
 
             setSubmitResult({
                 type: 'success',
-                message: 'Application submitted successfully! Our team will get back to you soon.'
+                message: 'Application submitted successfully! Our team will review it and get back to you soon.'
             });
-
-            // Reset form
-            setFormData({
+            // Reset forms
+            setCoreAnswers({
                 organization: '',
                 contactName: '',
                 email: '',
-                phone: '',
-                externalLink: '',
+                website: '',
                 proposal: ''
             });
-            // Reset dynamic answers
-            const resetAnswers = {};
+            setDynamicAnswers({});
+            // Reset dynamic answers based on questions
+            const resetDynamicAnswers = {};
             dynamicQuestions.forEach(q => {
-                resetAnswers[q.label] = '';
+                resetDynamicAnswers[q.label] = '';
             });
-            setDynamicAnswers(resetAnswers);
+            setDynamicAnswers(resetDynamicAnswers);
 
         } catch (err) {
             setSubmitResult({
@@ -218,10 +222,30 @@ const Collaborations = () => {
                                                     <Building className="w-6 h-6 text-brand-yellow" />
                                                 </div>
                                             </div>
-                                            <h3 className="text-xl font-bold mb-2">{collab.organization}</h3>
-                                            <p className="text-gray-400 text-sm mb-6 flex-grow">
-                                                {collab.proposal.length > 100 ? `${collab.proposal.substring(0, 100)}...` : collab.proposal}
-                                            </p>
+                                            {(() => {
+                                                const keys = Object.keys(collab).filter(k => k !== 'id' && k !== 'status' && k !== 'createdAt');
+
+                                                let titleKey = keys.find(k => k.toLowerCase().includes('organization') || k.toLowerCase().includes('company'));
+                                                if (!titleKey) titleKey = keys.find(k => k.toLowerCase().includes('name'));
+                                                if (!titleKey && keys.length > 0) titleKey = keys[0];
+
+                                                let descKey = keys.find(k => k.toLowerCase().includes('proposal') || k.toLowerCase().includes('description') || k.toLowerCase().includes('details'));
+                                                if (!descKey && keys.length > 1) {
+                                                    descKey = keys.find(k => k !== titleKey && typeof collab[k] === 'string' && collab[k].length > 20);
+                                                }
+
+                                                const titleValue = titleKey && collab[titleKey] ? collab[titleKey] : 'Application #' + collab.id.substring(0, 6);
+                                                const descValue = descKey && collab[descKey] ? collab[descKey] : 'Details unavailable';
+
+                                                return (
+                                                    <>
+                                                        <h3 className="text-xl font-bold mb-2">{titleValue}</h3>
+                                                        <p className="text-gray-400 text-sm mb-6 flex-grow">
+                                                            {descValue.length > 100 ? `${descValue.substring(0, 100)}...` : descValue}
+                                                        </p>
+                                                    </>
+                                                );
+                                            })()}
                                             {collab.externalLink && (
                                                 <a
                                                     href={collab.externalLink.startsWith('http') ? collab.externalLink : `https://${collab.externalLink}`}
@@ -267,8 +291,8 @@ const Collaborations = () => {
                             )}
 
                             <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    {/* Organization Name */}
+                                {/* Core Fields */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-bold uppercase mb-2 flex items-center gap-2">
                                             <Building className="w-4 h-4 text-brand-yellow" />
@@ -276,16 +300,13 @@ const Collaborations = () => {
                                         </label>
                                         <input
                                             type="text"
-                                            name="organization"
-                                            value={formData.organization}
-                                            onChange={handleInputChange}
+                                            value={coreAnswers.organization}
+                                            onChange={(e) => handleCoreInputChange('organization', e.target.value)}
                                             required
                                             placeholder="Your Company / Institution"
                                             className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-xl focus:border-brand-yellow focus:outline-none transition-colors"
                                         />
                                     </div>
-
-                                    {/* Contact Name */}
                                     <div>
                                         <label className="block text-sm font-bold uppercase mb-2 flex items-center gap-2">
                                             <User className="w-4 h-4 text-brand-yellow" />
@@ -293,18 +314,13 @@ const Collaborations = () => {
                                         </label>
                                         <input
                                             type="text"
-                                            name="contactName"
-                                            value={formData.contactName}
-                                            onChange={handleInputChange}
+                                            value={coreAnswers.contactName}
+                                            onChange={(e) => handleCoreInputChange('contactName', e.target.value)}
                                             required
                                             placeholder="Full Name"
                                             className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-xl focus:border-brand-yellow focus:outline-none transition-colors"
                                         />
                                     </div>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    {/* Email */}
                                     <div>
                                         <label className="block text-sm font-bold uppercase mb-2 flex items-center gap-2">
                                             <Mail className="w-4 h-4 text-brand-yellow" />
@@ -312,26 +328,22 @@ const Collaborations = () => {
                                         </label>
                                         <input
                                             type="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleInputChange}
+                                            value={coreAnswers.email}
+                                            onChange={(e) => handleCoreInputChange('email', e.target.value)}
                                             required
                                             placeholder="work@company.com"
                                             className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-xl focus:border-brand-yellow focus:outline-none transition-colors"
                                         />
                                     </div>
-
-                                    {/* Website */}
                                     <div>
                                         <label className="block text-sm font-bold uppercase mb-2 flex items-center gap-2">
-                                            <LinkIcon className="w-4 h-4 text-brand-yellow" />
+                                            <Link className="w-4 h-4 text-brand-yellow" />
                                             Website Link
                                         </label>
                                         <input
-                                            type="text"
-                                            name="externalLink"
-                                            value={formData.externalLink}
-                                            onChange={handleInputChange}
+                                            type="url"
+                                            value={coreAnswers.website}
+                                            onChange={(e) => handleCoreInputChange('website', e.target.value)}
                                             placeholder="https://example.com"
                                             className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-xl focus:border-brand-yellow focus:outline-none transition-colors"
                                         />
@@ -344,53 +356,62 @@ const Collaborations = () => {
                                         Collaboration Proposal <span className="text-brand-yellow">*</span>
                                     </label>
                                     <textarea
-                                        name="proposal"
-                                        value={formData.proposal}
-                                        onChange={handleInputChange}
+                                        value={coreAnswers.proposal}
+                                        onChange={(e) => handleCoreInputChange('proposal', e.target.value)}
                                         required
-                                        rows="5"
+                                        rows="4"
                                         placeholder="Tell us how you would like to collaborate with E-Cell DYPIU. Be specific about goals, timeline, and mutual benefits."
                                         className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-xl focus:border-brand-yellow focus:outline-none transition-colors resize-none"
                                     ></textarea>
                                 </div>
 
-                                {/* Dynamic Questions */}
-                                {dynamicQuestions.length > 0 && (
-                                    <div className="pt-6 mt-6 border-t border-zinc-800 space-y-6">
-                                        <h3 className="text-xl font-bold uppercase mb-4 text-brand-yellow">Additional Details</h3>
-                                        {dynamicQuestions.map((q) => (
-                                            <div key={q.id}>
-                                                <label className="block text-sm font-bold uppercase mb-2 flex items-center gap-2">
-                                                    <FileText className="w-4 h-4 text-brand-yellow" />
-                                                    {q.label} {q.required && <span className="text-brand-yellow">*</span>}
-                                                </label>
-                                                {q.type === 'textarea' ? (
-                                                    <textarea
-                                                        value={dynamicAnswers[q.label] || ''}
-                                                        onChange={(e) => handleDynamicInputChange(q.label, e.target.value)}
-                                                        required={q.required}
-                                                        rows="4"
-                                                        placeholder="Your answer..."
-                                                        className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-xl focus:border-brand-yellow focus:outline-none transition-colors resize-none"
-                                                    ></textarea>
-                                                ) : (
-                                                    <input
-                                                        type="text"
-                                                        value={dynamicAnswers[q.label] || ''}
-                                                        onChange={(e) => handleDynamicInputChange(q.label, e.target.value)}
-                                                        required={q.required}
-                                                        placeholder="Your answer..."
-                                                        className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-xl focus:border-brand-yellow focus:outline-none transition-colors"
-                                                    />
-                                                )}
-                                            </div>
-                                        ))}
+                                {/* Dynamic Questions Form */}
+                                {loadingQuestions ? (
+                                    <div className="flex justify-center py-10 border-t border-zinc-800 pt-8 mt-8">
+                                        <Loader2 className="w-8 h-8 animate-spin text-brand-yellow" />
+                                    </div>
+                                ) : dynamicQuestions.length > 0 && (
+                                    <div className="border-t border-zinc-800 pt-8 mt-8">
+                                        <h3 className="text-xl font-bold uppercase text-brand-yellow mb-6">Additional Details</h3>
+                                        <div className="space-y-6">
+                                            {dynamicQuestions.map((q) => (
+                                                <div key={q.id}>
+                                                    <label className="block text-sm font-bold uppercase mb-2 flex items-center gap-2">
+                                                        <FileText className="w-4 h-4 text-brand-yellow" />
+                                                        {q.label} {q.required && <span className="text-brand-yellow">*</span>}
+                                                    </label>
+                                                    {q.type === 'textarea' ? (
+                                                        <textarea
+                                                            value={dynamicAnswers[q.label] || ''}
+                                                            onChange={(e) => handleDynamicInputChange(q.label, e.target.value)}
+                                                            required={q.required}
+                                                            rows="4"
+                                                            placeholder="Your answer..."
+                                                            className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-xl focus:border-brand-yellow focus:outline-none transition-colors resize-none"
+                                                        ></textarea>
+                                                    ) : (
+                                                        <input
+                                                            type={q.type || 'text'}
+                                                            value={dynamicAnswers[q.label] || ''}
+                                                            onChange={(e) => handleDynamicInputChange(q.label, e.target.value)}
+                                                            required={q.required}
+                                                            placeholder={
+                                                                q.type === 'email' ? 'work@company.com' :
+                                                                    q.type === 'url' ? 'https://example.com' :
+                                                                        q.type === 'tel' ? 'Phone Number' : 'Your answer...'
+                                                            }
+                                                            className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-xl focus:border-brand-yellow focus:outline-none transition-colors"
+                                                        />
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
 
                                 <button
                                     type="submit"
-                                    disabled={submitLoading}
+                                    disabled={submitLoading || loadingQuestions || dynamicQuestions.length === 0}
                                     className="w-full bg-brand-yellow text-black font-black py-4 rounded-xl uppercase hover:bg-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     {submitLoading ? (

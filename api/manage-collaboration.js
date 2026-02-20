@@ -80,6 +80,25 @@ export default async function handler(req, res) {
             }
             const collabData = docSnap.data();
 
+            // Attempt to find dynamic email, name, and organization
+            let recipientEmail = collabData.email;
+            let recipientName = collabData.contactName || 'Applicant';
+            let orgName = collabData.organization || 'Your Organization';
+
+            if (!recipientEmail) {
+                for (const [key, value] of Object.entries(collabData)) {
+                    if (key.toLowerCase().includes('email') && typeof value === 'string' && value.includes('@')) {
+                        recipientEmail = value;
+                    }
+                    if (key.toLowerCase().includes('name') && !key.toLowerCase().includes('organization') && !key.toLowerCase().includes('company')) {
+                        recipientName = value;
+                    }
+                    if (key.toLowerCase().includes('organization') || key.toLowerCase().includes('company')) {
+                        orgName = value;
+                    }
+                }
+            }
+
             if (action === 'approve') {
                 await collabRef.update({ status: 'approved' });
 
@@ -92,10 +111,10 @@ export default async function handler(req, res) {
                         </div>
                         <div style="padding: 32px;">
                             <p style="color: #ccc; font-size: 15px; line-height: 1.6;">
-                                Hi <strong style="color: #fff;">${collabData.contactName}</strong>,
+                                Hi <strong style="color: #fff;">${recipientName}</strong>,
                             </p>
                             <p style="color: #ccc; font-size: 15px; line-height: 1.6;">
-                                Great news! Your collaboration application for <strong>${collabData.organization}</strong> has been <strong style="color: #10B981;">Approved</strong>.
+                                Great news! Your collaboration application for <strong>${orgName}</strong> has been <strong style="color: #10B981;">Approved</strong>.
                             </p>
                             <p style="color: #ccc; font-size: 15px; line-height: 1.6;">
                                 Our team will be in touch with you shortly with further details. You can track your status anytime using the link below.
@@ -111,8 +130,8 @@ export default async function handler(req, res) {
                         </div>
                     </div>
                 `;
-                if (collabData.email) {
-                    await sendEmail(collabData.email, 'Collaboration Application Approved - E-Cell DYPIU', emailHTML);
+                if (recipientEmail) {
+                    await sendEmail(recipientEmail, 'Collaboration Application Approved - E-Cell DYPIU', emailHTML);
                 }
 
                 return res.status(200).json({ success: true, message: 'Collaboration approved' });
@@ -128,10 +147,10 @@ export default async function handler(req, res) {
                         </div>
                         <div style="padding: 32px;">
                             <p style="color: #ccc; font-size: 15px; line-height: 1.6;">
-                                Hi <strong style="color: #fff;">${collabData.contactName}</strong>,
+                                Hi <strong style="color: #fff;">${recipientName}</strong>,
                             </p>
                             <p style="color: #ccc; font-size: 15px; line-height: 1.6;">
-                                Thank you for your interest in collaborating with us for <strong>${collabData.organization}</strong>.
+                                Thank you for your interest in collaborating with us for <strong>${orgName}</strong>.
                             </p>
                             <p style="color: #ccc; font-size: 15px; line-height: 1.6;">
                                 After careful consideration, we are unable to proceed with your proposal at this time. We appreciate your interest and wish you the best in your endeavors.
@@ -147,8 +166,8 @@ export default async function handler(req, res) {
                         </div>
                     </div>
                 `;
-                if (collabData.email) {
-                    await sendEmail(collabData.email, 'Update on Collaboration Application - E-Cell DYPIU', emailHTML);
+                if (recipientEmail) {
+                    await sendEmail(recipientEmail, 'Update on Collaboration Application - E-Cell DYPIU', emailHTML);
                 }
 
                 return res.status(200).json({ success: true, message: 'Collaboration rejected' });

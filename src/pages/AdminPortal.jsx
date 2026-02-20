@@ -1576,56 +1576,60 @@ More content..."
                                                             <div className="flex items-start justify-between">
                                                                 <div>
                                                                     <div className="flex items-center gap-3 mb-2">
-                                                                        <h3 className="text-2xl font-black">{collab.organization}</h3>
+                                                                        {(() => {
+                                                                            // Dynamically determine the title to show. First try 'organization' or 'name', otherwise pick the first string field.
+                                                                            const keys = Object.keys(collab).filter(k => k !== 'id' && k !== 'status' && k !== 'createdAt');
+
+                                                                            // find a key that looks like an organization or name
+                                                                            let titleKey = keys.find(k => k.toLowerCase().includes('organization') || k.toLowerCase().includes('company'));
+                                                                            if (!titleKey) {
+                                                                                titleKey = keys.find(k => k.toLowerCase().includes('name'));
+                                                                            }
+                                                                            if (!titleKey && keys.length > 0) {
+                                                                                titleKey = keys[0]; // fallback to first field
+                                                                            }
+
+                                                                            const titleValue = titleKey ? collab[titleKey] : 'Application #' + collab.id.substring(0, 6);
+
+                                                                            return <h3 className="text-2xl font-black">{titleValue}</h3>;
+                                                                        })()}
                                                                         {collab.status === 'pending' && <span className="bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-2 py-1 rounded text-xs font-bold uppercase">Pending</span>}
                                                                         {collab.status === 'approved' && <span className="bg-green-500/20 text-green-500 border border-green-500/50 px-2 py-1 rounded text-xs font-bold uppercase">Approved</span>}
                                                                         {collab.status === 'rejected' && <span className="bg-red-500/20 text-red-500 border border-red-500/50 px-2 py-1 rounded text-xs font-bold uppercase">Rejected</span>}
                                                                     </div>
-                                                                    {collab.externalLink && (
-                                                                        <a href={collab.externalLink.startsWith('http') ? collab.externalLink : `https://${collab.externalLink}`} target="_blank" rel="noopener noreferrer" className="text-brand-yellow hover:underline flex items-center gap-1 text-sm font-bold">
-                                                                            <LinkIcon className="w-3 h-3" /> Visit Website
-                                                                        </a>
-                                                                    )}
                                                                 </div>
                                                                 <span className="text-gray-500 text-sm whitespace-nowrap">
                                                                     {collab.createdAt ? new Date(collab.createdAt._seconds * 1000 || collab.createdAt).toLocaleDateString() : 'N/A'}
                                                                 </span>
                                                             </div>
 
-                                                            <div className="bg-black/50 rounded-xl p-4 border border-zinc-800">
-                                                                <h4 className="text-sm font-bold uppercase text-gray-400 mb-2">Proposal</h4>
-                                                                <p className="text-gray-300 whitespace-pre-wrap">{collab.proposal}</p>
-                                                            </div>
-
-                                                            {/* Render Dynamic Answers */}
-                                                            {Object.keys(collab).filter(key =>
-                                                                !['id', 'organization', 'contactName', 'email', 'phone', 'externalLink', 'proposal', 'status', 'createdAt'].includes(key)
-                                                            ).length > 0 && (
-                                                                    <div className="space-y-4">
-                                                                        <h4 className="text-sm font-bold uppercase text-brand-yellow border-b border-zinc-800 pb-2">Additional Application Details</h4>
-                                                                        <div className="grid gap-4">
-                                                                            {Object.keys(collab)
-                                                                                .filter(key => !['id', 'organization', 'contactName', 'email', 'phone', 'externalLink', 'proposal', 'status', 'createdAt'].includes(key))
-                                                                                .map(key => (
-                                                                                    <div key={key} className="bg-black/30 rounded-lg p-3 border border-zinc-800/50">
-                                                                                        <h5 className="text-xs font-bold uppercase text-gray-400 mb-1">{key}</h5>
-                                                                                        <p className="text-sm text-gray-200 whitespace-pre-wrap">{collab[key]?.toString() || 'N/A'}</p>
-                                                                                    </div>
-                                                                                ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-
-                                                            <div className="grid md:grid-cols-2 gap-4">
-                                                                <div className="flex items-center gap-2 text-sm text-gray-400">
-                                                                    <User className="w-4 h-4 text-brand-yellow" />
-                                                                    <span>{collab.contactName}</span>
-                                                                </div>
-                                                                <div className="flex items-center gap-2 text-sm text-gray-400">
-                                                                    <Mail className="w-4 h-4 text-brand-yellow" />
-                                                                    <a href={`mailto:${collab.email}`} className="hover:text-white transition-colors">{collab.email}</a>
+                                                            {/* Render All Application Details */}
+                                                            <div className="space-y-4">
+                                                                <h4 className="text-sm font-bold uppercase text-brand-yellow border-b border-zinc-800 pb-2">Application Details</h4>
+                                                                <div className="grid gap-4">
+                                                                    {Object.keys(collab)
+                                                                        .filter(key => key !== 'id' && key !== 'status' && key !== 'createdAt')
+                                                                        .map(key => (
+                                                                            <div key={key} className="bg-black/30 rounded-lg p-3 border border-zinc-800/50">
+                                                                                <h5 className="text-xs font-bold uppercase text-gray-400 mb-1">{key}</h5>
+                                                                                {/* Render based on value type or known link/email patterns if needed, for now just strings */}
+                                                                                {typeof collab[key] === 'string' && collab[key].startsWith('http') ? (
+                                                                                    <a href={collab[key]} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-yellow hover:underline break-all">
+                                                                                        {collab[key]}
+                                                                                    </a>
+                                                                                ) : typeof collab[key] === 'string' && collab[key].includes('@') && !collab[key].includes(' ') ? (
+                                                                                    <a href={`mailto:${collab[key]}`} className="text-sm text-brand-yellow hover:underline">
+                                                                                        {collab[key]}
+                                                                                    </a>
+                                                                                ) : (
+                                                                                    <p className="text-sm text-gray-200 whitespace-pre-wrap">{collab[key]?.toString() || 'N/A'}</p>
+                                                                                )}
+                                                                            </div>
+                                                                        ))}
                                                                 </div>
                                                             </div>
+
+                                                            {/* Contact details removed, rendering everything above instead */}
                                                         </div>
 
                                                         {/* Actions Section */}
@@ -1715,6 +1719,9 @@ More content..."
                                                     >
                                                         <option value="text">Short Text</option>
                                                         <option value="textarea">Long Textarea</option>
+                                                        <option value="email">Email</option>
+                                                        <option value="tel">Phone Number</option>
+                                                        <option value="url">Website URL</option>
                                                     </select>
                                                 </div>
                                                 <div className="md:col-span-3 flex shrink-0 items-center justify-between gap-4 mt-6 md:mt-0">
