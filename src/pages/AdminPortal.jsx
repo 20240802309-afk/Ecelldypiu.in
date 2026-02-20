@@ -5,7 +5,7 @@ import {
     Calendar, Clock, Tag, User, Eye, Trash2, BookOpen,
     FileText, Users, CheckSquare, Square, Mail, Phone, Search,
     ArrowLeft, Sparkles, Archive, ArrowUpDown, UserPlus, UserMinus,
-    Award
+    Award, Building, LinkIcon
 } from 'lucide-react';
 import CertificateManager from '../components/CertificateManager';
 
@@ -20,6 +20,13 @@ const AdminPortal = () => {
     const [loadingBlogs, setLoadingBlogs] = useState(false);
     const [blogFilter, setBlogFilter] = useState('all'); // 'all', 'new', 'old'
     const [blogSortOrder, setBlogSortOrder] = useState('newest'); // 'newest', 'oldest'
+
+    // Collaborations state
+    const [collaborations, setCollaborations] = useState([]);
+    const [loadingCollaborations, setLoadingCollaborations] = useState(false);
+    const [collabFilter, setCollabFilter] = useState('all'); // 'all', 'pending', 'approved', 'rejected'
+    const [collabQuestions, setCollabQuestions] = useState([]);
+    const [loadingCollabQuestions, setLoadingCollabQuestions] = useState(false);
 
     // Subscriber modal state
     const [showSubscriberModal, setShowSubscriberModal] = useState(false);
@@ -194,6 +201,74 @@ const AdminPortal = () => {
         }
     };
 
+    const fetchCollaborations = async () => {
+        setLoadingCollaborations(true);
+        try {
+            const response = await fetch('/api/get-collaborations', {
+                headers: {
+                    'Authorization': `Bearer ${adminKey}`
+                }
+            });
+            const data = await response.json();
+            if (data.collaborations) {
+                setCollaborations(data.collaborations);
+            }
+        } catch (err) {
+            console.error('Failed to fetch collaborations:', err);
+        } finally {
+            setLoadingCollaborations(false);
+        }
+    };
+
+    // Load collaborations when authenticated and on manage-collaborations tab
+    useEffect(() => {
+        if (isAuthenticated && activeTab === 'manage-collaborations') {
+            fetchCollaborations();
+            fetchCollabQuestions();
+        }
+    }, [isAuthenticated, activeTab]);
+
+    const fetchCollabQuestions = async () => {
+        setLoadingCollabQuestions(true);
+        try {
+            const response = await fetch('/api/get-collab-questions');
+            const data = await response.json();
+            if (data.questions) {
+                setCollabQuestions(data.questions);
+            }
+        } catch (err) {
+            console.error('Failed to fetch collab questions:', err);
+        } finally {
+            setLoadingCollabQuestions(false);
+        }
+    };
+
+    const handleSaveCollabQuestions = async () => {
+        setLoading(true);
+        setError(null);
+        setResult(null);
+
+        try {
+            const response = await fetch('/api/manage-collab-questions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminKey}`
+                },
+                body: JSON.stringify({ questions: collabQuestions })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to save questions');
+
+            setResult({ type: 'success', message: 'Questions updated successfully!' });
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleLogin = async (e) => {
         e.preventDefault();
         if (!adminKey.trim()) return;
@@ -246,6 +321,19 @@ const AdminPortal = () => {
                 .trim();
             setBlogData(prev => ({ ...prev, slug }));
         }
+    };
+
+    const handleQuestionAdd = () => {
+        setCollabQuestions([...collabQuestions, { id: Date.now().toString(), label: '', type: 'text', required: true }]);
+    };
+
+    const handleQuestionChange = (id, field, value) => {
+        setCollabQuestions(collabQuestions.map(q => q.id === id ? { ...q, [field]: value } : q));
+    };
+
+    const handleQuestionRemove = (id) => {
+        if (!confirm('Are you sure you want to remove this question?')) return;
+        setCollabQuestions(collabQuestions.filter(q => q.id !== id));
     };
 
     const addImageUrl = () => {
@@ -466,6 +554,54 @@ const AdminPortal = () => {
         }
     };
 
+    // Handle collaboration actions
+    const handleCollabAction = async (id, action) => {
+        const actionText = action === 'delete' ? 'delete' : `${action}`;
+        if (!confirm(`Are you sure you want to ${actionText} this collaboration?${action === 'delete' ? ' This cannot be undone.' : ''}`)) return;
+
+        setLoading(true);
+        setError(null);
+        setResult(null);
+
+        try {
+            const method = action === 'delete' ? 'DELETE' : 'POST';
+            const body = action === 'delete' ? JSON.stringify({ id }) : JSON.stringify({ id, action });
+
+            const response = await fetch('/api/manage-collaboration', {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminKey}`
+                },
+                body
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || `Failed to ${action} collaboration`);
+            }
+
+            setResult({
+                type: 'success',
+                message: `Collaboration ${action === 'delete' ? 'deleted' : action + 'd'} successfully!`
+            });
+
+            // Refresh the list
+            fetchCollaborations();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Get filtered collaborations
+    const getFilteredCollaborations = () => {
+        if (collabFilter === 'all') return collaborations;
+        return collaborations.filter(c => c.status === collabFilter);
+    };
+
     // Fetch subscribers for manage-subscribers tab
     const fetchSubscribersForManagement = async () => {
         setLoadingSubscribers(true);
@@ -552,9 +688,9 @@ const AdminPortal = () => {
         }
     };
 
-    // Load subscribers when manage-subscribers tab is active
+    // Load subscribers when manage-subscribers tab or dashboard is active
     useEffect(() => {
-        if (isAuthenticated && activeTab === 'manage-subscribers') {
+        if (isAuthenticated && (activeTab === 'manage-subscribers' || activeTab === 'dashboard')) {
             fetchSubscribersForManagement();
         }
     }, [isAuthenticated, activeTab]);
@@ -681,8 +817,8 @@ const AdminPortal = () => {
                                         <div
                                             key={idx}
                                             className={`flex items-center justify-between p-3 rounded-lg ${item.status === 'sent'
-                                                    ? 'bg-green-900/20 border border-green-800'
-                                                    : 'bg-red-900/20 border border-red-800'
+                                                ? 'bg-green-900/20 border border-green-800'
+                                                : 'bg-red-900/20 border border-red-800'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3">
@@ -753,6 +889,32 @@ const AdminPortal = () => {
                             Welcome to <span className="text-brand-yellow">Admin Portal</span>
                         </h2>
 
+                        {/* Quick Stats Horizontal Bar */}
+                        <div className="bg-zinc-900 border-2 border-zinc-700 rounded-xl p-4 mb-6 flex flex-wrap gap-6 items-center justify-between">
+                            <h3 className="text-lg font-black uppercase flex items-center gap-2 m-0 text-white">
+                                <Eye className="w-5 h-5 text-brand-yellow" />
+                                Quick Stats
+                            </h3>
+                            <div className="flex flex-wrap gap-4 md:gap-8 items-center">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-400 text-sm">Events</span>
+                                    <span className="text-brand-yellow font-black text-lg">5</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-400 text-sm">Dynamic Blogs</span>
+                                    <span className="text-brand-yellow font-black text-lg">{blogs.length}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-400 text-sm">Legacy Blogs</span>
+                                    <span className="text-white font-black text-lg">3</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-400 text-sm">Subscribers</span>
+                                    <span className="text-green-500 font-black text-lg">{subscribers.length}</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="grid md:grid-cols-2 gap-6">
                             {/* Blog Section Card */}
                             <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
@@ -810,28 +972,6 @@ const AdminPortal = () => {
                                 </button>
                             </div>
 
-                            {/* Quick Stats Card */}
-                            <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
-                                <h3 className="text-xl font-black uppercase mb-4 flex items-center gap-3">
-                                    <Eye className="w-5 h-5 text-brand-yellow" />
-                                    Quick Stats
-                                </h3>
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-center p-3 bg-zinc-800 rounded-lg">
-                                        <span className="text-gray-400">Total Blogs (Dynamic)</span>
-                                        <span className="text-brand-yellow font-black text-xl">{blogs.length}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center p-3 bg-zinc-800 rounded-lg">
-                                        <span className="text-gray-400">Legacy Blogs</span>
-                                        <span className="text-white font-black text-xl">3</span>
-                                    </div>
-                                    <div className="flex justify-between items-center p-3 bg-zinc-800 rounded-lg">
-                                        <span className="text-gray-400">Newsletter Subscribers</span>
-                                        <span className="text-green-500 font-black text-xl">{subscribers.length}</span>
-                                    </div>
-                                </div>
-                            </div>
-
                             {/* Certificate Management Card */}
                             <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
                                 <div className="flex items-center gap-4 mb-4">
@@ -849,6 +989,26 @@ const AdminPortal = () => {
                                 >
                                     <Award className="w-4 h-4 text-purple-500 group-hover:text-white" />
                                     <span>Manage Certificates</span>
+                                </button>
+                            </div>
+
+                            {/* Collaborations Management Card */}
+                            <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-14 h-14 bg-blue-500 rounded-xl flex items-center justify-center">
+                                        <Building className="w-7 h-7 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black uppercase">Collaborations</h3>
+                                        <p className="text-gray-400 text-sm">Review & manage proposals</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => { setActiveTab('manage-collaborations'); setError(null); setResult(null); }}
+                                    className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-blue-500 hover:text-white transition-colors text-left group"
+                                >
+                                    <Building className="w-4 h-4 text-blue-500 group-hover:text-white" />
+                                    <span>Manage Collaborations</span>
                                 </button>
                             </div>
                         </div>
@@ -1097,8 +1257,8 @@ More content..."
                                 <button
                                     onClick={() => setBlogFilter('all')}
                                     className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${blogFilter === 'all'
-                                            ? 'bg-brand-yellow text-black'
-                                            : 'bg-zinc-800 text-gray-400 hover:bg-zinc-700'
+                                        ? 'bg-brand-yellow text-black'
+                                        : 'bg-zinc-800 text-gray-400 hover:bg-zinc-700'
                                         }`}
                                 >
                                     All Blogs
@@ -1106,8 +1266,8 @@ More content..."
                                 <button
                                     onClick={() => setBlogFilter('new')}
                                     className={`px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${blogFilter === 'new'
-                                            ? 'bg-green-500 text-black'
-                                            : 'bg-zinc-800 text-gray-400 hover:bg-zinc-700'
+                                        ? 'bg-green-500 text-black'
+                                        : 'bg-zinc-800 text-gray-400 hover:bg-zinc-700'
                                         }`}
                                 >
                                     <Sparkles className="w-4 h-4" />
@@ -1116,8 +1276,8 @@ More content..."
                                 <button
                                     onClick={() => setBlogFilter('old')}
                                     className={`px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${blogFilter === 'old'
-                                            ? 'bg-zinc-500 text-white'
-                                            : 'bg-zinc-800 text-gray-400 hover:bg-zinc-700'
+                                        ? 'bg-zinc-500 text-white'
+                                        : 'bg-zinc-800 text-gray-400 hover:bg-zinc-700'
                                         }`}
                                 >
                                     <Archive className="w-4 h-4" />
@@ -1166,16 +1326,16 @@ More content..."
                                     <div
                                         key={blog.id}
                                         className={`border-2 rounded-xl p-6 transition-colors ${blog.isLegacy
-                                                ? 'bg-zinc-900/50 border-zinc-800 opacity-80'
-                                                : 'bg-zinc-900 border-zinc-700 hover:border-brand-yellow'
+                                            ? 'bg-zinc-900/50 border-zinc-800 opacity-80'
+                                            : 'bg-zinc-900 border-zinc-700 hover:border-brand-yellow'
                                             }`}
                                     >
                                         <div className="flex justify-between items-start gap-4">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                                                     <span className={`px-2 py-1 rounded text-xs font-bold ${blog.isLegacy
-                                                            ? 'bg-zinc-700 text-gray-300'
-                                                            : 'bg-brand-yellow text-black'
+                                                        ? 'bg-zinc-700 text-gray-300'
+                                                        : 'bg-brand-yellow text-black'
                                                         }`}>
                                                         {blog.category}
                                                     </span>
@@ -1246,8 +1406,8 @@ More content..."
                                                         }
                                                     }}
                                                     className={`p-2 rounded-lg transition-colors ${blog.isLegacy
-                                                            ? 'bg-zinc-800 text-zinc-600 hover:bg-zinc-700 cursor-not-allowed'
-                                                            : 'bg-red-900/50 text-red-400 hover:bg-red-900'
+                                                        ? 'bg-zinc-800 text-zinc-600 hover:bg-zinc-700 cursor-not-allowed'
+                                                        : 'bg-red-900/50 text-red-400 hover:bg-red-900'
                                                         }`}
                                                     title={blog.isLegacy ? "Cannot delete legacy blogs" : "Delete"}
                                                 >
@@ -1358,6 +1518,236 @@ More content..."
                                     )}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Manage Collaborations Tab */}
+                {activeTab === 'manage-collaborations' && (
+                    <div className="max-w-5xl mx-auto">
+                        <button
+                            onClick={() => { setActiveTab('dashboard'); setError(null); setResult(null); }}
+                            className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                            <span>Back to Dashboard</span>
+                        </button>
+                        <h2 className="text-3xl font-black uppercase mb-6">
+                            Manage <span className="text-brand-yellow">Collaborations</span>
+                        </h2>
+
+                        {/* Filters */}
+                        <div className="flex flex-wrap gap-2 mb-8">
+                            {['all', 'pending', 'approved', 'rejected'].map(filter => (
+                                <button
+                                    key={filter}
+                                    onClick={() => setCollabFilter(filter)}
+                                    className={`px-6 py-2 rounded-full font-bold uppercase transition-all duration-300 ${collabFilter === filter
+                                        ? 'bg-brand-yellow text-black'
+                                        : 'bg-zinc-800 text-gray-400 hover:bg-zinc-700 hover:text-white'
+                                        }`}
+                                >
+                                    {filter}
+                                </button>
+                            ))}
+                        </div>
+
+                        {loadingCollaborations ? (
+                            <div className="flex justify-center py-20">
+                                <Loader2 className="w-10 h-10 animate-spin text-brand-yellow" />
+                            </div>
+                        ) : (
+                            <div className="space-y-12">
+                                {/* Collaborations List */}
+                                <div>
+                                    <h3 className="text-xl font-bold mb-4">Proposals & Applications</h3>
+                                    {getFilteredCollaborations().length === 0 ? (
+                                        <div className="text-center py-20 border-4 border-dashed border-zinc-800 rounded-[2rem] bg-zinc-900/50">
+                                            <h3 className="text-2xl font-black uppercase text-gray-500 mb-2">No Collaborations Found</h3>
+                                            <p className="text-gray-400">There are no collaborations matching the '{collabFilter}' filter.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid gap-6">
+                                            {getFilteredCollaborations().map((collab) => (
+                                                <div key={collab.id} className="bg-zinc-900 border-2 border-zinc-800 rounded-2xl p-6 hover:border-zinc-700 transition-colors">
+                                                    <div className="flex flex-col md:flex-row gap-6">
+                                                        {/* Details Section */}
+                                                        <div className="flex-1 space-y-4">
+                                                            <div className="flex items-start justify-between">
+                                                                <div>
+                                                                    <div className="flex items-center gap-3 mb-2">
+                                                                        <h3 className="text-2xl font-black">{collab.organization}</h3>
+                                                                        {collab.status === 'pending' && <span className="bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-2 py-1 rounded text-xs font-bold uppercase">Pending</span>}
+                                                                        {collab.status === 'approved' && <span className="bg-green-500/20 text-green-500 border border-green-500/50 px-2 py-1 rounded text-xs font-bold uppercase">Approved</span>}
+                                                                        {collab.status === 'rejected' && <span className="bg-red-500/20 text-red-500 border border-red-500/50 px-2 py-1 rounded text-xs font-bold uppercase">Rejected</span>}
+                                                                    </div>
+                                                                    {collab.externalLink && (
+                                                                        <a href={collab.externalLink.startsWith('http') ? collab.externalLink : `https://${collab.externalLink}`} target="_blank" rel="noopener noreferrer" className="text-brand-yellow hover:underline flex items-center gap-1 text-sm font-bold">
+                                                                            <LinkIcon className="w-3 h-3" /> Visit Website
+                                                                        </a>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-gray-500 text-sm whitespace-nowrap">
+                                                                    {collab.createdAt ? new Date(collab.createdAt._seconds * 1000 || collab.createdAt).toLocaleDateString() : 'N/A'}
+                                                                </span>
+                                                            </div>
+
+                                                            <div className="bg-black/50 rounded-xl p-4 border border-zinc-800">
+                                                                <h4 className="text-sm font-bold uppercase text-gray-400 mb-2">Proposal</h4>
+                                                                <p className="text-gray-300 whitespace-pre-wrap">{collab.proposal}</p>
+                                                            </div>
+
+                                                            {/* Render Dynamic Answers */}
+                                                            {Object.keys(collab).filter(key =>
+                                                                !['id', 'organization', 'contactName', 'email', 'phone', 'externalLink', 'proposal', 'status', 'createdAt'].includes(key)
+                                                            ).length > 0 && (
+                                                                    <div className="space-y-4">
+                                                                        <h4 className="text-sm font-bold uppercase text-brand-yellow border-b border-zinc-800 pb-2">Additional Application Details</h4>
+                                                                        <div className="grid gap-4">
+                                                                            {Object.keys(collab)
+                                                                                .filter(key => !['id', 'organization', 'contactName', 'email', 'phone', 'externalLink', 'proposal', 'status', 'createdAt'].includes(key))
+                                                                                .map(key => (
+                                                                                    <div key={key} className="bg-black/30 rounded-lg p-3 border border-zinc-800/50">
+                                                                                        <h5 className="text-xs font-bold uppercase text-gray-400 mb-1">{key}</h5>
+                                                                                        <p className="text-sm text-gray-200 whitespace-pre-wrap">{collab[key]?.toString() || 'N/A'}</p>
+                                                                                    </div>
+                                                                                ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                            <div className="grid md:grid-cols-2 gap-4">
+                                                                <div className="flex items-center gap-2 text-sm text-gray-400">
+                                                                    <User className="w-4 h-4 text-brand-yellow" />
+                                                                    <span>{collab.contactName}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2 text-sm text-gray-400">
+                                                                    <Mail className="w-4 h-4 text-brand-yellow" />
+                                                                    <a href={`mailto:${collab.email}`} className="hover:text-white transition-colors">{collab.email}</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Actions Section */}
+                                                        <div className="flex flex-row md:flex-col gap-3 justify-center md:justify-start pt-4 border-t border-zinc-800 md:border-t-0 md:border-l md:pl-6">
+                                                            {collab.status !== 'approved' && (
+                                                                <button
+                                                                    onClick={() => handleCollabAction(collab.id, 'approve')}
+                                                                    disabled={loading}
+                                                                    className="flex-1 md:flex-none bg-green-900/40 text-green-500 border border-green-500/50 px-4 py-2 rounded-xl font-bold uppercase hover:bg-green-500 hover:text-black transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                                                >
+                                                                    <CheckSquare className="w-4 h-4" /> Approve
+                                                                </button>
+                                                            )}
+                                                            {collab.status !== 'rejected' && (
+                                                                <button
+                                                                    onClick={() => handleCollabAction(collab.id, 'reject')}
+                                                                    disabled={loading}
+                                                                    className="flex-1 md:flex-none bg-orange-900/40 text-orange-400 border border-orange-500/50 px-4 py-2 rounded-xl font-bold uppercase hover:bg-orange-500 hover:text-black transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                                                >
+                                                                    <X className="w-4 h-4" /> Reject
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => handleCollabAction(collab.id, 'delete')}
+                                                                disabled={loading}
+                                                                className="flex-1 md:flex-none bg-red-900/40 text-red-500 border border-red-500/50 px-4 py-2 rounded-xl font-bold uppercase hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" /> Delete
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Question Manager Section */}
+                        <div className="mt-16 pt-16 border-t-2 border-zinc-800">
+                            <div className="flex items-center justify-between mb-8">
+                                <h3 className="text-2xl font-black uppercase">
+                                    Manage <span className="text-brand-yellow">Form Questions</span>
+                                </h3>
+                                <button
+                                    onClick={handleSaveCollabQuestions}
+                                    disabled={loading || loadingCollabQuestions}
+                                    className="bg-brand-yellow text-black px-6 py-2 rounded-xl font-bold uppercase hover:bg-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckSquare className="w-4 h-4" />}
+                                    Save Config
+                                </button>
+                            </div>
+
+                            <p className="text-gray-400 mb-6">These questions will dynamically appear in the application form for new collaborations.</p>
+
+                            {loadingCollabQuestions ? (
+                                <div className="flex justify-center py-10">
+                                    <Loader2 className="w-8 h-8 animate-spin text-brand-yellow" />
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {collabQuestions.map((question, index) => (
+                                        <div key={question.id} className="bg-zinc-900 border-2 border-zinc-800 rounded-xl p-4 md:p-6 flex flex-col md:flex-row gap-4 items-start md:items-center">
+                                            <div className="flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-700 font-bold bg-black flex-shrink-0 text-brand-yellow">
+                                                {index + 1}
+                                            </div>
+
+                                            <div className="flex-1 grid md:grid-cols-12 gap-4 w-full">
+                                                <div className="md:col-span-6">
+                                                    <label className="block text-xs text-gray-500 font-bold uppercase mb-1">Question Label</label>
+                                                    <input
+                                                        type="text"
+                                                        value={question.label}
+                                                        onChange={(e) => handleQuestionChange(question.id, 'label', e.target.value)}
+                                                        className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none focus:bg-zinc-950"
+                                                        placeholder="What is your primary goal?"
+                                                    />
+                                                </div>
+                                                <div className="md:col-span-3">
+                                                    <label className="block text-xs text-gray-500 font-bold uppercase mb-1">Input Type</label>
+                                                    <select
+                                                        value={question.type}
+                                                        onChange={(e) => handleQuestionChange(question.id, 'type', e.target.value)}
+                                                        className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none appearance-none cursor-pointer"
+                                                    >
+                                                        <option value="text">Short Text</option>
+                                                        <option value="textarea">Long Textarea</option>
+                                                    </select>
+                                                </div>
+                                                <div className="md:col-span-3 flex shrink-0 items-center justify-between gap-4 mt-6 md:mt-0">
+                                                    <label className="flex items-center gap-2 cursor-pointer text-sm font-bold uppercase select-none">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={question.required}
+                                                            onChange={(e) => handleQuestionChange(question.id, 'required', e.target.checked)}
+                                                            className="w-5 h-5 accent-brand-yellow bg-black border-2 border-zinc-700 rounded cursor-pointer"
+                                                        />
+                                                        Required
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => handleQuestionRemove(question.id)}
+                                                className="mt-2 md:mt-0 ml-auto md:ml-2 p-3 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50 group flex-shrink-0"
+                                                title="Remove Question"
+                                            >
+                                                <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                            </button>
+                                        </div>
+                                    ))}
+
+                                    <button
+                                        onClick={handleQuestionAdd}
+                                        className="w-full mt-4 flex items-center justify-center gap-2 py-4 border-2 border-dashed border-brand-yellow/30 rounded-xl text-brand-yellow hover:bg-brand-yellow/10 hover:border-brand-yellow transition-all font-bold uppercase"
+                                    >
+                                        <PlusCircle className="w-5 h-5" /> Add New Question
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -1662,16 +2052,16 @@ More content..."
                                     <div
                                         key={subscriber.id}
                                         className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${selectedSubscribers.includes(subscriber.email)
-                                                ? 'bg-brand-yellow/10 border-brand-yellow'
-                                                : 'bg-zinc-800 border-zinc-700 hover:border-zinc-500'
+                                            ? 'bg-brand-yellow/10 border-brand-yellow'
+                                            : 'bg-zinc-800 border-zinc-700 hover:border-zinc-500'
                                             }`}
                                         onClick={() => toggleSubscriber(subscriber.email)}
                                     >
                                         <div className="flex items-center gap-4">
                                             {/* Checkbox */}
                                             <div className={`w-6 h-6 rounded flex items-center justify-center ${selectedSubscribers.includes(subscriber.email)
-                                                    ? 'bg-brand-yellow text-black'
-                                                    : 'bg-zinc-700 border border-zinc-600'
+                                                ? 'bg-brand-yellow text-black'
+                                                : 'bg-zinc-700 border border-zinc-600'
                                                 }`}>
                                                 {selectedSubscribers.includes(subscriber.email) && (
                                                     <CheckSquare className="w-4 h-4" />
@@ -1706,8 +2096,8 @@ More content..."
                                                 toggleSubscriber(subscriber.email);
                                             }}
                                             className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors ${selectedSubscribers.includes(subscriber.email)
-                                                    ? 'bg-red-900/50 text-red-400 hover:bg-red-900'
-                                                    : 'bg-green-900/50 text-green-400 hover:bg-green-900'
+                                                ? 'bg-red-900/50 text-red-400 hover:bg-red-900'
+                                                : 'bg-green-900/50 text-green-400 hover:bg-green-900'
                                                 }`}
                                         >
                                             {selectedSubscribers.includes(subscriber.email) ? 'Remove' : 'Add'}

@@ -24,6 +24,7 @@ const Navbar = () => {
     { name: 'Sponsors', path: '/sponsors' },
     { name: 'Events', path: '/events' },
     { name: 'Team', path: '/team' },
+    { name: 'Collaborations', path: '/collaborations' },
     { name: 'Blogs', path: '/blogs' },
   ];
 
@@ -43,7 +44,6 @@ const Navbar = () => {
               alt="E-Cell"
               className="h-10 w-auto object-contain brightness-0 invert"
             />
-            <span className="text-white font-black text-xl tracking-tighter block select-none">ECELL DYPIU</span>
           </div>
 
           {/* Desktop Navigation */}
@@ -52,7 +52,7 @@ const Navbar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`relative px-3 lg:px-5 py-2 text-xs lg:text-sm font-bold uppercase tracking-wide transition-all duration-300 rounded-full whitespace-nowrap ${location.pathname === item.path
+                className={`relative px-2 lg:px-4 xl:px-5 py-2 text-[10px] lg:text-sm font-bold uppercase tracking-wide transition-all duration-300 rounded-full whitespace-nowrap ${location.pathname === item.path
                   ? 'text-black bg-brand-yellow shadow-[0_0_10px_rgba(255,178,44,0.5)]'
                   : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
@@ -62,8 +62,8 @@ const Navbar = () => {
             ))}
           </div>
 
-          <div className="hidden md:block ml-3 flex-shrink-0">
-            <Link to="/contact" className="bg-white text-black px-4 lg:px-6 py-2.5 rounded-full font-bold text-xs lg:text-sm hover:bg-brand-yellow hover:text-black transition-all duration-300 border-2 border-transparent uppercase tracking-wider shadow-glow-white whitespace-nowrap">
+          <div className="hidden md:block ml-2 lg:ml-3 flex-shrink-0">
+            <Link to="/contact" className="bg-white text-black px-3 lg:px-6 py-2 lg:py-2.5 rounded-full font-bold text-[10px] lg:text-sm hover:bg-brand-yellow hover:text-black transition-all duration-300 border-2 border-transparent uppercase tracking-wider shadow-glow-white whitespace-nowrap">
               Let's Talk
             </Link>
           </div>
