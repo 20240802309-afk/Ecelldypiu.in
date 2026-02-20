@@ -22,6 +22,7 @@ import BlogDetail2 from './pages/BlogDetail2';
 import BlogDetail3 from './pages/BlogDetail3';
 import Linktree from './pages/Linktree';
 import Collaborations from './pages/Collaborations';
+import CollabStatus from './pages/CollabStatus';
 import ApplyNow from './pages/ApplyNow';
 import Newsletter from './pages/Newsletter';
 import AdminPortal from './pages/AdminPortal';
@@ -63,6 +64,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/ourlinks" element={<Linktree />} />
             <Route path="/collaborations" element={<Collaborations />} />
+            <Route path="/collaborations/status/:id" element={<CollabStatus />} />
             <Route path="/apply" element={<ApplyNow />} />
             <Route path="/newsletter" element={<Newsletter />} />
             <Route path="/admin" element={<AdminPortal />} />
