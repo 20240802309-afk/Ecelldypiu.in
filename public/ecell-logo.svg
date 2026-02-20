@@ -1,0 +1,26 @@
+<svg width="240" height="140" viewBox="0 0 240 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="240" height="140" fill="#0B1426" rx="12"/>
+  
+  <!-- Large "E" -->
+  <g transform="translate(60, 20)">
+    <!-- Top horizontal bar -->
+    <rect x="0" y="0" width="120" height="16" fill="white" rx="3"/>
+    <!-- Middle horizontal bar -->
+    <rect x="0" y="32" width="100" height="16" fill="white" rx="3"/>
+    <!-- Bottom horizontal bar -->
+    <rect x="0" y="64" width="120" height="16" fill="white" rx="3"/>
+    <!-- Vertical bar -->
+    <rect x="0" y="0" width="16" height="80" fill="white" rx="3"/>
+  </g>
+  
+  <!-- "e-cell" text -->
+  <g transform="translate(30, 110)">
+    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="300" fill="white" letter-spacing="1px">e-cell</text>
+  </g>
+  
+  <!-- "DYPIU" text -->
+  <g transform="translate(70, 130)">
+    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="white" letter-spacing="3px">DYPIU</text>
+  </g>
+</svg>
