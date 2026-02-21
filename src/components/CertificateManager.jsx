@@ -96,7 +96,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
     const fetchTemplates = async () => {
         setLoadingTemplates(true);
         try {
-            const res = await fetch('/api/list-certificate-templates');
+            const res = await fetch('/api/certificate?action=templates');
             if (res.ok) {
                 const data = await res.json();
                 setAvailableTemplates(data.templates || []);
@@ -120,7 +120,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
             setLoading(true);
             setError('');
             try {
-                const res = await fetch(`/api/get-certificate-config?eventId=${selectedEvent}&admin=true`);
+                const res = await fetch(`/api/certificate?eventId=${selectedEvent}&admin=true`);
                 if (res.ok) {
                     const data = await res.json();
                     const cfg = data.config;
@@ -359,7 +359,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
             });
 
             // Upload to server
-            const res = await fetch('/api/upload-certificate-template', {
+            const res = await fetch('/api/certificate?action=upload-template', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -440,7 +440,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
         if (!selectedEvent) return;
         setLoadingAttendees(true);
         try {
-            const res = await fetch(`/api/list-event-attendees?eventId=${selectedEvent}`, {
+            const res = await fetch(`/api/event?action=list-attendees&eventId=${selectedEvent}`, {
                 headers: { 'Authorization': `Bearer ${adminKey}` }
             });
             const data = await res.json();
@@ -491,7 +491,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
         const eventInfo = EVENTS.find(e => e.id === selectedEvent);
 
         try {
-            const res = await fetch('/api/save-certificate-config', {
+            const res = await fetch('/api/certificate?action=save-config', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -18,7 +18,7 @@ const BlogDetail = () => {
   const fetchBlog = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/get-blogs?slug=${slug}`);
+      const response = await fetch(`/api/blog?slug=${slug}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -161,11 +161,10 @@ const BlogDetail = () => {
                     <button
                       key={idx}
                       onClick={() => setCurrentImageIndex(idx)}
-                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                        idx === currentImageIndex
+                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex
                           ? 'border-brand-yellow scale-105'
                           : 'border-white/30 hover:border-white'
-                      }`}
+                        }`}
                     >
                       <img
                         src={img}
@@ -184,7 +183,7 @@ const BlogDetail = () => {
             {blog.content.split('\n\n').map((paragraph, idx) => {
               // Check if it's a heading (short line followed by content)
               const isHeading = paragraph.length < 100 && !paragraph.includes('.') && idx > 0;
-              
+
               if (isHeading) {
                 return (
                   <h2 key={idx} className="text-2xl md:text-3xl font-black text-brand-yellow mt-12 mb-6 uppercase">

@@ -59,10 +59,10 @@ const GetCertificate = () => {
         setStepError('');
 
         try {
-            const res = await fetch('/api/lookup-attendee', {
+            const res = await fetch('/api/event', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ eventId: eventSlug, identifier: identifier.trim() })
+                body: JSON.stringify({ action: 'lookup-attendee', eventId: eventSlug, identifier: identifier.trim() })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Lookup failed');

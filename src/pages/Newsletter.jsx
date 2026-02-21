@@ -59,7 +59,7 @@ const Newsletter = () => {
             console.log('📤 Attempting to submit via API...');
 
             // Use fetch API instead of Firestore SDK (better mobile compatibility)
-            const response = await fetch('/api/submit-newsletter', {
+            const response = await fetch('/api/subscriber', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

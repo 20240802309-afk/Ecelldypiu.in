@@ -25,7 +25,7 @@ const Blogs = () => {
 
   const fetchBlogs = async () => {
     try {
-      const response = await fetch('/api/get-blogs');
+      const response = await fetch('/api/blog');
       const data = await response.json();
       if (data.blogs) {
         setDynamicBlogs(data.blogs);

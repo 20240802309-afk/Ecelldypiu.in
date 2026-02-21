@@ -24,7 +24,7 @@ const InnovateForImpact = () => {
     const [certificateEnabled, setCertificateEnabled] = useState(false);
 
     useEffect(() => {
-        fetch('/api/get-certificate-config?eventId=innovate-for-impact')
+        fetch('/api/certificate?eventId=innovate-for-impact')
             .then(res => res.ok ? res.json() : null)
             .then(data => { if (data?.config?.enabled) setCertificateEnabled(true); })
             .catch(() => { });

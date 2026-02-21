@@ -153,12 +153,13 @@ const AdminPortal = () => {
                 setAdminKey(savedKey);
                 setLoginLoading(true);
                 try {
-                    const response = await fetch('/api/verify-admin', {
+                    const response = await fetch('/api/event', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${savedKey}`
-                        }
+                        },
+                        body: JSON.stringify({ action: 'verify-admin' })
                     });
                     if (response.ok) {
                         setIsAuthenticated(true);
@@ -189,7 +190,7 @@ const AdminPortal = () => {
     const fetchBlogs = async () => {
         setLoadingBlogs(true);
         try {
-            const response = await fetch('/api/get-blogs');
+            const response = await fetch('/api/blog');
             const data = await response.json();
             if (data.blogs) {
                 setBlogs(data.blogs);
@@ -204,7 +205,7 @@ const AdminPortal = () => {
     const fetchCollaborations = async () => {
         setLoadingCollaborations(true);
         try {
-            const response = await fetch('/api/get-collaborations', {
+            const response = await fetch('/api/collaboration', {
                 headers: {
                     'Authorization': `Bearer ${adminKey}`
                 }
@@ -231,7 +232,7 @@ const AdminPortal = () => {
     const fetchCollabQuestions = async () => {
         setLoadingCollabQuestions(true);
         try {
-            const response = await fetch('/api/get-collab-questions');
+            const response = await fetch('/api/collaboration?action=questions');
             const data = await response.json();
             if (data.questions) {
                 setCollabQuestions(data.questions);
@@ -249,7 +250,7 @@ const AdminPortal = () => {
         setResult(null);
 
         try {
-            const response = await fetch('/api/manage-collab-questions', {
+            const response = await fetch('/api/collaboration?action=questions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -277,12 +278,13 @@ const AdminPortal = () => {
         setLoginError('');
 
         try {
-            const response = await fetch('/api/verify-admin', {
+            const response = await fetch('/api/event', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${adminKey}`
-                }
+                },
+                body: JSON.stringify({ action: 'verify-admin' })
             });
 
             const data = await response.json();
@@ -372,7 +374,7 @@ const AdminPortal = () => {
                 })
             };
 
-            const response = await fetch('/api/create-blog', {
+            const response = await fetch('/api/blog', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -428,7 +430,7 @@ const AdminPortal = () => {
         setLoadingSubscribers(true);
         setError(null);
         try {
-            const response = await fetch('/api/get-subscribers', {
+            const response = await fetch('/api/subscriber', {
                 headers: {
                     'Authorization': `Bearer ${adminKey}`
                 }
@@ -491,7 +493,7 @@ const AdminPortal = () => {
             // Get the selected subscriber objects with name and email
             const selectedSubs = subscribers.filter(s => selectedSubscribers.includes(s.email));
 
-            const response = await fetch('/api/send-blog-notification', {
+            const response = await fetch('/api/blog?action=notify', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -535,7 +537,7 @@ const AdminPortal = () => {
         if (!confirm('Are you sure you want to delete this blog?')) return;
 
         try {
-            const response = await fetch('/api/delete-blog', {
+            const response = await fetch('/api/blog', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -567,7 +569,7 @@ const AdminPortal = () => {
             const method = action === 'delete' ? 'DELETE' : 'POST';
             const body = action === 'delete' ? JSON.stringify({ id }) : JSON.stringify({ id, action });
 
-            const response = await fetch('/api/manage-collaboration', {
+            const response = await fetch('/api/collaboration?action=manage', {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
@@ -606,7 +608,7 @@ const AdminPortal = () => {
     const fetchSubscribersForManagement = async () => {
         setLoadingSubscribers(true);
         try {
-            const response = await fetch('/api/get-subscribers', {
+            const response = await fetch('/api/subscriber', {
                 headers: {
                     'Authorization': `Bearer ${adminKey}`
                 }
@@ -630,7 +632,7 @@ const AdminPortal = () => {
         setError(null);
 
         try {
-            const response = await fetch('/api/add-subscriber', {
+            const response = await fetch('/api/subscriber?action=add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -664,7 +666,7 @@ const AdminPortal = () => {
         setError(null);
 
         try {
-            const response = await fetch('/api/delete-subscriber', {
+            const response = await fetch('/api/subscriber', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

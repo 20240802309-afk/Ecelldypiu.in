@@ -133,12 +133,12 @@ const ApplyNow = () => {
             console.log('📤 Attempting to submit via API...');
 
             // Use fetch API instead of Firestore SDK (better mobile compatibility)
-            const response = await fetch('/api/submit-application', {
+            const response = await fetch('/api/event', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData, action: 'submit-application' }),
             });
 
             if (!response.ok) {

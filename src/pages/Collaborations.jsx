@@ -33,7 +33,7 @@ const Collaborations = () => {
     const fetchDynamicQuestions = async () => {
         setLoadingQuestions(true);
         try {
-            const response = await fetch('/api/get-collab-questions');
+            const response = await fetch('/api/collaboration?action=questions');
             const data = await response.json();
             if (data.questions) {
                 setDynamicQuestions(data.questions);
@@ -54,7 +54,7 @@ const Collaborations = () => {
     const fetchCollaborations = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/get-collaborations');
+            const response = await fetch('/api/collaboration');
             const data = await response.json();
 
             if (!response.ok) {
@@ -96,7 +96,7 @@ const Collaborations = () => {
             // Combine core answers and dynamic answers
             const submissionData = { ...coreAnswers, ...dynamicAnswers };
 
-            const response = await fetch('/api/submit-collaboration', {
+            const response = await fetch('/api/collaboration', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

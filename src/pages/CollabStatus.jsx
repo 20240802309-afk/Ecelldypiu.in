@@ -11,7 +11,7 @@ const CollabStatus = () => {
     useEffect(() => {
         const fetchStatus = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/get-collaboration-status?id=${id}`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/collaboration?id=${id}`);
                 const data = await response.json();
 
                 if (response.ok && data.success) {
