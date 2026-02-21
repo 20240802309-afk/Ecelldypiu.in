@@ -92,4 +92,26 @@ function vercelApiPlugin() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), vercelApiPlugin()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Put react dependencies into their own chunk
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor-react';
+            }
+            // Put firebase into its own chunk
+            if (id.includes('firebase')) {
+              return 'vendor-firebase';
+            }
+            // Put other libraries into a general vendor chunk
+            return 'vendor';
+          }
+        },
+      },
+    },
+    // Optional: increase the warning limit slightly if the chunks are still a bit large
+    chunkSizeWarningLimit: 1000,
+  },
 })
