@@ -1,0 +1,151 @@
+[
+  {
+    "name": "multi_replace_file_content",
+    "args": {
+      "Description": "\"Add Image Fields, Draft Preview, and Dispatch capabilities to CertificateManager.\"",
+      "Instruction": "\"Update State, Load Config, Canvas Render, Handlers, Save Config, UI for Image Fields, UI for Live Preview, and Dispatch logic.\"",
+      "ReplacementChunks": "[{\"AllowMultiple\":false,\"EndLine\":60,\"ReplacementContent\":\"    // Custom fonts\\n    const [customFonts, setCustomFonts] = useState([]);\\n\\n    // Image fields (NEW)\\n    const [imageFields, setImageFields] = useState([]);\\n    const [activeImageIndex, setActiveImageIndex] = useState(null);\\n    const imageFieldInputRef = useRef(null);\\n\\n    // Draft Preview (NEW)\\n    const [previewAttendee, setPreviewAttendee] = useState(null);\\n    const [dispatching, setDispatching] = useState(false);\\n\\n    // Enabled\\n    const [enabled, setEnabled] = useState(true);\\n\\n    // Attendee collection override\",\"StartLine\":53,\"TargetContent\":\"    // Custom fonts\\n    const [customFonts, setCustomFonts] = useState([]);\\n\\n    // Enabled\\n    const [enabled, setEnabled] = useState(true);\\n\\n    // Attendee collection override\"},{\"AllowMultiple\":false,\"EndLine\":142,\"ReplacementContent\":\"                    setTemplateUrl(cfg.templateUrl || '');\\n                    setTextFields(cfg.textFields || []);\\n                    setImageFields(cfg.imageFields || []);\\n                    setCustomFonts(cfg.customFonts || []);\\n                    setEnabled(cfg.enabled !== false);\\n                    setAttendeeCollection(cfg.attendeeCollection || '');\\n                    setEligibility(cfg.eligibility || {});\\n                    setConfig(cfg);\\n                } else {\\n                    // No config yet, start fresh\\n                    setTemplateUrl('');\\n                    setTextFields([]);\\n                    setImageFields([]);\\n                    setCustomFonts([]);\\n                    setEnabled(true);\\n                    setAttendeeCollection(EVENTS.find(e => e.id === selectedEvent)?.collection || '');\\n                    setConfig(null);\\n                }\",\"StartLine\":127,\"TargetContent\":\"                    setTemplateUrl(cfg.templateUrl || '');\\n                    setTextFields(cfg.textFields || []);\\n                    setCustomFonts(cfg.customFonts || []);\\n                    setEnabled(cfg.enabled !== fals\n<truncated 13573 bytes>",
+      "TargetFile": "\"c:\\\\Users\\\\acer\\\\Documents\\\\GitHub\\\\Ecelldypiu.in\\\\src\\\\components\\\\CertificateManager.jsx\"",
+      "toolAction": "\"Updating CertificateManager state logic\"",
+      "toolSummary": "\"Update CertificateManager state\""
+    }
+  },
+  {
+    "name": "multi_replace_file_content",
+    "args": {
+      "Description": "\"Add UI for Image Fields, Live Preview Dropdown, and Dispatch Certificates.\"",
+      "Instruction": "\"Update imports, add handleDispatch, add Image Fields UI, modify Live Preview Header, and add Dispatch Certificates Section.\"",
+      "ReplacementChunks": "[{\"AllowMultiple\":false,\"EndLine\":7,\"ReplacementContent\":\"    Plus, Trash2, Move, Type, Eye, ArrowLeft,\\n    Settings, Image as ImageIcon, ChevronDown, Grid3X3,\\n    Users, Search, CheckSquare, XSquare, Send\\n} from 'lucide-react';\",\"StartLine\":4,\"TargetContent\":\"    Plus, Trash2, Move, Type, Eye, ArrowLeft,\\n    Settings, Image as ImageIcon, ChevronDown, Grid3X3,\\n    Users, Search, CheckSquare, XSquare\\n} from 'lucide-react';\"},{\"AllowMultiple\":false,\"EndLine\":484,\"ReplacementContent\":\"    // Dispatch Certificates\\n    const handleDispatch = async () => {\\n        if (!selectedEvent || !window.confirm('Are you sure you want to dispatch certificates to all eligible attendees? This will send emails.')) return;\\n        setDispatching(true);\\n        setError('');\\n        setSuccess('');\\n\\n        try {\\n            const res = await fetch('/api/certificate?action=dispatch', {\\n                method: 'POST',\\n                headers: {\\n                    'Content-Type': 'application/json',\\n                    'Authorization': `Bearer ${adminKey}`\\n                },\\n                body: JSON.stringify({ eventId: selectedEvent })\\n            });\\n\\n            const data = await res.json();\\n            if (!res.ok) throw new Error(data.error || 'Failed to dispatch');\\n\\n            setSuccess(`Successfully dispatched ${data.dispatched} certificates!`);\\n        } catch (err) {\\n            setError(err.message);\\n        } finally {\\n            setDispatching(false);\\n        }\\n    };\\n\\n    // Save config\",\"StartLine\":484,\"TargetContent\":\"    // Save config\"},{\"AllowMultiple\":false,\"EndLine\":1031,\"ReplacementContent\":\"                        )}\\n\\n                        {/* Image Fields */}\\n                        <div className=\\\"bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6\\\">\\n                            <div className=\\\"flex items-center justify-between mb-4\\\">\\n                                <h3 className=\\\"text-lg font-black uppercase flex items-center gap-2\\\">\\n                        \n<truncated 13186 bytes>",
+      "TargetFile": "\"c:\\\\Users\\\\acer\\\\Documents\\\\GitHub\\\\Ecelldypiu.in\\\\src\\\\components\\\\CertificateManager.jsx\"",
+      "toolAction": "\"Updating CertificateManager UI components\"",
+      "toolSummary": "\"Update CertificateManager UI\""
+    }
+  },
+  {
+    "name": "multi_replace_file_content",
+    "args": {
+      "Description": "\"Add ability to delete templates from CertificateManager\"",
+      "Instruction": "\"Add deletingTemplate state, handleDeleteTemplate function, and delete button in template grid in CertificateManager.jsx\"",
+      "ReplacementChunks": "[{\"AllowMultiple\":false,\"EndLine\":68,\"ReplacementContent\":\"    const [uploading, setUploading] = useState(false);\\n    const [deletingTemplate, setDeletingTemplate] = useState(null);\",\"StartLine\":67,\"TargetContent\":\"    const [uploading, setUploading] = useState(false);\"},{\"AllowMultiple\":false,\"EndLine\":513,\"ReplacementContent\":\"            if (fileInputRef.current) fileInputRef.current.value = '';\\n        }\\n    };\\n\\n    const handleDeleteTemplate = async (filename) => {\\n        if (!window.confirm('Are you sure you want to delete this template? This cannot be undone.')) return;\\n        setDeletingTemplate(filename);\\n        setError('');\\n        try {\\n            const res = await fetch(`/api/certificate?action=delete-template&filename=${encodeURIComponent(filename)}`, {\\n                method: 'DELETE',\\n                headers: {\\n                    'Authorization': `Bearer ${adminKey}`\\n                }\\n            });\\n            const data = await res.json();\\n            if (!res.ok) throw new Error(data.error || 'Failed to delete template');\\n            \\n            if (templateUrl && templateUrl.includes(filename)) {\\n                setTemplateUrl('');\\n            }\\n            \\n            await fetchTemplates();\\n            setSuccess('Template deleted successfully!');\\n            setTimeout(() => setSuccess(''), 3000);\\n        } catch (err) {\\n            setError(err.message);\\n        } finally {\\n            setDeletingTemplate(null);\\n        }\\n    };\\n\\n    // ====== FONT UPLOAD ======\",\"StartLine\":510,\"TargetContent\":\"            if (fileInputRef.current) fileInputRef.current.value = '';\\n        }\\n    };\\n\\n    // ====== FONT UPLOAD ======\"},{\"AllowMultiple\":false,\"EndLine\":895,\"ReplacementContent\":\"                                <div className=\\\"grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1\\\">\\n                                    {availableTemplates.map((tpl) => (\\n                                        <div key={tpl.filename} className=\\\"relative group\\\"\n<truncated 4924 bytes>",
+      "TargetFile": "\"c:\\\\Users\\\\acer\\\\Documents\\\\GitHub\\\\Ecelldypiu.in\\\\src\\\\components\\\\CertificateManager.jsx\"",
+      "toolAction": "\"Updating CertificateManager.jsx\"",
+      "toolSummary": "\"Update CertificateManager.jsx\""
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Fix certificate template rendering issue when changing templates\"",
+      "EndLine": "328",
+      "Instruction": "\"Reset templateLoaded state when a new templateUrl is selected, to force re-render when the new template finishes loading.\"",
+      "ReplacementContent": "\"        if (!templateUrl) {\\n            templateImgRef.current = null;\\n            setTemplateLoaded(false);\\n            return;\\n        }\\n\\n        setTemplateLoaded(false);\\n\\n        const img = new Image();\"",
+      "StartLine": "323",
+      "TargetContent": "\"        if (!templateUrl) {\\n            templateImgRef.current = null;\\n            setTemplateLoaded(false);\\n            return;\\n        }\\n\\n        const img = new Image();\"",
+      "TargetFile": "\"c:\\\\Users\\\\acer\\\\Documents\\\\GitHub\\\\Ecelldypiu.in\\\\src\\\\components\\\\CertificateManager.jsx\"",
+      "toolAction": "\"Editing CertificateManager.jsx\"",
+      "toolSummary": "\"Edit CertificateManager.jsx\""
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Style font options to preview the font directly in the dropdown\"",
+      "EndLine": "1170",
+      "Instruction": "\"Add inline styles to the select and option elements to preview the font family.\"",
+      "ReplacementContent": "\"                                        <select\\n                                            value={activeField.fontFamily}\\n                                            onChange={e => updateField(activeFieldIndex, 'fontFamily', e.target.value)}\\n                                            style={{ fontFamily: activeField.fontFamily }}\\n                                            className=\\\"w-full bg-black border-2 border-zinc-700 p-2 text-white rounded-lg focus:border-brand-yellow focus:outline-none text-sm\\\"\\n                                        >\\n                                            <optgroup label=\\\"System Fonts\\\">\\n                                                {DEFAULT_FONTS.filter(f => ['Arial', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Trebuchet MS', 'Impact', 'Comic Sans MS'].includes(f)).map(f => (\\n                                                    <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>\\n                                                ))}\\n                                            </optgroup>\\n                                            <optgroup label=\\\"Google Fonts\\\">\\n                                                {DEFAULT_FONTS.filter(f => !['Arial', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Trebuchet MS', 'Impact', 'Comic Sans MS'].includes(f)).map(f => (\\n                                                    <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>\\n                                                ))}\\n                                            </optgroup>\\n                                            {customFonts.length > 0 && (\\n                                                <optgroup label=\\\"Custom Fonts\\\">\\n                                                    {customFonts.map(f => (\\n                                                        <option key={f.name} value={f.name} style={{ fontFamily: f.name }}>{f.name}</option>\\n                                                    ))}\\n                     \n<truncated 138 bytes>",
+      "StartLine": "1147",
+      "TargetContent": "\"                                        <select\\n                                            value={activeField.fontFamily}\\n                                            onChange={e => updateField(activeFieldIndex, 'fontFamily', e.target.value)}\\n                                            className=\\\"w-full bg-black border-2 border-zinc-700 p-2 text-white rounded-lg focus:border-brand-yellow focus:outline-none text-sm\\\"\\n                                        >\\n                                            <optgroup label=\\\"System Fonts\\\">\\n                                                {DEFAULT_FONTS.filter(f => ['Arial', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Trebuchet MS', 'Impact', 'Comic Sans MS'].includes(f)).map(f => (\\n                                                    <option key={f} value={f}>{f}</option>\\n                                                ))}\\n                                            </optgroup>\\n                                            <optgroup label=\\\"Google Fonts\\\">\\n                                                {DEFAULT_FONTS.filter(f => !['Arial', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Trebuchet MS', 'Impact', 'Comic Sans MS'].includes(f)).map(f => (\\n                                                    <option key={f} value={f}>{f}</option>\\n                                                ))}\\n                                            </optgroup>\\n                                            {customFonts.length > 0 && (\\n                                                <optgroup label=\\\"Custom Fonts\\\">\\n                                                    {customFonts.map(f => (\\n                                                        <option key={f.name} value={f.name}>{f.name}</option>\\n                                                    ))}\\n                                                </optgroup>\\n                                            )}\\n                                        </select>\"",
+      "TargetFile": "\"c:\\\\Users\\\\acer\\\\Documents\\\\GitHub\\\\Ecelldypiu.in\\\\src\\\\components\\\\CertificateManager.jsx\"",
+      "toolAction": "\"Editing CertificateManager.jsx\"",
+      "toolSummary": "\"Edit CertificateManager.jsx\""
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Add a convenient save button to the email template section\"",
+      "EndLine": "1702",
+      "Instruction": "\"Replace the confusing 'Remember to Save' warning with an actual 'Save Configuration' button.\"",
+      "ReplacementContent": "\"                                        <button\\n                                            onClick={handleSave}\\n                                            disabled={saving || !templateUrl}\\n                                            className=\\\"w-full bg-brand-yellow text-black font-black text-lg py-4 rounded-xl border-4 border-white hover:shadow-[6px_6px_0px_white] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 uppercase tracking-wider mt-4\\\"\\n                                        >\\n                                            {saving ? (\\n                                                <><Loader2 className=\\\"w-5 h-5 animate-spin\\\" /> Saving...</>\\n                                            ) : (\\n                                                <><Save className=\\\"w-5 h-5\\\" /> Save Configuration</>\\n                                            )}\\n                                        </button>\"",
+      "StartLine": "1698",
+      "TargetContent": "\"                                        <div className=\\\"bg-brand-yellow/10 border border-brand-yellow/30 p-4 rounded-lg flex items-start gap-3 text-sm text-brand-yellow\\\">\\n                                            <AlertCircle className=\\\"w-5 h-5 flex-shrink-0 mt-0.5\\\" />\\n                                            <p><strong>Remember to Save!</strong> Click \\\"Save Configuration\\\" at the top to preserve your custom email template before dispatching.</p>\\n                                        </div>\"",
+      "TargetFile": "\"c:\\\\Users\\\\acer\\\\Documents\\\\GitHub\\\\Ecelldypiu.in\\\\src\\\\components\\\\CertificateManager.jsx\"",
+      "toolAction": "\"Editing CertificateManager.jsx\"",
+      "toolSummary": "\"Edit CertificateManager.jsx\""
+    }
+  },
+  {
+    "name": "multi_replace_file_content",
+    "args": {
+      "Description": "\"Add a dispatch results modal pop-up and add a dispatch button above the template\"",
+      "Instruction": "\"Add dispatchResult state, update handleDispatch to set dispatchResult instead of just generic success message. Render dispatch buttons above the template editor and render the dispatch result modal.\"",
+      "ReplacementChunks": "[{\"AllowMultiple\":false,\"EndLine\":106,\"ReplacementContent\":\"    const [dispatching, setDispatching] = useState(false);\\n    const [dispatchResult, setDispatchResult] = useState(null);\",\"StartLine\":106,\"TargetContent\":\"    const [dispatching, setDispatching] = useState(false);\"},{\"AllowMultiple\":false,\"EndLine\":830,\"ReplacementContent\":\"            const data = await res.json();\\n            if (!res.ok) throw new Error(data.error || 'Failed to dispatch');\\n\\n            setDispatchResult(data);\\n            setSuccess(`Dispatch process completed! Check the results pop-up for details.`);\\n        } catch (err) {\",\"StartLine\":826,\"TargetContent\":\"            const data = await res.json();\\n            if (!res.ok) throw new Error(data.error || 'Failed to dispatch');\\n\\n            setSuccess(`Successfully dispatched ${data.sentCount || data.dispatched || 0} certificates!`);\\n        } catch (err) {\"},{\"AllowMultiple\":false,\"EndLine\":1662,\"ReplacementContent\":\"                            {/* Dispatch Action (Top) */}\\n                            {eventAttendees.length > 0 && (\\n                                <div className=\\\"mt-8 mb-6\\\">\\n                                    <div className=\\\"flex items-center justify-between bg-zinc-900 border-4 border-brand-yellow/30 p-6 rounded-xl flex-wrap gap-4\\\">\\n                                        <div>\\n                                            <h4 className=\\\"text-lg font-bold text-white mb-1\\\">Ready to Dispatch?</h4>\\n                                            <p className=\\\"text-zinc-400 text-sm\\\">\\n                                                This will send emails with a download link to {eventAttendees.length - Object.keys(eligibility).length} eligible attendees.\\n                                            </p>\\n                                        </div>\\n                                        <div className=\\\"flex items-center gap-4 flex-wrap sm:flex-nowrap\\\">\\n                                            <div className=\\\"flex flex-col\\\">\\n              \n<truncated 19574 bytes>",
+      "TargetFile": "\"c:\\\\Users\\\\acer\\\\Documents\\\\GitHub\\\\Ecelldypiu.in\\\\src\\\\components\\\\CertificateManager.jsx\"",
+      "toolAction": "\"Updating CertificateManager.jsx\"",
+      "toolSummary": "\"Update CertificateManager.jsx\""
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Fix syntax error due to missing closing parenthesis and brace in JSX\"",
+      "EndLine": "1856",
+      "Instruction": "\"Add missing closing parenthesis and brace for eventAttendees condition\"",
+      "ReplacementContent": "\"                                    </div>\\n                                </div>\\n                            )}\\n                        </div>\\n                    </div>\\n                </div>\\n            )}\\n            \\n            {showAddAttendeeModal && (\"",
+      "StartLine": "1850",
+      "TargetContent": "\"                                    </div>\\n                                </div>\\n                        </div>\\n                    </div>\\n                </div>\\n            )}\\n                   {showAddAttendeeModal && (\"",
+      "TargetFile": "\"c:\\\\Users\\\\acer\\\\Documents\\\\GitHub\\\\Ecelldypiu.in\\\\src\\\\components\\\\CertificateManager.jsx\"",
+      "toolAction": "\"Editing CertificateManager.jsx to fix syntax error\"",
+      "toolSummary": "\"Fix syntax error in CertificateManager.jsx\""
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Fix syntax error in CertificateManager.jsx by adding missing JSX closing tag\"",
+      "EndLine": "1856",
+      "Instruction": "\"Add missing `)}` to close eventAttendees.length condition\"",
+      "ReplacementContent": "\"                                    </div>\\n                                </div>\\n                            )}\\n                        </div>\\n                    </div>\\n                </div>\\n            )}\\n                   {showAddAttendeeModal && (\"",
+      "StartLine": "1850",
+      "TargetContent": "\"                                    </div>\\n                                </div>\\n                        </div>\\n                    </div>\\n                </div>\\n            )}\\n                   {showAddAttendeeModal && (\"",
+      "TargetFile": "\"c:\\\\Users\\\\acer\\\\Documents\\\\GitHub\\\\Ecelldypiu.in\\\\src\\\\components\\\\CertificateManager.jsx\"",
+      "toolAction": "\"Fixing syntax error in CertificateManager.jsx\"",
+      "toolSummary": "\"Fix syntax error in CertificateManager.jsx\""
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Fix syntax error in CertificateManager.jsx\"",
+      "EndLine": "1856",
+      "Instruction": "\"Add the missing closing bracket and parenthesis.\"",
+      "ReplacementContent": "\"                                     </div>\\n                                 </div>\\n                             )}\\n                         </div>\\n                     </div>\\n                 </div>\\n             )}\\n                    {showAddAttendeeModal && (\"",
+      "StartLine": "1850",
+      "TargetContent": "\"                                     </div>\\n                                 </div>\\n                         </div>\\n                     </div>\\n                 </div>\\n             )}\\n                    {showAddAttendeeModal && (\"",
+      "TargetFile": "\"c:\\\\Users\\\\acer\\\\Documents\\\\GitHub\\\\Ecelldypiu.in\\\\src\\\\components\\\\CertificateManager.jsx\"",
+      "toolAction": "\"Editing CertificateManager.jsx to fix syntax error\"",
+      "toolSummary": "\"Fix syntax error in CertificateManager.jsx\""
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Fix missing parenthesis\"",
+      "EndLine": "1853",
+      "Instruction": "\"Add )} after the div\"",
+      "ReplacementContent": "\"                                     </div>\\n                                 </div>\\n                             )}\\n                         </div>\"",
+      "StartLine": "1850",
+      "TargetContent": "\"                                     </div>\\n                                 </div>\\n                         </div>\"",
+      "TargetFile": "\"c:\\\\Users\\\\acer\\\\Documents\\\\GitHub\\\\Ecelldypiu.in\\\\src\\\\components\\\\CertificateManager.jsx\"",
+      "toolAction": "\"Fixing syntax error in CertificateManager.jsx\"",
+      "toolSummary": "\"Fix syntax error in CertificateManager.jsx\""
+    }
+  }
+]

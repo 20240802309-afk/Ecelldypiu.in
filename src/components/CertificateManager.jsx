@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 const EVENTS = [
+    { id: 'fdp-trie', name: 'FDP on TRIE by CIIE', collection: 'events/fdp-trie/attendees' },
     { id: 'innovate-for-impact', name: 'Innovate For Impact', collection: 'events/innovate-for-impact/attendees' },
     { id: 'finbiz', name: "FinBiz'25", collection: 'events/finbiz/attendees' },
     { id: 'inceptio', name: "Inceptio'25", collection: 'events/inceptio/attendees' },
@@ -64,6 +65,28 @@ const CertificateManager = ({ adminKey, onBack }) => {
     const [loadingAttendees, setLoadingAttendees] = useState(false);
     const [eligibility, setEligibility] = useState({}); // { email: { eligible: bool, reason: string } }
     const [attendeeSearch, setAttendeeSearch] = useState('');
+
+    // NEW: Tabs & Email
+    const [managerTab, setManagerTab] = useState('design');
+    const [emailSubject, setEmailSubject] = useState('');
+    const [emailHTML, setEmailHTML] = useState('');
+    const [dispatching, setDispatching] = useState(false);
+    const [dispatchResult, setDispatchResult] = useState(null);
+
+    const DEFAULT_EMAIL_SUBJECT = "Your Certificate for {{event_name}} is Ready!";
+    const DEFAULT_EMAIL_HTML = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 2px solid #E5E7EB; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+  <div style="background-color: #FFB22C; padding: 24px; text-align: center;">
+    <h1 style="color: #000000; font-size: 28px; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 1px;">E-CELL DYPIU</h1>
+    <p style="color: #000000; font-size: 16px; margin: 8px 0 0 0; font-weight: 500;">Certificate Ready</p>
+  </div>
+  <div style="background-color: #000000; padding: 32px; color: #FFFFFF;">
+    <p style="font-size: 16px; margin-bottom: 24px; line-height: 1.5;">Hi <strong style="color: #FFB22C;">{{attendee_name}}</strong>,<br><br>Thank you for participating in <strong style="color: #FFB22C;">{{event_name}}</strong>. Your certificate is now ready to download!</p>
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="{{cert_link}}" style="background-color: #FFB22C; color: #000000; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block; text-transform: uppercase;">Get My Certificate</a>
+    </div>
+    <p style="font-size: 12px; color: #9CA3AF; text-align: center; margin-top: 32px;">If the button doesn't work, copy this link:<br><a href="{{cert_link}}" style="color: #FFB22C;">{{cert_link}}</a></p>
+  </div>
+</div>`;
 
     // Drag state stored in refs for performance
     const dragState = useRef({
@@ -130,6 +153,8 @@ const CertificateManager = ({ adminKey, onBack }) => {
                     setEnabled(cfg.enabled !== false);
                     setAttendeeCollection(cfg.attendeeCollection || '');
                     setEligibility(cfg.eligibility || {});
+                    setEmailSubject(cfg.emailSubject || '');
+                    setEmailHTML(cfg.emailHTML || '');
                     setConfig(cfg);
                 } else {
                     // No config yet, start fresh
@@ -138,6 +163,8 @@ const CertificateManager = ({ adminKey, onBack }) => {
                     setCustomFonts([]);
                     setEnabled(true);
                     setAttendeeCollection(EVENTS.find(e => e.id === selectedEvent)?.collection || '');
+                    setEmailSubject('');
+                    setEmailHTML('');
                     setConfig(null);
                 }
             } catch (err) {
@@ -481,6 +508,36 @@ const CertificateManager = ({ adminKey, onBack }) => {
         }));
     };
 
+    // Dispatch Certificates
+    const handleDispatch = async () => {
+        if (!selectedEvent || !window.confirm('Are you sure you want to dispatch certificates to all eligible attendees? This will send emails.')) return;
+        setDispatching(true);
+        setError('');
+        setSuccess('');
+        setDispatchResult(null);
+
+        try {
+            const res = await fetch('/api/certificate?action=dispatch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminKey}`
+                },
+                body: JSON.stringify({ eventId: selectedEvent })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to dispatch');
+
+            setDispatchResult(data);
+            setSuccess('Dispatch process completed! Check the results pop-up for details.');
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setDispatching(false);
+        }
+    };
+
     // Save config
     const handleSave = async () => {
         if (!selectedEvent) return;
@@ -506,6 +563,8 @@ const CertificateManager = ({ adminKey, onBack }) => {
                     customFonts,
                     attendeeCollection: attendeeCollection || eventInfo?.collection,
                     eligibility,
+                    emailSubject,
+                    emailHTML
                 })
             });
 
@@ -562,8 +621,26 @@ const CertificateManager = ({ adminKey, onBack }) => {
             )}
 
             {selectedEvent && !loading && (
-                <div className="grid lg:grid-cols-5 gap-6">
-                    {/* Left Panel - Settings */}
+                <>
+                    {/* Tabs */}
+                    <div className="flex gap-4 mb-6 border-b-2 border-zinc-800 pb-2">
+                        <button
+                            onClick={() => setManagerTab('design')}
+                            className={`px-6 py-3 font-bold uppercase rounded-t-xl transition-colors ${managerTab === 'design' ? 'bg-zinc-800 text-brand-yellow' : 'text-zinc-500 hover:text-white'}`}
+                        >
+                            Design & Configuration
+                        </button>
+                        <button
+                            onClick={() => setManagerTab('dispatch')}
+                            className={`px-6 py-3 font-bold uppercase rounded-t-xl transition-colors ${managerTab === 'dispatch' ? 'bg-zinc-800 text-brand-yellow' : 'text-zinc-500 hover:text-white'}`}
+                        >
+                            Dispatch Panel
+                        </button>
+                    </div>
+
+                    {managerTab === 'design' && (
+                        <div className="grid lg:grid-cols-5 gap-6">
+                            {/* Left Panel - Settings */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Enable/Disable */}
                         <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
@@ -1113,6 +1190,160 @@ const CertificateManager = ({ adminKey, onBack }) => {
                     </div>
                 </div>
             )}
+
+            {selectedEvent && !loading && managerTab === 'dispatch' && (
+                <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-2xl font-black uppercase text-brand-yellow">Dispatch Certificates</h3>
+                            <p className="text-zinc-400 mt-1">
+                                {eventAttendees.length === 0 ? 
+                                    "No attendees loaded. Please go to Design & Configuration to fetch attendees." : 
+                                    `Ready to dispatch to ${eventAttendees.length - Object.keys(eligibility).length} eligible attendees.`
+                                }
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleDispatch}
+                            disabled={dispatching || eventAttendees.length === 0}
+                            className="bg-brand-yellow text-black font-black px-6 py-3 rounded-xl border-4 border-white hover:shadow-[6px_6px_0px_white] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider flex items-center gap-2"
+                        >
+                            {dispatching ? (
+                                <><Loader2 className="w-5 h-5 animate-spin" /> Sending...</>
+                            ) : (
+                                "Dispatch Now"
+                            )}
+                        </button>
+                    </div>
+
+                    {dispatchResult && (
+                        <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-xl mb-6">
+                            <h4 className="text-green-400 font-bold flex items-center gap-2 mb-2">
+                                <CheckCircle2 className="w-5 h-5" /> Dispatch Complete
+                            </h4>
+                            <div className="text-sm text-zinc-300">
+                                <p>Successfully Sent: <strong className="text-white">{dispatchResult.sentCount || dispatchResult.dispatched || 0}</strong></p>
+                                {dispatchResult.errors && dispatchResult.errors.length > 0 && (
+                                    <div className="mt-2">
+                                        <p className="text-red-400 font-semibold">Errors ({dispatchResult.errors.length}):</p>
+                                        <ul className="list-disc list-inside text-xs text-zinc-400 max-h-32 overflow-y-auto mt-1">
+                                            {dispatchResult.errors.map((err, i) => (
+                                                <li key={i}>{err.email}: {err.error}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="border-t-2 border-zinc-800 pt-6">
+                        <div className="mb-4 flex items-center justify-between">
+                            <div>
+                                <h4 className="text-xl font-bold text-white flex items-center gap-2">
+                                    Email Template
+                                </h4>
+                                <p className="text-zinc-400 text-sm mt-1">Customize the email sent to attendees. Changes appear instantly in the preview.</p>
+                            </div>
+                            <button
+                                onClick={handleSave}
+                                disabled={saving}
+                                className="bg-zinc-800 text-white font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-zinc-700 transition-colors disabled:opacity-50"
+                            >
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                Save Template
+                            </button>
+                        </div>
+
+                        <div className="grid xl:grid-cols-2 gap-6 items-start">
+                            {/* Editor Column */}
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-400 mb-2">Email Subject</label>
+                                    <input
+                                        type="text"
+                                        value={emailSubject}
+                                        onChange={(e) => setEmailSubject(e.target.value)}
+                                        placeholder={DEFAULT_EMAIL_SUBJECT}
+                                        className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <div className="flex justify-between items-end mb-2">
+                                        <label className="block text-sm font-bold text-gray-400">Email HTML Body</label>
+                                    </div>
+                                    <textarea
+                                        value={emailHTML}
+                                        onChange={(e) => setEmailHTML(e.target.value)}
+                                        placeholder="<div>Hello {{attendee_name}}...</div>"
+                                        rows={18}
+                                        className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none font-mono text-sm leading-relaxed"
+                                    />
+                                    <div className="text-xs text-zinc-500 mt-2">
+                                        Placeholders: <code className="text-brand-yellow bg-brand-yellow/10 px-1 rounded">{`{{attendee_name}}`}</code>, <code className="text-brand-yellow bg-brand-yellow/10 px-1 rounded">{`{{event_name}}`}</code>, <code className="text-brand-yellow bg-brand-yellow/10 px-1 rounded">{`{{cert_link}}`}</code>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Live Preview Column */}
+                            <div className="bg-zinc-800 rounded-xl p-4 sticky top-6">
+                                <h5 className="text-sm font-bold text-gray-400 uppercase mb-3 flex items-center gap-2">
+                                    <Eye className="w-4 h-4" /> Live Preview
+                                </h5>
+                                <div className="bg-white rounded-xl overflow-hidden border border-zinc-700 shadow-2xl">
+                                    <div className="bg-zinc-100 p-4 border-b border-zinc-200">
+                                        <div className="text-xs text-zinc-500 mb-1 font-bold uppercase flex justify-between">
+                                            <span>Subject</span>
+                                            <span className="text-[10px] bg-brand-yellow/20 text-brand-yellow px-2 py-0.5 rounded">Editable</span>
+                                        </div>
+                                        <div 
+                                            className="text-black font-semibold text-sm outline-none cursor-text hover:bg-black/5 p-1 -ml-1 rounded transition-colors"
+                                            contentEditable={true}
+                                            suppressContentEditableWarning={true}
+                                            onBlur={(e) => {
+                                                let newSubj = e.currentTarget.innerHTML;
+                                                newSubj = newSubj.replace(/<span[^>]*>(\{\{.*?\}\})<\/span>/gi, '$1');
+                                                const tempDiv = document.createElement('div');
+                                                tempDiv.innerHTML = newSubj;
+                                                setEmailSubject(tempDiv.innerText || tempDiv.textContent);
+                                            }}
+                                            dangerouslySetInnerHTML={{
+                                                __html: (emailSubject || DEFAULT_EMAIL_SUBJECT)
+                                                    .replace(/{{attendee_name}}/g, '<span contenteditable="false" style="background:#FFB22C33;padding:0 4px;border-radius:4px;color:#d97706;">{{attendee_name}}</span>')
+                                                    .replace(/{{event_name}}/g, '<span contenteditable="false" style="background:#FFB22C33;padding:0 4px;border-radius:4px;color:#d97706;">{{event_name}}</span>')
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="relative group">
+                                        <div className="absolute top-2 right-2 bg-black/80 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                            Click to Edit Visually
+                                        </div>
+                                        <div 
+                                            className="p-6 outline-none cursor-text focus:ring-4 focus:ring-brand-yellow/30 transition-all min-h-[200px]"
+                                            contentEditable={true}
+                                            suppressContentEditableWarning={true}
+                                            onBlur={(e) => {
+                                                let newHtml = e.currentTarget.innerHTML;
+                                                newHtml = newHtml.replace(/<span[^>]*contenteditable="false"[^>]*>(\{\{.*?\}\})<\/span>/gi, '$1');
+                                                newHtml = newHtml.replace(/%7B%7B/g, '{{').replace(/%7D%7D/g, '}}');
+                                                newHtml = newHtml.replace(/href="[^"]*\{\{cert_link\}\}"/g, 'href="{{cert_link}}"');
+                                                setEmailHTML(newHtml);
+                                            }}
+                                            dangerouslySetInnerHTML={{ 
+                                                __html: (emailHTML || DEFAULT_EMAIL_HTML)
+                                                .replace(/{{attendee_name}}/g, '<span contenteditable="false" style="background:#FFB22C44;padding:2px 4px;border-radius:4px;color:#FFB22C;user-select:none;">{{attendee_name}}</span>')
+                                                .replace(/{{event_name}}/g, '<span contenteditable="false" style="background:#FFB22C44;padding:2px 4px;border-radius:4px;color:#FFB22C;user-select:none;">{{event_name}}</span>')
+                                            }} 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    )}
         </div>
     );
 };

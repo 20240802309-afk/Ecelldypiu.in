@@ -53,7 +53,47 @@ function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function sendEmail(to, subject, html) {
+async function sendEmail(to, subject, html, provider = 'resend') {
+    if (provider === 'bridge1' || provider === 'bridge2') {
+        const url = provider === 'bridge1' ? process.env.MAIL_BRIDGE_1 : process.env.MAIL_BRIDGE_2;
+        if (!url) {
+            throw new Error(`Environment variable ${provider === 'bridge1' ? 'MAIL_BRIDGE_1' : 'MAIL_BRIDGE_2'} is not set.`);
+        }
+        
+        const defaultName = provider === 'bridge1' ? 'CIIE DYPIU' : 'E-Cell DYPIU';
+        const defaultEmail = provider === 'bridge1' ? 'ciie@dypiu.in' : 'noreply@ecelldypiu.in';
+        
+        const envNameKey = provider === 'bridge1' ? 'MAIL_BRIDGE_1_NAME' : 'MAIL_BRIDGE_2_NAME';
+        const envEmailKey = provider === 'bridge1' ? 'MAIL_BRIDGE_1_EMAIL' : 'MAIL_BRIDGE_2_EMAIL';
+
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                to,
+                subject,
+                htmlContent: html,
+                fromName: process.env[envNameKey] || defaultName,
+                fromEmail: process.env[envEmailKey] || defaultEmail
+            })
+        });
+
+        const responseText = await res.text();
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch(e) {
+            throw new Error(`Mail Bridge returned invalid response: ${responseText}`);
+        }
+
+        if (!data.success) {
+            throw new Error(`Mail Bridge error: ${data.error || 'Unknown error'}`);
+        }
+        return data;
+    }
+
     if (!process.env.RESEND_API_KEY) {
         throw new Error('RESEND_API_KEY is not set');
     }
@@ -64,7 +104,7 @@ async function sendEmail(to, subject, html) {
             'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-            from: process.env.EMAIL_FROM || 'E-Cell DYPIU <noreply@ecelldypiu.in>',
+            from: process.env.EMAIL_FROM || 'CIIE Bridge <noreply@ecelldypiu.in>',
             to: [to],
             subject,
             html,
@@ -115,8 +155,18 @@ export default async function handler(req, res) {
             return await handleVerifyOtp(req, res);
         } else if (action === 'upload-template') {
             return await handleUploadTemplate(req, res);
+        } else if (action === 'dispatch-certificates') {
+            return await handleDispatchCertificates(req, res);
         }
         return res.status(400).json({ error: 'Valid action parameter is required for POST' });
+    }
+
+    if (req.method === 'DELETE') {
+        const action = actionQuery || req.body?.action;
+        if (action === 'delete-template') {
+            return await handleDeleteTemplate(req, res);
+        }
+        return res.status(400).json({ error: 'Valid action parameter is required for DELETE' });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
@@ -156,12 +206,15 @@ async function handleGetConfig(req, res) {
             enabled: config.enabled,
             templateUrl: config.templateUrl,
             textFields: config.textFields,
+            imageFields: config.imageFields || [],
             customFonts: config.customFonts,
         };
 
         if (isAdmin) {
             publicConfig.eligibility = config.eligibility || {};
             publicConfig.attendeeCollection = config.attendeeCollection || '';
+            publicConfig.emailSubject = config.emailSubject || '';
+            publicConfig.emailHTML = config.emailHTML || '';
         }
 
         return res.status(200).json({ config: publicConfig });
@@ -198,13 +251,56 @@ async function handleListTemplates(req, res) {
     }
 }
 
+async function handleDeleteTemplate(req, res) {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        const token = authHeader.split('Bearer ')[1];
+        if (token !== process.env.ADMIN_API_KEY) {
+            return res.status(403).json({ error: 'Invalid admin key' });
+        }
+
+        const url = new URL(req.url, 'http://localhost');
+        const filename = req.query?.filename || url.searchParams.get('filename') || req.body?.filename;
+        
+        if (!filename) {
+            return res.status(400).json({ error: 'Filename is required' });
+        }
+
+        // Prevent directory traversal
+        const safeFilename = path.basename(filename);
+        
+        let certsDir;
+        if (typeof __dirname !== 'undefined') {
+            certsDir = path.resolve(__dirname, '..', 'public', 'certificates');
+        } else {
+            const __dir = path.dirname(fileURLToPath(import.meta.url));
+            certsDir = path.resolve(__dir, '..', 'public', 'certificates');
+        }
+
+        const targetPath = path.join(certsDir, safeFilename);
+
+        if (!fs.existsSync(targetPath)) {
+            return res.status(404).json({ error: 'Template not found' });
+        }
+
+        fs.unlinkSync(targetPath);
+        return res.status(200).json({ message: 'Template deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting template:', error);
+        return res.status(500).json({ error: 'Failed to delete template', details: error.message });
+    }
+}
+
 async function handleSaveConfig(req, res) {
     const authHeader = req.headers.authorization;
     const adminKey = process.env.ADMIN_API_KEY;
     if (!adminKey || authHeader !== `Bearer ${adminKey}`) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
-        const { eventId, eventName, enabled, templateUrl, textFields, customFonts, attendeeCollection, eligibility } = req.body;
+        const { eventId, eventName, enabled, templateUrl, textFields, imageFields, customFonts, attendeeCollection, eligibility, emailSubject, emailHTML } = req.body;
         if (!eventId || !eventName) return res.status(400).json({ error: 'eventId and eventName are required' });
 
         const configData = {
@@ -213,9 +309,12 @@ async function handleSaveConfig(req, res) {
             enabled: enabled !== false,
             templateUrl: templateUrl || '',
             textFields: textFields || [],
+            imageFields: imageFields || [],
             customFonts: customFonts || [],
             attendeeCollection: attendeeCollection || `events/${eventId}/attendees`,
             eligibility: eligibility || {},
+            emailSubject: emailSubject || '',
+            emailHTML: emailHTML || '',
             updatedAt: new Date().toISOString(),
         };
 
@@ -435,3 +534,101 @@ async function handleUploadTemplate(req, res) {
         return res.status(500).json({ error: 'Failed to upload template', details: error.message });
     }
 }
+
+async function handleDispatchCertificates(req, res) {
+    const authHeader = req.headers.authorization;
+    const adminKey = process.env.ADMIN_API_KEY;
+    if (!adminKey || authHeader !== `Bearer ${adminKey}`) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+        const { eventId, provider } = req.body;
+        if (!eventId) return res.status(400).json({ error: 'eventId is required' });
+
+        if (!db) return res.status(500).json({ error: 'Database connection not available' });
+
+        const configDoc = await db.collection('certificateConfigs').doc(eventId).get();
+        if (!configDoc.exists || !configDoc.data().enabled) return res.status(404).json({ error: 'Certificate config not found or disabled' });
+
+        const config = configDoc.data();
+        const attendeeCollection = config.attendeeCollection || `events/${eventId}/attendees`;
+        const eligibility = config.eligibility || {};
+
+        const attendeesSnapshot = await db.collection(attendeeCollection).get();
+        if (attendeesSnapshot.empty) {
+            return res.status(404).json({ error: 'No attendees found for this event' });
+        }
+
+        let sentCount = 0;
+        let skippedCount = 0;
+        const errors = [];
+        const attendees = [];
+        attendeesSnapshot.forEach(doc => attendees.push(doc.data()));
+
+        for (const attendee of attendees) {
+            if (!attendee.email) {
+                skippedCount++;
+                continue;
+            }
+
+            const emailKey = attendee.email.trim().toLowerCase();
+            if (eligibility[emailKey]?.eligible === false) {
+                skippedCount++;
+                continue;
+            }
+
+            try {
+                // Assuming protocol is https unless localhost
+                const host = req.headers.origin || (req.headers.host ? `https://${req.headers.host}` : 'https://ecelldypiu.in');
+                const certLink = `${host}/events/${eventId}/certificate?email=${encodeURIComponent(attendee.email)}`;
+                const subjectTemplate = config.emailSubject || `Your Certificate for ${config.eventName} is Ready!`;
+                const htmlTemplate = config.emailHTML || `
+                    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #000; color: #fff; border-radius: 16px; overflow: hidden; border: 2px solid #333;">
+                        <div style="background: #FFB22C; padding: 24px 32px; text-align: center;">
+                            <h1 style="margin: 0; color: #000; font-size: 24px; font-weight: 900; letter-spacing: 1px;">E-CELL DYPIU</h1>
+                            <p style="margin: 4px 0 0; color: #000; font-size: 14px; font-weight: 600;">Certificate Ready</p>
+                        </div>
+                        <div style="padding: 32px;">
+                            <p style="color: #ccc; font-size: 15px; line-height: 1.6;">Hi <strong style="color: #fff;">{{attendee_name}}</strong>,</p>
+                            <p style="color: #ccc; font-size: 15px; line-height: 1.6;">Thank you for participating in <strong style="color: #FFB22C;">{{event_name}}</strong>. Your certificate is now ready to download!</p>
+                            <div style="text-align: center; margin: 32px 0;">
+                                <a href="{{cert_link}}" style="display: inline-block; background: #FFB22C; color: #000; text-decoration: none; font-weight: 800; padding: 14px 32px; border-radius: 8px; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">Get My Certificate</a>
+                            </div>
+                            <p style="color: #888; font-size: 13px; text-align: center;">If the button doesn't work, copy this link:<br/><a href="{{cert_link}}" style="color: #FFB22C;">{{cert_link}}</a></p>
+                        </div>
+                    </div>
+                `;
+
+                // Replace placeholders
+                const finalSubject = subjectTemplate
+                    .replace(/{{attendee_name}}/g, attendee.name || 'Attendee')
+                    .replace(/{{event_name}}/g, config.eventName)
+                    .replace(/{{cert_link}}/g, certLink);
+
+                const finalHTML = htmlTemplate
+                    .replace(/{{attendee_name}}/g, attendee.name || 'Attendee')
+                    .replace(/{{event_name}}/g, config.eventName)
+                    .replace(/{{cert_link}}/g, certLink);
+
+                await sendEmail(attendee.email, finalSubject, finalHTML, provider || 'resend');
+                sentCount++;
+                
+                await new Promise(r => setTimeout(r, 100)); // Rate limit
+            } catch (err) {
+                errors.push({ email: attendee.email, error: err.message });
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Dispatched ${sentCount} emails. Skipped ${skippedCount}.`,
+            sentCount,
+            skippedCount,
+            errors: errors.length > 0 ? errors : undefined
+        });
+
+    } catch (error) {
+        console.error('Error dispatching certificates:', error);
+        return res.status(500).json({ error: 'Failed to dispatch certificates', details: error.message });
+    }
+}
+

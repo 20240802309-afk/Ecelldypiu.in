@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, Mail, CheckCircle, Download,
@@ -9,6 +9,8 @@ import {
 
 const GetCertificate = () => {
     const { eventSlug } = useParams();
+    const [searchParams] = useSearchParams();
+    const emailParam = searchParams.get('email');
     const canvasRef = useRef(null);
 
     const [config, setConfig] = useState(null);
@@ -38,7 +40,7 @@ const GetCertificate = () => {
     useEffect(() => {
         const fetchConfig = async () => {
             try {
-                const res = await fetch(`/api/get-certificate-config?eventId=${eventSlug}`);
+                const res = await fetch(`/api/certificate?eventId=${eventSlug}`);
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Certificate not available');
                 setConfig(data.config);
@@ -52,17 +54,17 @@ const GetCertificate = () => {
     }, [eventSlug]);
 
     // Step 1: Look up attendee by name or email
-    const handleLookup = async (e) => {
-        e.preventDefault();
-        if (!identifier.trim()) return;
+    const performLookup = async (lookupId) => {
+        if (!lookupId.trim()) return;
         setStepLoading(true);
         setStepError('');
+        setIdentifier(lookupId);
 
         try {
             const res = await fetch('/api/event', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'lookup-attendee', eventId: eventSlug, identifier: identifier.trim() })
+                body: JSON.stringify({ action: 'lookup-attendee', eventId: eventSlug, identifier: lookupId.trim() })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Lookup failed');
@@ -82,6 +84,19 @@ const GetCertificate = () => {
             setStepLoading(false);
         }
     };
+
+    const handleLookup = async (e) => {
+        e.preventDefault();
+        performLookup(identifier);
+    };
+
+    // Auto-lookup if email parameter is present
+    useEffect(() => {
+        if (emailParam && step === 1 && !loading) {
+            performLookup(emailParam);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [emailParam, loading]);
 
     // Generate certificate on canvas
     const generateCertificate = useCallback(async (retryCount = 0) => {
@@ -116,6 +131,23 @@ const GetCertificate = () => {
                 await Promise.all(fontPromises);
             }
 
+            // Pre-load image fields
+            const loadedImageFields = [];
+            if (config.imageFields && config.imageFields.length > 0) {
+                const imgPromises = config.imageFields.map(async (field) => {
+                    if (!field.url) return null;
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => resolve({ ...field, imgElement: img });
+                        img.onerror = () => resolve(null); // skip on error
+                        img.src = field.url;
+                    });
+                });
+                const results = await Promise.all(imgPromises);
+                loadedImageFields.push(...results.filter(r => r !== null));
+            }
+
             // Load template image with timeout
             await new Promise((resolve, reject) => {
                 const img = new Image();
@@ -129,6 +161,17 @@ const GetCertificate = () => {
                     canvas.width = img.width;
                     canvas.height = img.height;
                     ctx.drawImage(img, 0, 0);
+
+                    // Draw loaded image fields
+                    for (const field of loadedImageFields) {
+                        ctx.drawImage(
+                            field.imgElement,
+                            field.x || 0,
+                            field.y || 0,
+                            field.width || 100,
+                            field.height || 100
+                        );
+                    }
 
                     // Draw text fields
                     if (config.textFields) {
@@ -264,7 +307,7 @@ const GetCertificate = () => {
 
                 <AnimatePresence mode="wait">
                     {/* Step 1: Enter Name / Email */}
-                    {step === 1 && (
+                    {step === 1 && (!emailParam || stepError) && (
                         <motion.div
                             key="step1"
                             initial={{ opacity: 0, y: 20 }}
@@ -312,6 +355,24 @@ const GetCertificate = () => {
                                     )}
                                 </button>
                             </form>
+                        </motion.div>
+                    )}
+
+                    {step === 1 && emailParam && !stepError && (
+                        <motion.div
+                            key="step1-auto"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="bg-zinc-900 border-4 border-zinc-700 rounded-[2rem] p-8 md:p-12 text-center"
+                        >
+                            <div className="w-20 h-20 bg-brand-yellow/10 border-2 border-brand-yellow/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Loader2 className="w-10 h-10 text-brand-yellow animate-spin" />
+                            </div>
+                            <h3 className="text-2xl md:text-3xl font-black uppercase text-white mb-4">
+                                Verifying Your <span className="text-brand-yellow">Certificate</span>
+                            </h3>
+                            <p className="text-gray-400">Please wait while we fetch your certificate securely...</p>
                         </motion.div>
                     )}
 

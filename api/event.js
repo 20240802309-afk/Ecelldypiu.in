@@ -122,6 +122,8 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
         if (action === 'list-attendees') {
             return await handleListAttendees(req, res);
+        } else if (action === 'get-events') {
+            return await handleGetEvents(req, res);
         }
     }
 
@@ -132,6 +134,14 @@ export default async function handler(req, res) {
             return await handleSubmitApplication(req, res);
         } else if (action === 'verify-admin') {
             return await handleVerifyAdmin(req, res);
+        } else if (action === 'import-attendees') {
+            return await handleImportAttendees(req, res);
+        } else if (action === 'create-event') {
+            return await handleCreateEvent(req, res);
+        } else if (action === 'update-event') {
+            return await handleUpdateEvent(req, res);
+        } else if (action === 'delete-event') {
+            return await handleDeleteEvent(req, res);
         }
     }
 
@@ -316,4 +326,132 @@ async function handleVerifyAdmin(req, res) {
     }
 
     return res.status(200).json({ success: true, message: 'Authenticated successfully' });
+}
+
+async function handleImportAttendees(req, res) {
+    const authHeader = req.headers.authorization;
+    const adminKey = process.env.ADMIN_API_KEY;
+    if (!adminKey || authHeader !== `Bearer ${adminKey}`) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { eventId, attendees } = req.body;
+    if (!eventId || !attendees || !Array.isArray(attendees)) return res.status(400).json({ error: 'eventId and attendees array required' });
+
+    if (!db) return res.status(503).json({ error: 'Database not available' });
+
+    try {
+        let count = 0;
+        await Promise.all(attendees.map(async (attendee) => {
+            if (!attendee.email && !attendee.name) return;
+            const docId = (attendee.email || attendee.name).replace(/[^a-zA-Z0-9]/g, '');
+            await db.doc(`events/${eventId}/attendees/${docId}`).set({
+                ...attendee,
+                importedAt: Timestamp.now()
+            }, { merge: true });
+            count++;
+        }));
+
+        return res.status(200).json({ success: true, count, message: 'Attendees imported successfully' });
+    } catch (error) {
+        console.error('Error importing attendees:', error);
+        return res.status(500).json({ error: 'Failed to import attendees', details: error.message });
+    }
+}
+
+async function handleGetEvents(req, res) {
+    if (!db) return res.status(503).json({ error: 'Database not available' });
+
+    try {
+        const authHeader = req.headers.authorization;
+        const adminKey = process.env.ADMIN_API_KEY;
+        const isAdmin = adminKey && authHeader === `Bearer ${adminKey}`;
+
+        const snapshot = await db.collection('events').orderBy('createdAt', 'desc').get();
+        let events = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.createdAt && data.createdAt.toDate) data.createdAt = data.createdAt.toDate().toISOString();
+            if (data.updatedAt && data.updatedAt.toDate) data.updatedAt = data.updatedAt.toDate().toISOString();
+            events.push({ id: doc.id, ...data });
+        });
+
+        if (!isAdmin) {
+            events = events.filter(e => !e.internalOnly);
+        }
+
+        return res.status(200).json(events);
+    } catch (error) {
+        console.error('Error fetching events:', error);
+        return res.status(500).json({ error: 'Failed to fetch events' });
+    }
+}
+
+async function handleCreateEvent(req, res) {
+    const authHeader = req.headers.authorization;
+    const adminKey = process.env.ADMIN_API_KEY;
+    if (!adminKey || authHeader !== `Bearer ${adminKey}`) return res.status(401).json({ error: 'Unauthorized' });
+
+    if (!db) return res.status(503).json({ error: 'Database not available' });
+
+    try {
+        const eventData = req.body.event;
+        if (!eventData) return res.status(400).json({ error: 'event data required' });
+
+        const docId = eventData.slug || Date.now().toString();
+        const docRef = db.collection('events').doc(docId);
+        
+        await docRef.set({
+            ...eventData,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now()
+        });
+
+        return res.status(200).json({ success: true, id: docId });
+    } catch (error) {
+        console.error('Error creating event:', error);
+        return res.status(500).json({ error: 'Failed to create event' });
+    }
+}
+
+async function handleUpdateEvent(req, res) {
+    const authHeader = req.headers.authorization;
+    const adminKey = process.env.ADMIN_API_KEY;
+    if (!adminKey || authHeader !== `Bearer ${adminKey}`) return res.status(401).json({ error: 'Unauthorized' });
+
+    if (!db) return res.status(503).json({ error: 'Database not available' });
+
+    try {
+        const { eventId, updates } = req.body;
+        if (!eventId || !updates) return res.status(400).json({ error: 'eventId and updates required' });
+
+        const docRef = db.collection('events').doc(eventId);
+        await docRef.update({
+            ...updates,
+            updatedAt: Timestamp.now()
+        });
+
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('Error updating event:', error);
+        return res.status(500).json({ error: 'Failed to update event' });
+    }
+}
+
+async function handleDeleteEvent(req, res) {
+    const authHeader = req.headers.authorization;
+    const adminKey = process.env.ADMIN_API_KEY;
+    if (!adminKey || authHeader !== `Bearer ${adminKey}`) return res.status(401).json({ error: 'Unauthorized' });
+
+    if (!db) return res.status(503).json({ error: 'Database not available' });
+
+    try {
+        const { eventId } = req.body;
+        if (!eventId) return res.status(400).json({ error: 'eventId required' });
+
+        await db.collection('events').doc(eventId).delete();
+
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        return res.status(500).json({ error: 'Failed to delete event' });
+    }
 }

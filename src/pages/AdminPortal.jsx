@@ -8,6 +8,7 @@ import {
     Award, Building, LinkIcon
 } from 'lucide-react';
 import CertificateManager from '../components/CertificateManager';
+import EventManager from '../components/EventManager';
 
 const AdminPortal = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -974,6 +975,26 @@ const AdminPortal = () => {
                                 </button>
                             </div>
 
+                            {/* Event Management Card */}
+                            <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-14 h-14 bg-brand-yellow rounded-xl flex items-center justify-center">
+                                        <Calendar className="w-7 h-7 text-black" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black uppercase">Event Management</h3>
+                                        <p className="text-gray-400 text-sm">Create, edit & manage events</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => { setActiveTab('manage-events'); setError(null); setResult(null); }}
+                                    className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-brand-yellow hover:text-black transition-colors text-left group"
+                                >
+                                    <List className="w-4 h-4 text-brand-yellow group-hover:text-black" />
+                                    <span>Manage Events</span>
+                                </button>
+                            </div>
+
                             {/* Certificate Management Card */}
                             <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
                                 <div className="flex items-center gap-4 mb-4">
@@ -985,13 +1006,22 @@ const AdminPortal = () => {
                                         <p className="text-gray-400 text-sm">Configure & manage event certificates</p>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => { setActiveTab('certificates'); setError(null); setResult(null); }}
-                                    className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-purple-500 hover:text-white transition-colors text-left group"
-                                >
-                                    <Award className="w-4 h-4 text-purple-500 group-hover:text-white" />
-                                    <span>Manage Certificates</span>
-                                </button>
+                                <div className="space-y-2 text-sm">
+                                    <button
+                                        onClick={() => { setActiveTab('certificates'); setError(null); setResult(null); }}
+                                        className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-purple-500 hover:text-white transition-colors text-left group"
+                                    >
+                                        <Award className="w-4 h-4 text-purple-500 group-hover:text-white" />
+                                        <span>Manage Certificates</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setActiveTab('certificates'); setError(null); setResult(null); }}
+                                        className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-purple-500 hover:text-white transition-colors text-left group"
+                                    >
+                                        <Send className="w-4 h-4 text-purple-500 group-hover:text-white" />
+                                        <span>Dispatch Certificates</span>
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Collaborations Management Card */}
@@ -1014,6 +1044,20 @@ const AdminPortal = () => {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {/* Event Manager Tab */}
+                {activeTab === 'manage-events' && (
+                    <div className="max-w-6xl mx-auto">
+                        <button
+                            onClick={() => { setActiveTab('dashboard'); setError(null); setResult(null); }}
+                            className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                            <span>Back to Dashboard</span>
+                        </button>
+                        <EventManager adminKey={sessionStorage.getItem('adminKey')} />
                     </div>
                 )}
 

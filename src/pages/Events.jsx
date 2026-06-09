@@ -1,7 +1,7 @@
 
 import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import FunkyMarquee from '../components/FunkyMarquee';
 import {
   Calendar,
@@ -9,11 +9,14 @@ import {
   Star,
   Trophy,
   ArrowRight,
-  Rocket
+  Rocket,
+  Loader2
 } from 'lucide-react';
 
 const Events = () => {
   const location = useLocation();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!window.location.hash) {
@@ -33,68 +36,22 @@ const Events = () => {
     handleHashScroll();
   }, [location]);
 
-  const successfulEvents = [
-    {
-      id: 5,
-      title: 'Innovate For Impact',
-      date: '01 Feb 2026',
-      time: '6 Hours',
-      location: 'DYPIU Campus',
-      description: 'E-Summit 2026 Zonal Qualifier where teams built innovative solutions under time pressure and competed for national recognition.',
-      category: 'Hackathon',
-      participants: '150+',
-      image: '/innovate-completed.png',
-      featured: true,
-    },
-    {
-      id: 4,
-      title: "FinBiz'25 Powered by Surya Electronics",
-      date: '8th and 9th November 2025',
-      time: '36 Hour Marathon',
-      location: 'DYPIU Campus',
-      description: 'An unprecedented entrepreneurship & trading conclave by E-Cell DYPIU. 36-hour marathon of extensive learning and competition.',
-      category: 'Conclave',
-      participants: '500+',
-      image: '/FINBIZ_SURYA.png',
-      featured: true,
-    },
-    {
-      id: 1,
-      title: 'Inceptio\'25',
-      date: '19th and 20th August 2025',
-      time: 'Full Day Event',
-      location: 'DYPIU Campus',
-      description: 'Our flagship entrepreneurship event featuring startup pitches, workshops, and networking sessions.',
-      category: 'Competition',
-      participants: '200+',
-      image: '/INCEPTIO.png',
-      featured: true,
-    },
-    {
-      id: 2,
-      title: 'Elevate\'25',
-      date: '21st August 2025',
-      time: 'Full Day Event',
-      location: 'DYPIU Campus',
-      description: 'Startup acceleration and mentorship program designed to elevate student ventures to the next level.',
-      category: 'Workshop',
-      participants: '150+',
-      image: '/ELEVATE.jpeg',
-      featured: true,
-    },
-    {
-      id: 3,
-      title: "SIH'25",
-      date: '23rd and 24th September 2025',
-      time: '48 Hour Hackathon',
-      location: 'DYPIU Campus',
-      description: 'Smart India Hackathon internal competition where students solve real-world problems through innovative solutions.',
-      category: 'Hackathon',
-      participants: '300+',
-      image: '/SIH.png',
-      featured: true,
-    },
-  ];
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch('/api/event?action=get-events');
+        const data = await response.json();
+        if (response.ok) {
+          setEvents(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch events:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-brand-yellow selection:text-black font-sans overflow-x-hidden">
@@ -152,34 +109,38 @@ const Events = () => {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {successfulEvents.map((event, index) => (
-              <motion.div
-                key={index}
-                whileHover={{ y: -10 }}
-                className="group bg-zinc-900 border-4 border-zinc-700 hover:border-brand-yellow rounded-[2rem] overflow-hidden transition-all duration-300 h-full flex flex-col"
-              >
-                <div className="h-64 bg-white p-2 border-b-4 border-black relative overflow-hidden">
-                  <img src={event.image} alt={event.title} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
-                </div>
-                <div className="p-8 flex flex-col flex-1">
-                  <h3 className="text-3xl font-black uppercase mb-4">{event.title}</h3>
-                  <div className="flex justify-between items-center border-t-2 border-zinc-700 pt-4 mt-auto">
-                    <span className="font-mono text-brand-yellow">{event.date}</span>
-                    <Link to={
-                      event.title.includes('Innovate') ? '/events/innovate-for-impact' :
-                        event.title.includes('FinBiz') ? '/events/finbiz' :
-                          event.title.includes('SIH') ? '/events/sih' :
-                            event.title.includes('Elevate') ? '/events/elevate' :
-                              `/events/${event.title.toLowerCase().replace("'", "").replace("25", "")}`
-                    }>
-                      <div className="w-12 h-12 bg-black border-2 border-white rounded-full flex items-center justify-center group-hover:bg-brand-yellow group-hover:text-black group-hover:border-black transition-all">
-                        <ArrowRight className="-rotate-45 group-hover:rotate-0 transition-transform" />
-                      </div>
-                    </Link>
+            {loading ? (
+              <div className="col-span-1 md:col-span-2 lg:col-span-3 flex justify-center py-20">
+                <Loader2 className="w-12 h-12 text-brand-yellow animate-spin" />
+              </div>
+            ) : events.length === 0 ? (
+              <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-20">
+                <p className="text-xl text-gray-500">No events found.</p>
+              </div>
+            ) : (
+              events.map((event, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ y: -10 }}
+                  className="group bg-zinc-900 border-4 border-zinc-700 hover:border-brand-yellow rounded-[2rem] overflow-hidden transition-all duration-300 h-full flex flex-col"
+                >
+                  <div className="h-64 bg-white p-2 border-b-4 border-black relative overflow-hidden">
+                    <img src={event.image || event.thumbnail} alt={event.title} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                  <div className="p-8 flex flex-col flex-1">
+                    <h3 className="text-3xl font-black uppercase mb-4">{event.title}</h3>
+                    <div className="flex justify-between items-center border-t-2 border-zinc-700 pt-4 mt-auto">
+                      <span className="font-mono text-brand-yellow">{event.date}</span>
+                      <Link to={`/events/${event.slug || event.id}`}>
+                        <div className="w-12 h-12 bg-black border-2 border-white rounded-full flex items-center justify-center group-hover:bg-brand-yellow group-hover:text-black group-hover:border-black transition-all">
+                          <ArrowRight className="-rotate-45 group-hover:rotate-0 transition-transform" />
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
       </section>
