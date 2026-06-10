@@ -603,7 +603,7 @@ async function handleDispatchCertificates(req, res) {
             }
 
             const emailKey = attendee.email.trim().toLowerCase();
-            if (eligibility[emailKey]?.eligible === false) {
+            if (eligibility[emailKey]?.eligible !== true) {
                 skippedCount++;
                 continue;
             }

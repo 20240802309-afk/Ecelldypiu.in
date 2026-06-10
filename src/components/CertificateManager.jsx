@@ -296,7 +296,9 @@ const CertificateManager = ({ adminKey, onBack }) => {
         setTemplateLoaded(false);
 
         const img = new Image();
-        img.crossOrigin = 'anonymous';
+        if (templateUrl.startsWith('http')) {
+            img.crossOrigin = 'anonymous';
+        }
         img.onload = () => {
             templateImgRef.current = img;
             imageDims.current = { width: img.naturalWidth, height: img.naturalHeight };
@@ -633,11 +635,11 @@ const CertificateManager = ({ adminKey, onBack }) => {
         const key = email.trim().toLowerCase();
         setEligibility(prev => {
             const curr = prev[key];
-            if (!curr || curr.eligible !== false) {
-                // Mark as ineligible
-                return { ...prev, [key]: { eligible: false, reason: '' } };
+            if (!curr || !curr.eligible) {
+                // Mark as eligible
+                return { ...prev, [key]: { eligible: true, reason: '' } };
             } else {
-                // Remove from map (mark as eligible)
+                // Remove from map (mark as ineligible)
                 const next = { ...prev };
                 delete next[key];
                 return next;
@@ -646,18 +648,18 @@ const CertificateManager = ({ adminKey, onBack }) => {
     };
 
     const handleSelectAll = () => {
-        setEligibility({});
-    };
-
-    const handleUnselectAll = () => {
         const newEligibility = {};
         eventAttendees.forEach(attendee => {
             const emailKey = (attendee.email || attendee.name || '').trim().toLowerCase();
             if (emailKey) {
-                newEligibility[emailKey] = { eligible: false, reason: '' };
+                newEligibility[emailKey] = { eligible: true, reason: '' };
             }
         });
         setEligibility(newEligibility);
+    };
+
+    const handleUnselectAll = () => {
+        setEligibility({});
     };
 
     // Update denial reason
@@ -1308,9 +1310,9 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                             </button>
                                         </div>
                                         <div className="text-sm text-zinc-500 whitespace-nowrap">
-                                            <span className="text-green-400 font-bold">{eventAttendees.length - Object.keys(eligibility).length}</span> eligible
-                                            {Object.keys(eligibility).length > 0 && (
-                                                <> · <span className="text-red-400 font-bold">{Object.keys(eligibility).length}</span> excluded</>
+                                            <span className="text-green-400 font-bold">{Object.values(eligibility).filter(e => e.eligible).length}</span> eligible
+                                            {eventAttendees.length - Object.values(eligibility).filter(e => e.eligible).length > 0 && (
+                                                <> · <span className="text-red-400 font-bold">{eventAttendees.length - Object.values(eligibility).filter(e => e.eligible).length}</span> excluded</>
                                             )}
                                         </div>
                                     </div>
@@ -1337,12 +1339,12 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                                     })
                                                     .map((attendee, idx) => {
                                                         const emailKey = (attendee.email || '').trim().toLowerCase();
-                                                        const isExcluded = eligibility[emailKey]?.eligible === false;
+                                                        const isEligible = eligibility[emailKey]?.eligible === true;
 
                                                         return (
                                                             <tr
                                                                 key={attendee.id || idx}
-                                                                className={`border-t border-zinc-800 transition-colors ${isExcluded ? 'bg-red-500/5' : 'hover:bg-zinc-800/50'
+                                                                className={`border-t border-zinc-800 transition-colors ${!isEligible ? 'opacity-70' : 'hover:bg-zinc-800/50'
                                                                     }`}
                                                             >
                                                                 <td className="px-4 py-3">
@@ -1350,17 +1352,17 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                                                         onClick={() => toggleEligibility(attendee.email)}
                                                                         className="flex items-center justify-center"
                                                                     >
-                                                                        {isExcluded ? (
-                                                                            <XSquare className="w-5 h-5 text-red-400" />
+                                                                        {!isEligible ? (
+                                                                            <div className="w-5 h-5 border-2 border-zinc-500 rounded flex items-center justify-center" />
                                                                         ) : (
                                                                             <CheckSquare className="w-5 h-5 text-green-400" />
                                                                         )}
                                                                     </button>
                                                                 </td>
-                                                                <td className={`px-4 py-3 font-medium ${isExcluded ? 'text-zinc-500 line-through' : 'text-white'}`}>
+                                                                <td className={`px-4 py-3 font-medium ${!isEligible ? 'text-zinc-400' : 'text-white'}`}>
                                                                     {attendee.name || '—'}
                                                                 </td>
-                                                                <td className={`px-4 py-3 font-mono text-xs ${isExcluded ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                                                                <td className={`px-4 py-3 font-mono text-xs ${!isEligible ? 'text-zinc-500' : 'text-zinc-400'}`}>
                                                                     {attendee.email || '—'}
                                                                 </td>
                                                                 <td className="px-4 py-3">
@@ -1369,13 +1371,13 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                                                     </span>
                                                                 </td>
                                                                 <td className="px-4 py-3">
-                                                                    {isExcluded && (
+                                                                    {!isEligible && (
                                                                         <input
                                                                             type="text"
                                                                             value={eligibility[emailKey]?.reason || ''}
                                                                             onChange={e => updateDenialReason(attendee.email, e.target.value)}
-                                                                            placeholder="Enter reason..."
-                                                                            className="w-full bg-black border border-red-500/30 px-3 py-1.5 text-white rounded-lg focus:border-red-400 focus:outline-none text-sm"
+                                                                            placeholder="Enter reason (optional)..."
+                                                                            className="w-full bg-black border border-zinc-700 px-3 py-1.5 text-white rounded-lg focus:border-brand-yellow focus:outline-none text-sm"
                                                                         />
                                                                     )}
                                                                 </td>
