@@ -72,6 +72,12 @@ const CertificateManager = ({ adminKey, onBack }) => {
     const [emailHTML, setEmailHTML] = useState('');
     const [dispatching, setDispatching] = useState(false);
     const [dispatchResult, setDispatchResult] = useState(null);
+    const [emailProvider, setEmailProvider] = useState('resend');
+
+    // NEW: Manual Attendee & CSV Import
+    const [showAddAttendee, setShowAddAttendee] = useState(false);
+    const [newAttendeeData, setNewAttendeeData] = useState({ name: '', email: '', college: '', phone: '' });
+    const csvInputRef = useRef(null);
 
     const DEFAULT_EMAIL_SUBJECT = "Your Certificate for {{event_name}} is Ready!";
     const DEFAULT_EMAIL_HTML = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 2px solid #E5E7EB; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
@@ -287,6 +293,8 @@ const CertificateManager = ({ adminKey, onBack }) => {
             return;
         }
 
+        setTemplateLoaded(false);
+
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
@@ -418,6 +426,29 @@ const CertificateManager = ({ adminKey, onBack }) => {
         }
     };
 
+    const handleDeleteTemplate = async (filename) => {
+        try {
+            const res = await fetch('/api/certificate?action=delete-template', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminKey}`
+                },
+                body: JSON.stringify({ filename })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to delete template');
+            setSuccess(`Template "${filename}" deleted!`);
+            setTimeout(() => setSuccess(''), 3000);
+            if (templateUrl.includes(filename)) {
+                setTemplateUrl('');
+            }
+            fetchTemplates();
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
     // ====== FONT UPLOAD ======
     const handleFontUpload = (e) => {
         const file = e.target.files?.[0];
@@ -481,6 +512,87 @@ const CertificateManager = ({ adminKey, onBack }) => {
         }
     };
 
+    const handleAddManualAttendee = async (e) => {
+        e.preventDefault();
+        if (!selectedEvent) return;
+        setLoadingAttendees(true);
+        try {
+            const res = await fetch('/api/event?action=import-attendees', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminKey}`
+                },
+                body: JSON.stringify({
+                    eventId: selectedEvent,
+                    attendees: [{ ...newAttendeeData, source: 'Manual Import' }]
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSuccess('Attendee added successfully!');
+                setTimeout(() => setSuccess(''), 3000);
+                setNewAttendeeData({ name: '', email: '', college: '', phone: '' });
+                setShowAddAttendee(false);
+                fetchAttendees();
+            } else {
+                throw new Error(data.error || 'Failed to add attendee');
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoadingAttendees(false);
+        }
+    };
+
+    const handleImportCSV = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file || !selectedEvent) return;
+        setLoadingAttendees(true);
+        try {
+            const text = await file.text();
+            const rows = text.split('\n').map(row => row.trim()).filter(row => row);
+            if (rows.length < 2) throw new Error('CSV is empty or missing headers');
+            
+            const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+            
+            const attendees = rows.slice(1).map(row => {
+                const values = row.split(',');
+                const attendee = { source: 'CSV Import' };
+                headers.forEach((header, index) => {
+                    if (values[index]) attendee[header] = values[index].trim();
+                });
+                return attendee;
+            });
+
+            const res = await fetch('/api/event?action=import-attendees', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminKey}`
+                },
+                body: JSON.stringify({
+                    eventId: selectedEvent,
+                    attendees
+                })
+            });
+            
+            const data = await res.json();
+            if (res.ok) {
+                setSuccess(`Successfully imported ${data.count} attendees!`);
+                setTimeout(() => setSuccess(''), 3000);
+                fetchAttendees();
+            } else {
+                throw new Error(data.error || 'Failed to import CSV');
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoadingAttendees(false);
+            if (csvInputRef.current) csvInputRef.current.value = '';
+        }
+    };
+
     // Toggle eligibility for an attendee
     const toggleEligibility = (email) => {
         if (!email) return;
@@ -517,13 +629,13 @@ const CertificateManager = ({ adminKey, onBack }) => {
         setDispatchResult(null);
 
         try {
-            const res = await fetch('/api/certificate?action=dispatch', {
+            const res = await fetch('/api/certificate?action=dispatch-certificates', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${adminKey}`
                 },
-                body: JSON.stringify({ eventId: selectedEvent })
+                body: JSON.stringify({ eventId: selectedEvent, provider: emailProvider })
             });
 
             const data = await res.json();
@@ -693,28 +805,40 @@ const CertificateManager = ({ adminKey, onBack }) => {
                             ) : availableTemplates.length > 0 ? (
                                 <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1">
                                     {availableTemplates.map((tpl) => (
-                                        <button
-                                            key={tpl.filename}
-                                            onClick={() => setTemplateUrl(tpl.url)}
-                                            className={`relative rounded-xl overflow-hidden border-2 transition-all aspect-[4/3] group ${templateUrl === tpl.url
-                                                ? 'border-brand-yellow shadow-lg shadow-brand-yellow/20'
-                                                : 'border-zinc-700 hover:border-zinc-500'
-                                                }`}
-                                        >
-                                            <img
-                                                src={tpl.url}
-                                                alt={tpl.name}
-                                                className="w-full h-full object-cover"
-                                            />
-                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-                                                <p className="text-xs text-white truncate font-medium">{tpl.name}</p>
-                                            </div>
-                                            {templateUrl === tpl.url && (
-                                                <div className="absolute top-2 right-2 bg-brand-yellow rounded-full p-1">
-                                                    <CheckCircle2 className="w-4 h-4 text-black" />
+                                        <div key={tpl.filename} className="relative group">
+                                            <button
+                                                onClick={() => setTemplateUrl(tpl.url)}
+                                                className={`relative rounded-xl overflow-hidden border-2 transition-all aspect-[4/3] w-full group-hover:opacity-90 ${templateUrl === tpl.url
+                                                    ? 'border-brand-yellow shadow-lg shadow-brand-yellow/20'
+                                                    : 'border-zinc-700 hover:border-zinc-500'
+                                                    }`}
+                                            >
+                                                <img
+                                                    src={tpl.url}
+                                                    alt={tpl.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                                                    <p className="text-xs text-white truncate font-medium">{tpl.name}</p>
                                                 </div>
-                                            )}
-                                        </button>
+                                                {templateUrl === tpl.url && (
+                                                    <div className="absolute top-2 right-2 bg-brand-yellow rounded-full p-1 z-10">
+                                                        <CheckCircle2 className="w-4 h-4 text-black" />
+                                                    </div>
+                                                )}
+                                            </button>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if(window.confirm('Delete this template?')) {
+                                                        handleDeleteTemplate(tpl.filename);
+                                                    }
+                                                }}
+                                                className="absolute top-2 left-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-600 shadow-md"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     ))}
                                 </div>
                             ) : (
@@ -879,18 +1003,18 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                         >
                                             <optgroup label="System Fonts">
                                                 {DEFAULT_FONTS.filter(f => ['Arial', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Trebuchet MS', 'Impact', 'Comic Sans MS'].includes(f)).map(f => (
-                                                    <option key={f} value={f}>{f}</option>
+                                                    <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
                                                 ))}
                                             </optgroup>
                                             <optgroup label="Google Fonts">
                                                 {DEFAULT_FONTS.filter(f => !['Arial', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Trebuchet MS', 'Impact', 'Comic Sans MS'].includes(f)).map(f => (
-                                                    <option key={f} value={f}>{f}</option>
+                                                    <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
                                                 ))}
                                             </optgroup>
                                             {customFonts.length > 0 && (
                                                 <optgroup label="Custom Fonts">
                                                     {customFonts.map(f => (
-                                                        <option key={f.name} value={f.name}>{f.name}</option>
+                                                        <option key={f.name} value={f.name} style={{ fontFamily: f.name }}>{f.name}</option>
                                                     ))}
                                                 </optgroup>
                                             )}
@@ -1068,17 +1192,38 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                     <Users className="w-5 h-5 text-brand-yellow" />
                                     Attendee Eligibility
                                 </h3>
-                                <button
-                                    onClick={fetchAttendees}
-                                    disabled={loadingAttendees}
-                                    className="bg-brand-yellow text-black font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-white transition-colors disabled:opacity-50"
-                                >
-                                    {loadingAttendees ? (
-                                        <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
-                                    ) : (
-                                        <><Users className="w-4 h-4" /> Fetch Attendees</>
-                                    )}
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setShowAddAttendee(true)}
+                                        className="bg-zinc-800 text-white font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-zinc-700 transition-colors"
+                                    >
+                                        <Plus className="w-4 h-4" /> Add Manual
+                                    </button>
+                                    <button
+                                        onClick={() => csvInputRef.current?.click()}
+                                        className="bg-zinc-800 text-white font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-zinc-700 transition-colors"
+                                    >
+                                        <Upload className="w-4 h-4" /> Import CSV
+                                    </button>
+                                    <input
+                                        type="file"
+                                        accept=".csv"
+                                        className="hidden"
+                                        ref={csvInputRef}
+                                        onChange={handleImportCSV}
+                                    />
+                                    <button
+                                        onClick={fetchAttendees}
+                                        disabled={loadingAttendees}
+                                        className="bg-brand-yellow text-black font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-white transition-colors disabled:opacity-50"
+                                    >
+                                        {loadingAttendees ? (
+                                            <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
+                                        ) : (
+                                            <><Users className="w-4 h-4" /> Fetch Attendees</>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
 
                             <p className="text-zinc-500 text-sm mb-4">
@@ -1191,9 +1336,80 @@ const CertificateManager = ({ adminKey, onBack }) => {
                 </div>
             )}
 
+            {/* Add Manual Attendee Modal */}
+            {showAddAttendee && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="bg-zinc-900 border-4 border-zinc-700 p-6 rounded-2xl max-w-md w-full shadow-2xl relative">
+                        <button 
+                            onClick={() => setShowAddAttendee(false)}
+                            className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        
+                        <h4 className="text-white font-black text-2xl uppercase mb-6 flex items-center gap-2">
+                            <Plus className="w-6 h-6 text-brand-yellow" /> Add Attendee
+                        </h4>
+                        
+                        <form onSubmit={handleAddManualAttendee} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-400 mb-2">Name</label>
+                                <input
+                                    type="text"
+                                    value={newAttendeeData.name}
+                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, name: e.target.value })}
+                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
+                                    placeholder="John Doe"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-400 mb-2">Email</label>
+                                <input
+                                    type="email"
+                                    value={newAttendeeData.email}
+                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, email: e.target.value })}
+                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
+                                    placeholder="john@example.com"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-400 mb-2">College (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={newAttendeeData.college}
+                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, college: e.target.value })}
+                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
+                                    placeholder="DYPIU"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-400 mb-2">Phone (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={newAttendeeData.phone}
+                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, phone: e.target.value })}
+                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
+                                    placeholder="+91 9876543210"
+                                />
+                            </div>
+                            
+                            <button 
+                                type="submit"
+                                disabled={loadingAttendees}
+                                className="w-full mt-2 bg-brand-yellow hover:bg-white text-black font-black py-3 rounded-xl transition-colors uppercase disabled:opacity-50"
+                            >
+                                {loadingAttendees ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'Save Attendee'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {selectedEvent && !loading && managerTab === 'dispatch' && (
                 <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div>
                             <h3 className="text-2xl font-black uppercase text-brand-yellow">Dispatch Certificates</h3>
                             <p className="text-zinc-400 mt-1">
@@ -1203,36 +1419,70 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                 }
                             </p>
                         </div>
-                        <button
-                            onClick={handleDispatch}
-                            disabled={dispatching || eventAttendees.length === 0}
-                            className="bg-brand-yellow text-black font-black px-6 py-3 rounded-xl border-4 border-white hover:shadow-[6px_6px_0px_white] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider flex items-center gap-2"
-                        >
-                            {dispatching ? (
-                                <><Loader2 className="w-5 h-5 animate-spin" /> Sending...</>
-                            ) : (
-                                "Dispatch Now"
-                            )}
-                        </button>
+                        <div className="flex items-center gap-4">
+                            <select
+                                value={emailProvider}
+                                onChange={(e) => setEmailProvider(e.target.value)}
+                                className="bg-black border-2 border-zinc-700 p-3 rounded-lg text-white font-bold focus:border-brand-yellow outline-none uppercase text-sm"
+                            >
+                                <option value="resend">Default (Resend)</option>
+                                <option value="bridge1">Bridge 1 (CIIE)</option>
+                                <option value="bridge2">Bridge 2 (E-Cell)</option>
+                            </select>
+                            <button
+                                onClick={handleDispatch}
+                                disabled={dispatching || eventAttendees.length === 0}
+                                className="bg-brand-yellow text-black font-black px-6 py-3 rounded-xl border-4 border-white hover:shadow-[6px_6px_0px_white] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider flex items-center gap-2 whitespace-nowrap"
+                            >
+                                {dispatching ? (
+                                    <><Loader2 className="w-5 h-5 animate-spin" /> Sending...</>
+                                ) : (
+                                    "Dispatch Now"
+                                )}
+                            </button>
+                        </div>
                     </div>
 
+                    {/* Dispatch Result Pop-up Modal */}
                     {dispatchResult && (
-                        <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-xl mb-6">
-                            <h4 className="text-green-400 font-bold flex items-center gap-2 mb-2">
-                                <CheckCircle2 className="w-5 h-5" /> Dispatch Complete
-                            </h4>
-                            <div className="text-sm text-zinc-300">
-                                <p>Successfully Sent: <strong className="text-white">{dispatchResult.sentCount || dispatchResult.dispatched || 0}</strong></p>
-                                {dispatchResult.errors && dispatchResult.errors.length > 0 && (
-                                    <div className="mt-2">
-                                        <p className="text-red-400 font-semibold">Errors ({dispatchResult.errors.length}):</p>
-                                        <ul className="list-disc list-inside text-xs text-zinc-400 max-h-32 overflow-y-auto mt-1">
-                                            {dispatchResult.errors.map((err, i) => (
-                                                <li key={i}>{err.email}: {err.error}</li>
-                                            ))}
-                                        </ul>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                            <div className="bg-zinc-900 border-4 border-zinc-700 p-6 rounded-2xl max-w-lg w-full shadow-2xl relative">
+                                <button 
+                                    onClick={() => setDispatchResult(null)}
+                                    className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                                
+                                <h4 className="text-green-400 font-black text-2xl uppercase flex items-center gap-2 mb-4">
+                                    <CheckCircle2 className="w-8 h-8" /> Dispatch Complete
+                                </h4>
+                                
+                                <div className="space-y-4 text-zinc-300">
+                                    <div className="bg-black/50 p-4 rounded-xl border border-zinc-800">
+                                        <p className="text-lg">Successfully Sent: <strong className="text-brand-yellow text-2xl ml-2">{dispatchResult.sentCount || dispatchResult.dispatched || 0}</strong></p>
                                     </div>
-                                )}
+                                    
+                                    {dispatchResult.errors && dispatchResult.errors.length > 0 && (
+                                        <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl">
+                                            <p className="text-red-400 font-bold mb-2 flex items-center gap-2">
+                                                <AlertCircle className="w-5 h-5" /> Errors ({dispatchResult.errors.length}):
+                                            </p>
+                                            <ul className="list-disc list-inside text-sm text-zinc-400 max-h-48 overflow-y-auto space-y-1">
+                                                {dispatchResult.errors.map((err, i) => (
+                                                    <li key={i}><span className="text-white">{err.email}:</span> {err.error}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <button 
+                                    onClick={() => setDispatchResult(null)}
+                                    className="w-full mt-6 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl transition-colors uppercase"
+                                >
+                                    Close
+                                </button>
                             </div>
                         </div>
                     )}
@@ -1338,6 +1588,21 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Secondary Dispatch Button (Below template) */}
+                        <div className="mt-8 pt-6 border-t-2 border-zinc-800 flex justify-end">
+                            <button
+                                onClick={handleDispatch}
+                                disabled={dispatching || eventAttendees.length === 0}
+                                className="bg-brand-yellow text-black font-black px-8 py-4 rounded-xl border-4 border-white hover:shadow-[6px_6px_0px_white] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider flex items-center gap-2"
+                            >
+                                {dispatching ? (
+                                    <><Loader2 className="w-5 h-5 animate-spin" /> Sending...</>
+                                ) : (
+                                    "Dispatch Now"
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>
