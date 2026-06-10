@@ -429,7 +429,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
     const handleDeleteTemplate = async (filename) => {
         try {
             const res = await fetch('/api/certificate?action=delete-template', {
-                method: 'POST',
+                method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${adminKey}`
@@ -554,16 +554,50 @@ const CertificateManager = ({ adminKey, onBack }) => {
             const rows = text.split('\n').map(row => row.trim()).filter(row => row);
             if (rows.length < 2) throw new Error('CSV is empty or missing headers');
             
-            const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+            const parseCSVRow = (row) => {
+                const values = [];
+                let inQuotes = false;
+                let currentValue = '';
+                for (let i = 0; i < row.length; i++) {
+                    const char = row[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(currentValue);
+                        currentValue = '';
+                    } else {
+                        currentValue += char;
+                    }
+                }
+                values.push(currentValue);
+                return values;
+            };
+
+            const mapHeader = (h) => {
+                const lower = h.trim().toLowerCase().replace(/['"]/g, '');
+                if (lower.includes('name')) return 'name';
+                if (lower.includes('mail')) return 'email';
+                if (lower.includes('college') || lower.includes('institution') || lower.includes('university')) return 'college';
+                if (lower.includes('phone') || lower.includes('contact') || lower.includes('number')) return 'phone';
+                if (lower.includes('team')) return 'team';
+                return lower;
+            };
+
+            const rawHeaders = parseCSVRow(rows[0]);
+            const headers = rawHeaders.map(mapHeader);
             
             const attendees = rows.slice(1).map(row => {
-                const values = row.split(',');
+                const values = parseCSVRow(row);
                 const attendee = { source: 'CSV Import' };
                 headers.forEach((header, index) => {
-                    if (values[index]) attendee[header] = values[index].trim();
+                    if (values[index]) attendee[header] = values[index].trim().replace(/^["']|["']$/g, '');
                 });
                 return attendee;
-            });
+            }).filter(a => a.name || a.email);
+
+            if (attendees.length === 0) {
+                throw new Error('No valid attendees found. Ensure CSV has Name or Email columns.');
+            }
 
             const res = await fetch('/api/event?action=import-attendees', {
                 method: 'POST',
@@ -609,6 +643,21 @@ const CertificateManager = ({ adminKey, onBack }) => {
                 return next;
             }
         });
+    };
+
+    const handleSelectAll = () => {
+        setEligibility({});
+    };
+
+    const handleUnselectAll = () => {
+        const newEligibility = {};
+        eventAttendees.forEach(attendee => {
+            const emailKey = (attendee.email || attendee.name || '').trim().toLowerCase();
+            if (emailKey) {
+                newEligibility[emailKey] = { eligible: false, reason: '' };
+            }
+        });
+        setEligibility(newEligibility);
     };
 
     // Update denial reason
@@ -1233,8 +1282,8 @@ const CertificateManager = ({ adminKey, onBack }) => {
                             {eventAttendees.length > 0 && (
                                 <>
                                     {/* Search & Stats */}
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className="flex-1 relative">
+                                    <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4 mb-4">
+                                        <div className="flex-1 relative w-full">
                                             <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
                                             <input
                                                 type="text"
@@ -1243,6 +1292,20 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                                 placeholder="Search by name or email..."
                                                 className="w-full bg-black border-2 border-zinc-700 pl-10 pr-4 py-2 text-white rounded-lg focus:border-brand-yellow focus:outline-none text-sm"
                                             />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={handleSelectAll}
+                                                className="bg-zinc-800 text-white font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-zinc-700 transition-colors whitespace-nowrap"
+                                            >
+                                                Select All
+                                            </button>
+                                            <button
+                                                onClick={handleUnselectAll}
+                                                className="bg-zinc-800 text-white font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-zinc-700 transition-colors whitespace-nowrap"
+                                            >
+                                                Unselect All
+                                            </button>
                                         </div>
                                         <div className="text-sm text-zinc-500 whitespace-nowrap">
                                             <span className="text-green-400 font-bold">{eventAttendees.length - Object.keys(eligibility).length}</span> eligible
