@@ -1,6 +1,5 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, Timestamp as FirestoreTimestamp } from 'firebase-admin/firestore';
-import { getStorage } from 'firebase-admin/storage';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,7 +20,6 @@ try {
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
                 privateKey,
             }),
-            storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || 'ecell-86bee.firebasestorage.app',
         });
     }
 
@@ -231,22 +229,19 @@ async function handleGetConfig(req, res) {
 
 async function handleListTemplates(req, res) {
     try {
-        if (!getApps().length) {
+        if (!db) {
             return res.status(500).json({ error: 'Firebase not initialized' });
         }
-        const bucket = getStorage().bucket();
-        const [files] = await bucket.getFiles({ prefix: 'certificates/' });
         
-        const templates = files
-            .filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f.name))
-            .map(f => {
-                const basename = path.basename(f.name);
-                return {
-                    name: basename.replace(/\.(png|jpg|jpeg|webp)$/i, '').replace(/[-_]/g, ' '),
-                    filename: basename,
-                    url: `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(f.name)}?alt=media`,
-                };
-            });
+        const snapshot = await db.collection('certificateTemplates').get();
+        const templates = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                name: data.name,
+                filename: data.filename,
+                url: data.url
+            };
+        });
 
         return res.status(200).json({ templates });
     } catch (error) {
@@ -273,22 +268,19 @@ async function handleDeleteTemplate(req, res) {
             return res.status(400).json({ error: 'Filename is required' });
         }
 
-        // Prevent directory traversal attacks
         const safeFilename = path.basename(filename);
         
-        if (!getApps().length) {
+        if (!db) {
             return res.status(500).json({ error: 'Firebase not initialized' });
         }
 
-        const bucket = getStorage().bucket();
-        const file = bucket.file(`certificates/${safeFilename}`);
-        
-        const [exists] = await file.exists();
-        if (!exists) {
+        const docRef = db.collection('certificateTemplates').doc(safeFilename);
+        const doc = await docRef.get();
+        if (!doc.exists) {
             return res.status(404).json({ error: 'Template not found' });
         }
 
-        await file.delete();
+        await docRef.delete();
         return res.status(200).json({ message: 'Template deleted successfully' });
     } catch (error) {
         console.error('Error deleting template:', error);
@@ -510,34 +502,26 @@ async function handleUploadTemplate(req, res) {
         const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '-').toLowerCase();
         if (!/\.(png|jpg|jpeg|webp)$/i.test(safeName)) return res.status(400).json({ error: 'File must be a valid image format' });
 
-        if (!getApps().length) {
+        if (!db) {
             return res.status(500).json({ error: 'Firebase not initialized' });
         }
-
-        const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
-        const buffer = Buffer.from(base64Data, 'base64');
-
-        const bucket = getStorage().bucket();
-        const file = bucket.file(`certificates/${safeName}`);
         
-        const ext = safeName.split('.').pop();
-        const contentType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
-
-        await file.save(buffer, {
-            metadata: { contentType }
-        });
-
-        try {
-            await file.makePublic();
-        } catch (e) {
-            console.warn('Could not make file public (might already be public or IAM restricted)', e.message);
+        const sizeInMB = Buffer.byteLength(imageData, 'utf8') / (1024 * 1024);
+        if (sizeInMB > 1.0) {
+            return res.status(400).json({ error: 'Template size is too large (max 1MB). Please compress the image.' });
         }
 
-        const url = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(file.name)}?alt=media`;
+        const docRef = db.collection('certificateTemplates').doc(safeName);
+        await docRef.set({
+            name: safeName.replace(/\.(png|jpg|jpeg|webp)$/i, '').replace(/[-_]/g, ' '),
+            filename: safeName,
+            url: imageData, // the base64 data URI
+            createdAt: FirestoreTimestamp.now()
+        });
 
         return res.status(200).json({
             success: true,
-            url,
+            url: imageData,
             filename: safeName,
             message: `Template uploaded successfully`
         });
@@ -581,20 +565,30 @@ async function handleDispatchCertificates(req, res) {
         if (config.templateUrl) {
             try {
                 let urlToFetch = config.templateUrl;
-                if (urlToFetch.startsWith('/')) {
-                    let scheme = 'https';
-                    if (req.headers.host && (req.headers.host.includes('localhost') || req.headers.host.includes('127.0.0.1'))) {
-                        scheme = 'http';
+                if (urlToFetch.startsWith('data:image/')) {
+                    const match = urlToFetch.match(/^data:image\/(\w+);base64,(.*)$/);
+                    if (match) {
+                        const [, ext, base64Data] = match;
+                        templateImageBytes = Buffer.from(base64Data, 'base64');
+                        if (ext === 'jpeg' || ext === 'jpg') templateImageType = 'jpg';
+                        else templateImageType = 'png';
                     }
-                    const host = req.headers.origin || (req.headers.host ? `${scheme}://${req.headers.host}` : 'https://ecelldypiu.in');
-                    urlToFetch = `${host}${urlToFetch}`;
-                }
-                const imgRes = await fetch(urlToFetch);
-                if (imgRes.ok) {
-                    const arrayBuffer = await imgRes.arrayBuffer();
-                    templateImageBytes = Buffer.from(arrayBuffer);
-                    if (urlToFetch.toLowerCase().endsWith('.jpg') || urlToFetch.toLowerCase().endsWith('.jpeg')) {
-                        templateImageType = 'jpg';
+                } else {
+                    if (urlToFetch.startsWith('/')) {
+                        let scheme = 'https';
+                        if (req.headers.host && (req.headers.host.includes('localhost') || req.headers.host.includes('127.0.0.1'))) {
+                            scheme = 'http';
+                        }
+                        const host = req.headers.origin || (req.headers.host ? `${scheme}://${req.headers.host}` : 'https://ecelldypiu.in');
+                        urlToFetch = `${host}${urlToFetch}`;
+                    }
+                    const imgRes = await fetch(urlToFetch);
+                    if (imgRes.ok) {
+                        const arrayBuffer = await imgRes.arrayBuffer();
+                        templateImageBytes = Buffer.from(arrayBuffer);
+                        if (urlToFetch.toLowerCase().endsWith('.jpg') || urlToFetch.toLowerCase().endsWith('.jpeg')) {
+                            templateImageType = 'jpg';
+                        }
                     }
                 }
             } catch (err) {
