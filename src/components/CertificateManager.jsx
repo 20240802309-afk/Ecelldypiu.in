@@ -3,7 +3,7 @@ import {
     Upload, Save, Loader2, AlertCircle, CheckCircle2, X,
     Plus, Trash2, Move, Type, Eye, ArrowLeft,
     Settings, Image as ImageIcon, ChevronDown, Grid3X3,
-    Users, Search, CheckSquare, XSquare
+    Users, Search, CheckSquare, XSquare, Send
 } from 'lucide-react';
 
 const EVENTS = [
@@ -73,6 +73,9 @@ const CertificateManager = ({ adminKey, onBack }) => {
     const [dispatching, setDispatching] = useState(false);
     const [dispatchResult, setDispatchResult] = useState(null);
     const [emailProvider, setEmailProvider] = useState('resend');
+    const [showDispatchConfirm, setShowDispatchConfirm] = useState(false);
+    const [dispatchPassword, setDispatchPassword] = useState('');
+    const [dispatchPasswordError, setDispatchPasswordError] = useState('');
 
     // NEW: Manual Attendee & CSV Import
     const [showAddAttendee, setShowAddAttendee] = useState(false);
@@ -1235,8 +1238,180 @@ const CertificateManager = ({ adminKey, onBack }) => {
                         </button>
                     </div>
 
+
+                </div>
+            )}
+
+            {/* Dispatch Confirmation Modal */}
+            {showDispatchConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="bg-zinc-900 border-4 border-zinc-700 p-6 rounded-2xl max-w-2xl w-full shadow-2xl relative max-h-[90vh] flex flex-col">
+                        <button 
+                            onClick={() => {
+                                setShowDispatchConfirm(false);
+                                setDispatchPassword('');
+                                setDispatchPasswordError('');
+                            }}
+                            className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        
+                        <h4 className="text-white font-black text-2xl uppercase mb-2 flex items-center gap-2">
+                            <Send className="w-6 h-6 text-brand-yellow" /> Confirm Dispatch
+                        </h4>
+                        <p className="text-zinc-400 mb-6">
+                            Are you sure you want to send certificates to the following <strong className="text-white">{eventAttendees.filter(a => eligibility[(a.email || '').trim().toLowerCase()]?.eligible === true).length}</strong> participants?
+                        </p>
+                        
+                        <div className="flex-1 overflow-y-auto border-2 border-zinc-800 rounded-xl mb-6 bg-black/50 p-2">
+                            <table className="w-full text-sm">
+                                <thead className="sticky top-0 bg-zinc-900 z-10">
+                                    <tr className="text-left">
+                                        <th className="px-4 py-2 text-zinc-400 font-bold uppercase text-xs">Name</th>
+                                        <th className="px-4 py-2 text-zinc-400 font-bold uppercase text-xs">Email</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {eventAttendees
+                                        .filter(a => eligibility[(a.email || '').trim().toLowerCase()]?.eligible === true)
+                                        .map((attendee, idx) => (
+                                            <tr key={idx} className="border-t border-zinc-800/50">
+                                                <td className="px-4 py-2 text-white">{attendee.name || '—'}</td>
+                                                <td className="px-4 py-2 font-mono text-zinc-400">{attendee.email || '—'}</td>
+                                            </tr>
+                                        ))
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div className="mb-4">
+                            <label className="block text-sm font-bold uppercase mb-2 text-zinc-400">
+                                Enter Admin Password to Confirm
+                            </label>
+                            <input
+                                type="password"
+                                value={dispatchPassword}
+                                onChange={(e) => {
+                                    setDispatchPassword(e.target.value);
+                                    setDispatchPasswordError('');
+                                }}
+                                className={`w-full bg-black border-2 p-3 text-white rounded-lg focus:outline-none ${dispatchPasswordError ? 'border-red-500 focus:border-red-500' : 'border-zinc-700 focus:border-brand-yellow'}`}
+                                placeholder="Admin Password"
+                            />
+                            {dispatchPasswordError && (
+                                <p className="text-red-500 text-xs font-bold mt-1">{dispatchPasswordError}</p>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4 border-t-2 border-zinc-800">
+                            <button
+                                onClick={() => {
+                                    setShowDispatchConfirm(false);
+                                    setDispatchPassword('');
+                                    setDispatchPasswordError('');
+                                }}
+                                className="px-6 py-3 rounded-xl font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (dispatchPassword !== adminKey) {
+                                        setDispatchPasswordError('Incorrect admin password');
+                                        return;
+                                    }
+                                    setShowDispatchConfirm(false);
+                                    setDispatchPassword('');
+                                    setDispatchPasswordError('');
+                                    handleDispatch();
+                                }}
+                                className="bg-brand-yellow text-black font-black px-6 py-3 rounded-xl hover:shadow-[4px_4px_0px_white] transition-all uppercase flex items-center gap-2"
+                            >
+                                <Send className="w-4 h-4" /> Yes, Send Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Manual Attendee Modal */}
+            {showAddAttendee && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="bg-zinc-900 border-4 border-zinc-700 p-6 rounded-2xl max-w-md w-full shadow-2xl relative">
+                        <button 
+                            onClick={() => setShowAddAttendee(false)}
+                            className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        
+                        <h4 className="text-white font-black text-2xl uppercase mb-6 flex items-center gap-2">
+                            <Plus className="w-6 h-6 text-brand-yellow" /> Add Attendee
+                        </h4>
+                        
+                        <form onSubmit={handleAddManualAttendee} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-400 mb-2">Name</label>
+                                <input
+                                    type="text"
+                                    value={newAttendeeData.name}
+                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, name: e.target.value })}
+                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
+                                    placeholder="John Doe"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-400 mb-2">Email</label>
+                                <input
+                                    type="email"
+                                    value={newAttendeeData.email}
+                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, email: e.target.value })}
+                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
+                                    placeholder="john@example.com"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-400 mb-2">College (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={newAttendeeData.college}
+                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, college: e.target.value })}
+                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
+                                    placeholder="DYPIU"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-400 mb-2">Phone (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={newAttendeeData.phone}
+                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, phone: e.target.value })}
+                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
+                                    placeholder="+91 9876543210"
+                                />
+                            </div>
+                            
+                            <button 
+                                type="submit"
+                                disabled={loadingAttendees}
+                                className="w-full mt-2 bg-brand-yellow hover:bg-white text-black font-black py-3 rounded-xl transition-colors uppercase disabled:opacity-50"
+                            >
+                                {loadingAttendees ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'Save Attendee'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {selectedEvent && !loading && managerTab === 'dispatch' && (
+                
+                <div className="space-y-6">
                     {/* Attendee Eligibility Section - Full Width */}
-                    <div className="lg:col-span-5 mt-6">
+                    <div className="mb-6">
                         <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-black uppercase flex items-center gap-2">
@@ -1337,6 +1512,13 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                                         return (a.name || '').toLowerCase().includes(q) ||
                                                             (a.email || '').toLowerCase().includes(q);
                                                     })
+                                                    .sort((a, b) => {
+                                                        const aKey = (a.email || '').trim().toLowerCase();
+                                                        const bKey = (b.email || '').trim().toLowerCase();
+                                                        const aEligible = eligibility[aKey]?.eligible === true ? 1 : 0;
+                                                        const bEligible = eligibility[bKey]?.eligible === true ? 1 : 0;
+                                                        return bEligible - aEligible;
+                                                    })
                                                     .map((attendee, idx) => {
                                                         const emailKey = (attendee.email || '').trim().toLowerCase();
                                                         const isEligible = eligibility[emailKey]?.eligible === true;
@@ -1398,81 +1580,6 @@ const CertificateManager = ({ adminKey, onBack }) => {
                             )}
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* Add Manual Attendee Modal */}
-            {showAddAttendee && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-zinc-900 border-4 border-zinc-700 p-6 rounded-2xl max-w-md w-full shadow-2xl relative">
-                        <button 
-                            onClick={() => setShowAddAttendee(false)}
-                            className="absolute top-4 right-4 text-zinc-500 hover:text-white"
-                        >
-                            <X className="w-6 h-6" />
-                        </button>
-                        
-                        <h4 className="text-white font-black text-2xl uppercase mb-6 flex items-center gap-2">
-                            <Plus className="w-6 h-6 text-brand-yellow" /> Add Attendee
-                        </h4>
-                        
-                        <form onSubmit={handleAddManualAttendee} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-400 mb-2">Name</label>
-                                <input
-                                    type="text"
-                                    value={newAttendeeData.name}
-                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, name: e.target.value })}
-                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
-                                    placeholder="John Doe"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-400 mb-2">Email</label>
-                                <input
-                                    type="email"
-                                    value={newAttendeeData.email}
-                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, email: e.target.value })}
-                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
-                                    placeholder="john@example.com"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-400 mb-2">College (Optional)</label>
-                                <input
-                                    type="text"
-                                    value={newAttendeeData.college}
-                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, college: e.target.value })}
-                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
-                                    placeholder="DYPIU"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-400 mb-2">Phone (Optional)</label>
-                                <input
-                                    type="text"
-                                    value={newAttendeeData.phone}
-                                    onChange={(e) => setNewAttendeeData({ ...newAttendeeData, phone: e.target.value })}
-                                    className="w-full bg-black border-2 border-zinc-700 p-3 rounded-lg text-white focus:border-brand-yellow outline-none"
-                                    placeholder="+91 9876543210"
-                                />
-                            </div>
-                            
-                            <button 
-                                type="submit"
-                                disabled={loadingAttendees}
-                                className="w-full mt-2 bg-brand-yellow hover:bg-white text-black font-black py-3 rounded-xl transition-colors uppercase disabled:opacity-50"
-                            >
-                                {loadingAttendees ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'Save Attendee'}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {selectedEvent && !loading && managerTab === 'dispatch' && (
                 <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div>
@@ -1495,7 +1602,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                 <option value="bridge2">Bridge 2 (E-Cell)</option>
                             </select>
                             <button
-                                onClick={handleDispatch}
+                                onClick={() => setShowDispatchConfirm(true)}
                                 disabled={dispatching || eventAttendees.length === 0}
                                 className="bg-brand-yellow text-black font-black px-6 py-3 rounded-xl border-4 border-white hover:shadow-[6px_6px_0px_white] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider flex items-center gap-2 whitespace-nowrap"
                             >
@@ -1658,7 +1765,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
                         {/* Secondary Dispatch Button (Below template) */}
                         <div className="mt-8 pt-6 border-t-2 border-zinc-800 flex justify-end">
                             <button
-                                onClick={handleDispatch}
+                                onClick={() => setShowDispatchConfirm(true)}
                                 disabled={dispatching || eventAttendees.length === 0}
                                 className="bg-brand-yellow text-black font-black px-8 py-4 rounded-xl border-4 border-white hover:shadow-[6px_6px_0px_white] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider flex items-center gap-2"
                             >
@@ -1669,6 +1776,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                 )}
                             </button>
                         </div>
+                    </div>
                     </div>
                 </div>
             )}
