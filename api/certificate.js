@@ -537,7 +537,7 @@ async function handleDispatchCertificates(req, res) {
     if (!adminKey || authHeader !== `Bearer ${adminKey}`) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
-        const { eventId, provider } = req.body;
+        const { eventId, provider, eligibility: reqEligibility } = req.body;
         if (!eventId) return res.status(400).json({ error: 'eventId is required' });
 
         if (!db) return res.status(500).json({ error: 'Database connection not available' });
@@ -547,7 +547,7 @@ async function handleDispatchCertificates(req, res) {
 
         const config = configDoc.data();
         const attendeeCollection = config.attendeeCollection || `events/${eventId}/attendees`;
-        const eligibility = config.eligibility || {};
+        const eligibility = reqEligibility || config.eligibility || {};
 
         const attendeesSnapshot = await db.collection(attendeeCollection).get();
         if (attendeesSnapshot.empty) {
@@ -566,12 +566,16 @@ async function handleDispatchCertificates(req, res) {
             try {
                 let urlToFetch = config.templateUrl;
                 if (urlToFetch.startsWith('data:image/')) {
-                    const match = urlToFetch.match(/^data:image\/(\w+);base64,(.*)$/);
-                    if (match) {
-                        const [, ext, base64Data] = match;
-                        templateImageBytes = Buffer.from(base64Data, 'base64');
-                        if (ext === 'jpeg' || ext === 'jpg') templateImageType = 'jpg';
-                        else templateImageType = 'png';
+                    const parts = urlToFetch.split(',');
+                    const dataPart = parts[1];
+                    const mimePart = parts[0].split(';')[0].toLowerCase();
+                    if (dataPart) {
+                        templateImageBytes = Buffer.from(dataPart, 'base64');
+                        if (mimePart.includes('jpeg') || mimePart.includes('jpg')) {
+                            templateImageType = 'jpg';
+                        } else {
+                            templateImageType = 'png';
+                        }
                     }
                 } else {
                     if (urlToFetch.startsWith('/')) {
@@ -701,9 +705,16 @@ async function handleDispatchCertificates(req, res) {
                         attachments.push({
                             filename: `${config.eventName.replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.pdf`,
                             content: pdfBytes,
+                            base64: pdfBytes,
+                            data: pdfBytes,
+                            contentType: 'application/pdf',
+                            mimeType: 'application/pdf',
+                            type: 'application/pdf'
                         });
                     } catch (pdfErr) {
                         console.error('Failed to generate PDF for', attendee.email, pdfErr);
+                        errors.push({ email: attendee.email, error: 'PDF Error: ' + pdfErr.message });
+                        continue; // Skip sending email if PDF failed
                     }
                 }
 

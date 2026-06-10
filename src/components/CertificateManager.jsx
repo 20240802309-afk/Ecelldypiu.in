@@ -161,7 +161,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
                     setCustomFonts(cfg.customFonts || []);
                     setEnabled(cfg.enabled !== false);
                     setAttendeeCollection(cfg.attendeeCollection || '');
-                    setEligibility(cfg.eligibility || {});
+                    setEligibility({});
                     setEmailSubject(cfg.emailSubject || '');
                     setEmailHTML(cfg.emailHTML || '');
                     setConfig(cfg);
@@ -172,6 +172,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
                     setCustomFonts([]);
                     setEnabled(true);
                     setAttendeeCollection(EVENTS.find(e => e.id === selectedEvent)?.collection || '');
+                    setEligibility({});
                     setEmailSubject('');
                     setEmailHTML('');
                     setConfig(null);
@@ -676,7 +677,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
 
     // Dispatch Certificates
     const handleDispatch = async () => {
-        if (!selectedEvent || !window.confirm('Are you sure you want to dispatch certificates to all eligible attendees? This will send emails.')) return;
+        if (!selectedEvent) return;
         setDispatching(true);
         setError('');
         setSuccess('');
@@ -689,7 +690,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${adminKey}`
                 },
-                body: JSON.stringify({ eventId: selectedEvent, provider: emailProvider })
+                body: JSON.stringify({ eventId: selectedEvent, provider: emailProvider, eligibility })
             });
 
             const data = await res.json();
