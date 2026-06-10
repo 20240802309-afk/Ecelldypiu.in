@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, Timestamp as FirestoreTimestamp } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -20,6 +21,7 @@ try {
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
                 privateKey,
             }),
+            storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || 'ecell-86bee.firebasestorage.app',
         });
     }
 
@@ -229,25 +231,24 @@ async function handleGetConfig(req, res) {
 
 async function handleListTemplates(req, res) {
     try {
-        let certsDir;
-        if (typeof __dirname !== 'undefined') {
-            certsDir = path.resolve(__dirname, '..', 'public', 'certificates');
-        } else {
-            const __dir = path.dirname(fileURLToPath(import.meta.url));
-            certsDir = path.resolve(__dir, '..', 'public', 'certificates');
+        if (!getApps().length) {
+            return res.status(500).json({ error: 'Firebase not initialized' });
         }
+        const bucket = getStorage().bucket();
+        const [files] = await bucket.getFiles({ prefix: 'certificates/' });
+        
+        const templates = files
+            .filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f.name))
+            .map(f => {
+                const basename = path.basename(f.name);
+                return {
+                    name: basename.replace(/\.(png|jpg|jpeg|webp)$/i, '').replace(/[-_]/g, ' '),
+                    filename: basename,
+                    url: `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(f.name)}?alt=media`,
+                };
+            });
 
-        if (!fs.existsSync(certsDir)) return res.status(200).json({ templates: [] });
-
-        const files = fs.readdirSync(certsDir)
-            .filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f))
-            .map(f => ({
-                name: f.replace(/\.(png|jpg|jpeg|webp)$/i, '').replace(/[-_]/g, ' '),
-                filename: f,
-                url: `/certificates/${f}`,
-            }));
-
-        return res.status(200).json({ templates: files });
+        return res.status(200).json({ templates });
     } catch (error) {
         console.error('Error listing templates:', error);
         return res.status(500).json({ error: 'Failed to list templates', details: error.message });
@@ -272,24 +273,22 @@ async function handleDeleteTemplate(req, res) {
             return res.status(400).json({ error: 'Filename is required' });
         }
 
-        // Prevent directory traversal
+        // Prevent directory traversal attacks
         const safeFilename = path.basename(filename);
         
-        let certsDir;
-        if (typeof __dirname !== 'undefined') {
-            certsDir = path.resolve(__dirname, '..', 'public', 'certificates');
-        } else {
-            const __dir = path.dirname(fileURLToPath(import.meta.url));
-            certsDir = path.resolve(__dir, '..', 'public', 'certificates');
+        if (!getApps().length) {
+            return res.status(500).json({ error: 'Firebase not initialized' });
         }
 
-        const targetPath = path.join(certsDir, safeFilename);
-
-        if (!fs.existsSync(targetPath)) {
+        const bucket = getStorage().bucket();
+        const file = bucket.file(`certificates/${safeFilename}`);
+        
+        const [exists] = await file.exists();
+        if (!exists) {
             return res.status(404).json({ error: 'Template not found' });
         }
 
-        fs.unlinkSync(targetPath);
+        await file.delete();
         return res.status(200).json({ message: 'Template deleted successfully' });
     } catch (error) {
         console.error('Error deleting template:', error);
@@ -511,24 +510,34 @@ async function handleUploadTemplate(req, res) {
         const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '-').toLowerCase();
         if (!/\.(png|jpg|jpeg|webp)$/i.test(safeName)) return res.status(400).json({ error: 'File must be a valid image format' });
 
-        let certsDir;
-        if (typeof __dirname !== 'undefined') {
-            certsDir = path.resolve(__dirname, '..', 'public', 'certificates');
-        } else {
-            const __dir = path.dirname(fileURLToPath(import.meta.url));
-            certsDir = path.resolve(__dir, '..', 'public', 'certificates');
+        if (!getApps().length) {
+            return res.status(500).json({ error: 'Firebase not initialized' });
         }
-
-        if (!fs.existsSync(certsDir)) fs.mkdirSync(certsDir, { recursive: true });
 
         const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
 
-        fs.writeFileSync(path.join(certsDir, safeName), buffer);
+        const bucket = getStorage().bucket();
+        const file = bucket.file(`certificates/${safeName}`);
+        
+        const ext = safeName.split('.').pop();
+        const contentType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+
+        await file.save(buffer, {
+            metadata: { contentType }
+        });
+
+        try {
+            await file.makePublic();
+        } catch (e) {
+            console.warn('Could not make file public (might already be public or IAM restricted)', e.message);
+        }
+
+        const url = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(file.name)}?alt=media`;
 
         return res.status(200).json({
             success: true,
-            url: `/certificates/${safeName}`,
+            url,
             filename: safeName,
             message: `Template uploaded successfully`
         });
