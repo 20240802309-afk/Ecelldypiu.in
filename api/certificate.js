@@ -3,6 +3,7 @@ import { getFirestore, Timestamp as FirestoreTimestamp } from 'firebase-admin/fi
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 let db = null;
 let Timestamp = FirestoreTimestamp;
@@ -53,7 +54,7 @@ function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function sendEmail(to, subject, html, provider = 'resend') {
+async function sendEmail(to, subject, html, provider = 'resend', attachments = []) {
     if (provider === 'bridge1' || provider === 'bridge2') {
         const url = provider === 'bridge1' ? process.env.MAIL_BRIDGE_1 : process.env.MAIL_BRIDGE_2;
         if (!url) {
@@ -76,7 +77,8 @@ async function sendEmail(to, subject, html, provider = 'resend') {
                 subject,
                 htmlContent: html,
                 fromName: process.env[envNameKey] || defaultName,
-                fromEmail: process.env[envEmailKey] || defaultEmail
+                fromEmail: process.env[envEmailKey] || defaultEmail,
+                attachments
             })
         });
 
@@ -108,6 +110,7 @@ async function sendEmail(to, subject, html, provider = 'resend') {
             to: [to],
             subject,
             html,
+            attachments: attachments.length > 0 ? attachments : undefined,
         }),
     });
 
@@ -564,6 +567,32 @@ async function handleDispatchCertificates(req, res) {
         const attendees = [];
         attendeesSnapshot.forEach(doc => attendees.push(doc.data()));
 
+        let templateImageBytes = null;
+        let templateImageType = 'png';
+        if (config.templateUrl) {
+            try {
+                let urlToFetch = config.templateUrl;
+                if (urlToFetch.startsWith('/')) {
+                    let scheme = 'https';
+                    if (req.headers.host && (req.headers.host.includes('localhost') || req.headers.host.includes('127.0.0.1'))) {
+                        scheme = 'http';
+                    }
+                    const host = req.headers.origin || (req.headers.host ? `${scheme}://${req.headers.host}` : 'https://ecelldypiu.in');
+                    urlToFetch = `${host}${urlToFetch}`;
+                }
+                const imgRes = await fetch(urlToFetch);
+                if (imgRes.ok) {
+                    const arrayBuffer = await imgRes.arrayBuffer();
+                    templateImageBytes = Buffer.from(arrayBuffer);
+                    if (urlToFetch.toLowerCase().endsWith('.jpg') || urlToFetch.toLowerCase().endsWith('.jpeg')) {
+                        templateImageType = 'jpg';
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to pre-fetch template image:", err);
+            }
+        }
+
         for (const attendee of attendees) {
             if (!attendee.email) {
                 skippedCount++;
@@ -609,7 +638,73 @@ async function handleDispatchCertificates(req, res) {
                     .replace(/{{event_name}}/g, config.eventName)
                     .replace(/{{cert_link}}/g, certLink);
 
-                await sendEmail(attendee.email, finalSubject, finalHTML, provider || 'resend');
+                const attachments = [];
+                if (templateImageBytes) {
+                    try {
+                        const pdfDoc = await PDFDocument.create();
+                        const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+                        
+                        let image;
+                        if (templateImageType === 'jpg') {
+                            image = await pdfDoc.embedJpg(templateImageBytes);
+                        } else {
+                            image = await pdfDoc.embedPng(templateImageBytes);
+                        }
+                        
+                        const { width, height } = image.scale(1);
+                        const page = pdfDoc.addPage([width, height]);
+                        page.drawImage(image, { x: 0, y: 0, width, height });
+
+                        if (config.textFields) {
+                            for (const field of config.textFields) {
+                                const value = attendee[field.sourceField] || '';
+                                if (!value) continue;
+                                
+                                const fontSize = field.fontSize || 36;
+                                const pdfY = height - (field.y || 0) - (fontSize / 2) - (fontSize * 0.15); // Adjustment for vertical centering
+                                
+                                let pdfX = field.x || 0;
+                                const textWidth = font.widthOfTextAtSize(value, fontSize);
+                                
+                                if ((field.textAlign || 'center') === 'center') {
+                                    pdfX = pdfX - (textWidth / 2);
+                                } else if (field.textAlign === 'right') {
+                                    pdfX = pdfX - textWidth;
+                                }
+
+                                let color = rgb(0, 0, 0);
+                                if (field.fontColor) {
+                                    const hex = field.fontColor.replace('#', '');
+                                    if (hex.length === 6) {
+                                        color = rgb(
+                                            parseInt(hex.substring(0, 2), 16) / 255,
+                                            parseInt(hex.substring(2, 4), 16) / 255,
+                                            parseInt(hex.substring(4, 6), 16) / 255
+                                        );
+                                    }
+                                }
+
+                                page.drawText(value, {
+                                    x: pdfX,
+                                    y: pdfY,
+                                    size: fontSize,
+                                    font: font,
+                                    color: color,
+                                });
+                            }
+                        }
+
+                        const pdfBytes = await pdfDoc.saveAsBase64({ dataUri: false });
+                        attachments.push({
+                            filename: `${config.eventName.replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.pdf`,
+                            content: pdfBytes,
+                        });
+                    } catch (pdfErr) {
+                        console.error('Failed to generate PDF for', attendee.email, pdfErr);
+                    }
+                }
+
+                await sendEmail(attendee.email, finalSubject, finalHTML, provider || 'resend', attachments);
                 sentCount++;
                 
                 await new Promise(r => setTimeout(r, 100)); // Rate limit
