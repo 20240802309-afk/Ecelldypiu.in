@@ -1588,7 +1588,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
                             <p className="text-zinc-400 mt-1">
                                 {eventAttendees.length === 0 ? 
                                     "No attendees loaded. Please go to Design & Configuration to fetch attendees." : 
-                                    `Ready to dispatch to ${eventAttendees.length - Object.keys(eligibility).length} eligible attendees.`
+                                    `Ready to dispatch to ${Object.values(eligibility).filter(e => e.eligible).length} eligible attendees.`
                                 }
                             </p>
                         </div>
