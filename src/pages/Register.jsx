@@ -1,9 +1,94 @@
 import { useState } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { User, Mail, Lock, Phone, GraduationCap, Calendar, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
+import {
+    User, Mail, Lock, Phone, GraduationCap, Calendar, AlertCircle,
+    Loader2, CheckCircle2, Eye, EyeOff
+} from 'lucide-react';
 
-const BRANCH_OPTIONS = ['CSE', 'ECE', 'ME', 'CE', 'EEE', 'Other'];
+const PROGRAM_GROUPS = [
+    {
+        school: "School of Commerce and Management (SoCM)",
+        programs: [
+            "BBA (Hons.)",
+            "M.B.A. - Digital Business",
+            "M.B.A. - Executive"
+        ]
+    },
+    {
+        school: "School of Design (SoD)",
+        programs: [
+            "B. Design"
+        ]
+    },
+    {
+        school: "School of Computer Science Engineering & Applications (SoCSEA)",
+        programs: [
+            "B.Tech (CSE)",
+            "B.Tech (CSE) - AI & ML (in association with IBM)",
+            "B.Tech (CSE) - Cyber Security & Forensics (in association with IBM)",
+            "M.Tech (CSE) - Quantum Computing",
+            "BCA (Hons.)",
+            "MCA",
+            "M.Sc. - Computational Mathematics"
+        ]
+    },
+    {
+        school: "School of Biosciences and Bioengineering (SoBB)",
+        programs: [
+            "B.Tech - Bioengineering",
+            "B.Sc. - Forensic Sciences (Hons.)",
+            "M.Sc. - Medical Biotechnology",
+            "M.Sc. - Medicinal Chemistry"
+        ]
+    },
+    {
+        school: "School of Humanities and Social Sciences",
+        programs: [
+            "B.A. - Liberal Arts (Hons.)",
+            "B.Sc. - Economics (Hons.)"
+        ]
+    },
+    {
+        school: "School of Continuing Education (For Working Professionals)",
+        programs: [
+            "B.Tech - Mechanical Engg.",
+            "B.Tech - Electrical Engg.",
+            "M.Tech - Electric Vehicles"
+        ]
+    },
+    {
+        school: "School of Media and Communication Studies (SoMCS)",
+        programs: [
+            "B.A. - Journalism & Mass Communication (Hons.)",
+            "M.A. - Journalism & Mass Communication"
+        ]
+    },
+    {
+        school: "School of Applied Arts & Crafts (SoAAC)",
+        programs: [
+            "Bachelor of Fine Arts (BFA)"
+        ]
+    },
+    {
+        school: "School of Engineering, Management & Research (SoEMR)",
+        programs: [
+            "B.Tech - Chemical Engineering (CE)",
+            "B.Tech - Civil Engineering (CE)",
+            "B.Tech - Mechanical Engineering (ME)",
+            "B.Tech - Semiconductor Engineering (SCE)",
+            "B.Tech - Mechanical Engineering (AI & ML)"
+        ]
+    },
+    {
+        school: "Centre for Interdisciplinary Studies and Research",
+        programs: [
+            "PhD",
+            "Postdoctoral Research"
+        ]
+    }
+];
+
 const YEAR_OPTIONS = ['1st', '2nd', '3rd', '4th'];
 
 const Register = () => {
@@ -16,11 +101,14 @@ const Register = () => {
         password: '',
         confirmPassword: '',
         phone: '',
-        branch: 'CSE',
+        branch: 'B.Tech (CSE)',
+        customBranch: '',
         year: '1st',
         agreeTerms: false
     });
 
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -45,6 +133,10 @@ const Register = () => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData.email.trim())) {
             return 'Please enter a valid email address.';
+        }
+
+        if (formData.branch === 'Other' && !formData.customBranch.trim()) {
+            return 'Please specify your degree or program name.';
         }
 
         if (formData.password.length < 6) {
@@ -78,11 +170,15 @@ const Register = () => {
         setLoading(true);
         setError('');
 
+        const finalBranch = formData.branch === 'Other'
+            ? formData.customBranch.trim()
+            : formData.branch;
+
         try {
             await register(formData.email.trim(), formData.password, {
                 name: formData.name.trim(),
                 phone: formData.phone.replace(/\D/g, ''),
-                branch: formData.branch,
+                branch: finalBranch,
                 year: formData.year,
                 college: 'DYPIU'
             });
@@ -149,7 +245,7 @@ const Register = () => {
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
-                                placeholder="John Doe"
+                                placeholder="Your Name"
                                 required
                                 autoComplete="name"
                                 className="w-full bg-black border-2 border-zinc-700 pl-11 pr-4 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
@@ -169,7 +265,7 @@ const Register = () => {
                                 name="email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                placeholder="you@dypiu.ac.in"
+                                placeholder="you@mail.com"
                                 required
                                 autoComplete="email"
                                 className="w-full bg-black border-2 border-zinc-700 pl-11 pr-4 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
@@ -201,19 +297,30 @@ const Register = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-bold uppercase text-gray-300 mb-2">
-                                Branch <span className="text-brand-yellow">*</span>
+                                Branch / Program <span className="text-brand-yellow">*</span>
                             </label>
                             <div className="relative">
-                                <GraduationCap className="w-5 h-5 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <GraduationCap className="w-5 h-5 text-gray-500 absolute left-3.5 top-3.5 pointer-events-none" />
                                 <select
                                     name="branch"
                                     value={formData.branch}
                                     onChange={handleChange}
-                                    className="w-full bg-black border-2 border-zinc-700 pl-11 pr-4 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm appearance-none"
+                                    className="w-full bg-black border-2 border-zinc-700 pl-11 pr-8 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm appearance-none truncate"
                                 >
-                                    {BRANCH_OPTIONS.map(b => (
-                                        <option key={b} value={b}>{b}</option>
+                                    {PROGRAM_GROUPS.map((group) => (
+                                        <optgroup key={group.school} label={group.school} className="bg-zinc-900 text-brand-yellow font-bold">
+                                            {group.programs.map((program) => (
+                                                <option key={program} value={program} className="bg-black text-white font-normal">
+                                                    {program}
+                                                </option>
+                                            ))}
+                                        </optgroup>
                                     ))}
+                                    <optgroup label="Other Options" className="bg-zinc-900 text-brand-yellow font-bold">
+                                        <option value="Other" className="bg-black text-white font-normal">
+                                            Other (please specify)
+                                        </option>
+                                    </optgroup>
                                 </select>
                             </div>
                         </div>
@@ -238,7 +345,25 @@ const Register = () => {
                         </div>
                     </div>
 
-                    {/* Password */}
+                    {/* Custom Program Input (shown when "Other" is selected) */}
+                    {formData.branch === 'Other' && (
+                        <div className="bg-black/60 border-2 border-brand-yellow/50 p-4 rounded-xl space-y-2">
+                            <label className="block text-xs font-bold uppercase text-brand-yellow mb-1">
+                                Please specify your program <span className="text-white">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="customBranch"
+                                value={formData.customBranch}
+                                onChange={handleChange}
+                                placeholder="Enter your degree or program name"
+                                required
+                                className="w-full bg-black border-2 border-zinc-700 px-4 py-2.5 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
+                            />
+                        </div>
+                    )}
+
+                    {/* Password & Confirm Password with Show/Hide Toggles */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-bold uppercase text-gray-300 mb-2">
@@ -247,15 +372,23 @@ const Register = () => {
                             <div className="relative">
                                 <Lock className="w-5 h-5 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
                                     placeholder="••••••••"
                                     required
                                     autoComplete="new-password"
-                                    className="w-full bg-black border-2 border-zinc-700 pl-11 pr-4 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
+                                    className="w-full bg-black border-2 border-zinc-700 pl-11 pr-11 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-yellow focus:outline-none transition-colors p-1"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
                         </div>
 
@@ -266,15 +399,23 @@ const Register = () => {
                             <div className="relative">
                                 <Lock className="w-5 h-5 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                                 <input
-                                    type="password"
+                                    type={showConfirmPassword ? 'text' : 'password'}
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
                                     placeholder="••••••••"
                                     required
                                     autoComplete="new-password"
-                                    className="w-full bg-black border-2 border-zinc-700 pl-11 pr-4 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
+                                    className="w-full bg-black border-2 border-zinc-700 pl-11 pr-11 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-yellow focus:outline-none transition-colors p-1"
+                                >
+                                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
                         </div>
                     </div>

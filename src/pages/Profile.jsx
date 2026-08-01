@@ -3,12 +3,95 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { getMembershipDuration, getMilestone } from '../utils/membershipDuration';
 import {
-    User, Mail, Phone, GraduationCap, Calendar, Building, Edit2, LogOut,
+    User, Phone, GraduationCap, Calendar, Building, Edit2, LogOut,
     CheckCircle2, Award, CalendarDays, Sparkles, Clock, Save, X, Loader2,
     AlertCircle, ArrowRight
 } from 'lucide-react';
 
-const BRANCH_OPTIONS = ['CSE', 'ECE', 'ME', 'CE', 'EEE', 'Other'];
+const PROGRAM_GROUPS = [
+    {
+        school: "School of Commerce and Management (SoCM)",
+        programs: [
+            "BBA (Hons.)",
+            "M.B.A. - Digital Business",
+            "M.B.A. - Executive"
+        ]
+    },
+    {
+        school: "School of Design (SoD)",
+        programs: [
+            "B. Design"
+        ]
+    },
+    {
+        school: "School of Computer Science Engineering & Applications (SoCSEA)",
+        programs: [
+            "B.Tech (CSE)",
+            "B.Tech (CSE) - AI & ML (in association with IBM)",
+            "B.Tech (CSE) - Cyber Security & Forensics (in association with IBM)",
+            "M.Tech (CSE) - Quantum Computing",
+            "BCA (Hons.)",
+            "MCA",
+            "M.Sc. - Computational Mathematics"
+        ]
+    },
+    {
+        school: "School of Biosciences and Bioengineering (SoBB)",
+        programs: [
+            "B.Tech - Bioengineering",
+            "B.Sc. - Forensic Sciences (Hons.)",
+            "M.Sc. - Medical Biotechnology",
+            "M.Sc. - Medicinal Chemistry"
+        ]
+    },
+    {
+        school: "School of Humanities and Social Sciences",
+        programs: [
+            "B.A. - Liberal Arts (Hons.)",
+            "B.Sc. - Economics (Hons.)"
+        ]
+    },
+    {
+        school: "School of Continuing Education (For Working Professionals)",
+        programs: [
+            "B.Tech - Mechanical Engg.",
+            "B.Tech - Electrical Engg.",
+            "M.Tech - Electric Vehicles"
+        ]
+    },
+    {
+        school: "School of Media and Communication Studies (SoMCS)",
+        programs: [
+            "B.A. - Journalism & Mass Communication (Hons.)",
+            "M.A. - Journalism & Mass Communication"
+        ]
+    },
+    {
+        school: "School of Applied Arts & Crafts (SoAAC)",
+        programs: [
+            "Bachelor of Fine Arts (BFA)"
+        ]
+    },
+    {
+        school: "School of Engineering, Management & Research (SoEMR)",
+        programs: [
+            "B.Tech - Chemical Engineering (CE)",
+            "B.Tech - Civil Engineering (CE)",
+            "B.Tech - Mechanical Engineering (ME)",
+            "B.Tech - Semiconductor Engineering (SCE)",
+            "B.Tech - Mechanical Engineering (AI & ML)"
+        ]
+    },
+    {
+        school: "Centre for Interdisciplinary Studies and Research",
+        programs: [
+            "PhD",
+            "Postdoctoral Research"
+        ]
+    }
+];
+
+const ALL_PROGRAM_NAMES = PROGRAM_GROUPS.flatMap(g => g.programs);
 const YEAR_OPTIONS = ['1st', '2nd', '3rd', '4th'];
 
 const Profile = () => {
@@ -19,7 +102,8 @@ const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({
         phone: '',
-        branch: 'CSE',
+        branch: 'B.Tech (CSE)',
+        customBranch: '',
         year: '1st',
         bio: ''
     });
@@ -39,9 +123,13 @@ const Profile = () => {
     }, [membership.totalDays]);
 
     const handleStartEditing = () => {
+        const currentBranch = userProfile?.branch || 'B.Tech (CSE)';
+        const isStandard = ALL_PROGRAM_NAMES.includes(currentBranch);
+
         setEditForm({
             phone: userProfile?.phone || '',
-            branch: userProfile?.branch || 'CSE',
+            branch: isStandard ? currentBranch : 'Other',
+            customBranch: isStandard ? '' : currentBranch,
             year: userProfile?.year || '1st',
             bio: userProfile?.bio || ''
         });
@@ -56,11 +144,20 @@ const Profile = () => {
         setSaveSuccess('');
         setSaveError('');
 
+        const finalBranch = editForm.branch === 'Other'
+            ? editForm.customBranch.trim()
+            : editForm.branch;
+
+        if (editForm.branch === 'Other' && !finalBranch) {
+            setSaveError('Please specify your degree or program name.');
+            setSaving(false);
+            return;
+        }
+
         try {
-            // Strictly exclude joinedAt, uid, email
             await updateProfileData({
                 phone: editForm.phone.replace(/\D/g, ''),
-                branch: editForm.branch,
+                branch: finalBranch,
                 year: editForm.year,
                 bio: editForm.bio.trim()
             });
@@ -262,16 +359,27 @@ const Profile = () => {
 
                                 <div>
                                     <label className="block text-xs font-bold uppercase text-gray-300 mb-1">
-                                        Branch
+                                        Branch / Program
                                     </label>
                                     <select
                                         value={editForm.branch}
                                         onChange={(e) => setEditForm({ ...editForm, branch: e.target.value })}
-                                        className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
+                                        className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm truncate"
                                     >
-                                        {BRANCH_OPTIONS.map(b => (
-                                            <option key={b} value={b}>{b}</option>
+                                        {PROGRAM_GROUPS.map((group) => (
+                                            <optgroup key={group.school} label={group.school} className="bg-zinc-900 text-brand-yellow font-bold">
+                                                {group.programs.map((program) => (
+                                                    <option key={program} value={program} className="bg-black text-white font-normal">
+                                                        {program}
+                                                    </option>
+                                                ))}
+                                            </optgroup>
                                         ))}
+                                        <optgroup label="Other Options" className="bg-zinc-900 text-brand-yellow font-bold">
+                                            <option value="Other" className="bg-black text-white font-normal">
+                                                Other (please specify)
+                                            </option>
+                                        </optgroup>
                                     </select>
                                 </div>
 
@@ -302,6 +410,23 @@ const Profile = () => {
                                     />
                                 </div>
                             </div>
+
+                            {/* Custom Branch Input for Edit Mode */}
+                            {editForm.branch === 'Other' && (
+                                <div className="bg-black/60 border-2 border-brand-yellow/50 p-4 rounded-xl space-y-2">
+                                    <label className="block text-xs font-bold uppercase text-brand-yellow mb-1">
+                                        Please specify your program <span className="text-white">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editForm.customBranch}
+                                        onChange={(e) => setEditForm({ ...editForm, customBranch: e.target.value })}
+                                        placeholder="Enter your degree or program name"
+                                        required
+                                        className="w-full bg-black border-2 border-zinc-700 px-4 py-2.5 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
+                                    />
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-xs font-bold uppercase text-gray-300 mb-1">
@@ -345,11 +470,11 @@ const Profile = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 bg-black border-2 border-zinc-800 p-4 rounded-2xl">
+                                <div className="flex items-center gap-3 bg-black border-2 border-zinc-800 p-4 rounded-2xl min-w-0">
                                     <GraduationCap className="w-5 h-5 text-brand-yellow flex-shrink-0" />
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase font-bold">Branch</p>
-                                        <p className="text-sm font-bold text-white">{userProfile.branch || 'N/A'}</p>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-xs text-gray-500 uppercase font-bold">Branch / Program</p>
+                                        <p className="text-sm font-bold text-white break-words" title={userProfile.branch}>{userProfile.branch || 'N/A'}</p>
                                     </div>
                                 </div>
 

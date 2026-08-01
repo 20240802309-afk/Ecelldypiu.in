@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { Mail, Lock, AlertCircle, Loader2, LogIn, CheckCircle2, X } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Loader2, LogIn, CheckCircle2, X, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
     const { login, sendResetPassword, currentUser } = useAuth();
@@ -12,6 +12,7 @@ const Login = () => {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -38,7 +39,6 @@ const Login = () => {
             navigate(from, { replace: true });
         } catch (err) {
             console.error('Login error:', err);
-            // Generic error message to prevent leaking account existence
             setError('Invalid email or password.');
         } finally {
             setLoading(false);
@@ -109,7 +109,7 @@ const Login = () => {
                                 type="email"
                                 value={email}
                                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                                placeholder="you@dypiu.ac.in"
+                                placeholder="you@mail.com"
                                 required
                                 autoComplete="email"
                                 className="w-full bg-black border-2 border-zinc-700 pl-11 pr-4 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
@@ -134,14 +134,22 @@ const Login = () => {
                         <div className="relative">
                             <Lock className="w-5 h-5 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={(e) => { setPassword(e.target.value); setError(''); }}
                                 placeholder="••••••••"
                                 required
                                 autoComplete="current-password"
-                                className="w-full bg-black border-2 border-zinc-700 pl-11 pr-4 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
+                                className="w-full bg-black border-2 border-zinc-700 pl-11 pr-11 py-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-yellow focus:outline-none transition-colors p-1"
+                            >
+                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
                         </div>
                     </div>
 
@@ -221,7 +229,7 @@ const Login = () => {
                                     value={resetEmail}
                                     onChange={(e) => setResetEmail(e.target.value)}
                                     required
-                                    placeholder="you@dypiu.ac.in"
+                                    placeholder="you@mail.com"
                                     className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
                                 />
                             </div>
