@@ -1,99 +1,167 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
+
+const PHRASES = [
+    "Your next stop is loading...",
+    "Taking you where the good stuff is...",
+    "Almost there — your destination is ready.",
+    "Fast-tracking you to the right place...",
+    "Your shortcut is doing its thing...",
+    "Buckle up — we're taking off..."
+];
 
 const Redirect = () => {
     const { slug } = useParams();
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [destinationName, setDestinationName] = useState('');
+    const [error, setError] = useState(false);
 
-    useEffect(() => {
-        let isMounted = true;
+    // Pick random phrase ONCE on mount so it does not change on re-renders
+    const randomPhrase = useMemo(() => {
+        const randomIndex = Math.floor(Math.random() * PHRASES.length);
+        return PHRASES[randomIndex];
+    }, []);
 
-        const performRedirect = async () => {
-            if (!slug) {
-                if (isMounted) {
-                    setError('Invalid short link.');
-                    setLoading(false);
-                }
+    const performRedirect = useCallback(async (isRetry = false) => {
+        if (isRetry) {
+            setError(false);
+        }
+
+        if (!slug) {
+            setError(true);
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/shortlink', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'redirect',
+                    slug: slug.trim().toLowerCase(),
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success || !data.originalUrl) {
+                setError(true);
                 return;
             }
 
-            try {
-                const response = await fetch('/api/shortlink', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'redirect',
-                        slug: slug.trim().toLowerCase(),
-                    }),
-                });
+            const name = data.destinationName && data.destinationName.trim()
+                ? data.destinationName.trim()
+                : 'your destination';
 
-                const data = await response.json();
+            setDestinationName(name);
 
-                if (!response.ok || !data.success || !data.originalUrl) {
-                    if (isMounted) {
-                        setError(data.error || 'Link not found or has expired.');
-                        setLoading(false);
-                    }
-                    return;
-                }
+            // Wait ~900ms before replacing window location for smooth branded feedback
+            const timer = setTimeout(() => {
+                window.location.replace(data.originalUrl);
+            }, 900);
 
-                // Redirect to original URL
-                window.location.href = data.originalUrl;
-            } catch (err) {
-                console.error('Redirection error:', err);
-                if (isMounted) {
-                    setError('Failed to resolve short link. Please try again.');
-                    setLoading(false);
-                }
-            }
-        };
-
-        performRedirect();
-
-        return () => {
-            isMounted = false;
-        };
+            return () => clearTimeout(timer);
+        } catch (err) {
+            console.error('Redirection error:', err);
+            setError(true);
+        }
     }, [slug]);
 
-    return (
-        <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
-            {/* E-Cell Logo */}
-            <div className="mb-8 flex items-center justify-center">
-                <img
-                    src="/logonew.png"
-                    alt="E-Cell DYPIU Logo"
-                    className="h-16 md:h-20 w-auto object-contain brightness-0 invert"
-                />
-            </div>
+    useEffect(() => {
+        let cleanupTimer;
+        const execute = async () => {
+            cleanupTimer = await performRedirect();
+        };
+        execute();
 
-            {loading ? (
-                <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-8 max-w-md w-full shadow-[8px_8px_0px_#FFB22C] flex flex-col items-center">
-                    <Loader2 className="w-12 h-12 text-brand-yellow animate-spin mb-4" />
-                    <h2 className="text-xl font-black uppercase text-white mb-2">Redirecting...</h2>
-                    <p className="text-gray-400 text-sm font-medium">
-                        Please wait while we take you to your destination for <span className="text-brand-yellow font-mono font-bold">/s/{slug}</span>
-                    </p>
+        return () => {
+            if (typeof cleanupTimer === 'function') {
+                cleanupTimer();
+            }
+        };
+    }, [performRedirect]);
+
+    return (
+        <div
+            role="status"
+            aria-live="polite"
+            className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden selection:bg-brand-yellow selection:text-black"
+        >
+            {/* Ambient Background Radial Glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-yellow/10 rounded-full blur-[120px] pointer-events-none motion-reduce:hidden" />
+            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-orange-500/10 rounded-full blur-[90px] pointer-events-none motion-reduce:hidden" />
+
+            {/* Main Container Card */}
+            <div className="relative z-10 w-full max-w-md">
+                {/* E-Cell Logo */}
+                <div className="mb-8 flex items-center justify-center">
+                    <img
+                        src="/logonew.png"
+                        alt="E-Cell DYPIU"
+                        className="h-16 md:h-20 w-auto object-contain brightness-0 invert filter drop-shadow-[0_0_15px_rgba(255,178,44,0.3)]"
+                    />
                 </div>
-            ) : (
-                <div className="bg-zinc-900 border-4 border-red-500 rounded-2xl p-8 max-w-md w-full shadow-[8px_8px_0px_#EF4444] flex flex-col items-center">
-                    <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-                    <h2 className="text-2xl font-black uppercase text-white mb-2">Link Not Found</h2>
-                    <p className="text-gray-400 text-sm mb-6">
-                        {error || `The requested short code "/s/${slug}" does not exist or has been deactivated.`}
-                    </p>
-                    <Link
-                        to="/"
-                        className="inline-flex items-center gap-2 bg-brand-yellow text-black font-black px-6 py-3 rounded-xl uppercase hover:bg-white transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        Go to Homepage
-                    </Link>
-                </div>
-            )}
+
+                {!error ? (
+                    <div className="bg-zinc-900/90 backdrop-blur-xl border-4 border-zinc-800 rounded-3xl p-8 shadow-[0_0_50px_rgba(255,178,44,0.12),8px_8px_0px_#FFB22C] flex flex-col items-center">
+                        {/* Catchy Phrase */}
+                        <p className="text-gray-400 text-xs md:text-sm font-medium tracking-wide mb-6 italic">
+                            "{randomPhrase}"
+                        </p>
+
+                        {/* Section Header */}
+                        <p className="text-zinc-500 text-xs font-black uppercase tracking-widest mb-2">
+                            REDIRECTING YOU TO
+                        </p>
+
+                        {/* Destination Name */}
+                        <h1 className="text-2xl md:text-3xl font-black text-brand-yellow mb-6 break-words max-w-full leading-tight">
+                            {destinationName || 'your destination'}
+                        </h1>
+
+                        {/* Animated Progress Indicator */}
+                        <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden mb-6 relative">
+                            <div className="bg-gradient-to-r from-brand-yellow via-amber-400 to-yellow-200 h-full w-full animate-[pulse_1.5s_ease-in-out_infinite] motion-reduce:animate-none" />
+                        </div>
+
+                        {/* Spinner */}
+                        <Loader2 className="w-8 h-8 text-brand-yellow animate-spin mb-4 motion-reduce:animate-none" />
+
+                        {/* Small Helper Text */}
+                        <p className="text-gray-400 text-xs font-medium">
+                            Please wait a moment while we open your destination.
+                        </p>
+                    </div>
+                ) : (
+                    /* Error State Card - Strictly NO Slug or URL display */
+                    <div className="bg-zinc-900/90 backdrop-blur-xl border-4 border-red-500/80 rounded-3xl p-8 shadow-[8px_8px_0px_#EF4444] flex flex-col items-center">
+                        <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+                        <h2 className="text-2xl font-black uppercase text-white mb-2">Destination unavailable</h2>
+                        <p className="text-gray-400 text-sm mb-6 max-w-xs">
+                            This link may have expired or is no longer active.
+                        </p>
+
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+                            <Link
+                                to="/"
+                                className="w-full inline-flex items-center justify-center gap-2 bg-brand-yellow text-black font-black px-5 py-3 rounded-xl uppercase text-xs hover:bg-white transition-colors"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                Return to Homepage
+                            </Link>
+                            <button
+                                onClick={() => performRedirect(true)}
+                                className="w-full inline-flex items-center justify-center gap-2 bg-zinc-800 text-gray-300 hover:text-white font-bold px-5 py-3 rounded-xl uppercase text-xs transition-colors hover:bg-zinc-700"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                                Try Again
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

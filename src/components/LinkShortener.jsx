@@ -3,7 +3,7 @@ import {
     Link as LinkIcon, Copy, Check, ExternalLink, Edit2, Trash2,
     Search, BarChart2, Plus, RefreshCw, AlertCircle,
     CheckCircle2, Loader2, X, ArrowLeft, ChevronLeft, ChevronRight,
-    TrendingUp, Filter, ArrowUpDown
+    TrendingUp, Filter, ArrowUpDown, Tag
 } from 'lucide-react';
 
 const LinkShortener = ({ adminKey, onBack }) => {
@@ -15,9 +15,11 @@ const LinkShortener = ({ adminKey, onBack }) => {
 
     // Create form state
     const [longUrl, setLongUrl] = useState('');
+    const [destinationName, setDestinationName] = useState('');
     const [customSlug, setCustomSlug] = useState('');
     const [creating, setCreating] = useState(false);
     const [createdLink, setCreatedLink] = useState(null);
+    const [formValidationError, setFormValidationError] = useState('');
 
     // Filter, Search, Sort & Pagination state
     const [searchQuery, setSearchQuery] = useState('');
@@ -32,8 +34,10 @@ const LinkShortener = ({ adminKey, onBack }) => {
     // Edit modal state
     const [editingLink, setEditingLink] = useState(null);
     const [editUrl, setEditUrl] = useState('');
+    const [editDestinationName, setEditDestinationName] = useState('');
     const [editSlug, setEditSlug] = useState('');
     const [savingEdit, setSavingEdit] = useState(false);
+    const [editValidationError, setEditValidationError] = useState('');
 
     // Delete modal state
     const [deletingLink, setDeletingLink] = useState(null);
@@ -96,7 +100,22 @@ const LinkShortener = ({ adminKey, onBack }) => {
     // Handle Create Link
     const handleCreateLink = async (e) => {
         e.preventDefault();
-        if (!longUrl.trim()) return;
+        setFormValidationError('');
+
+        if (!longUrl.trim()) {
+            setFormValidationError('Original URL is required.');
+            return;
+        }
+
+        const destTrimmed = destinationName.trim();
+        if (!destTrimmed) {
+            setFormValidationError('Destination Name is required.');
+            return;
+        }
+        if (destTrimmed.length < 2 || destTrimmed.length > 60) {
+            setFormValidationError('Destination Name must be between 2 and 60 characters.');
+            return;
+        }
 
         setCreating(true);
         setError(null);
@@ -112,6 +131,7 @@ const LinkShortener = ({ adminKey, onBack }) => {
                 body: JSON.stringify({
                     action: 'create',
                     originalUrl: longUrl.trim(),
+                    destinationName: destTrimmed,
                     slug: customSlug.trim()
                 })
             });
@@ -123,6 +143,7 @@ const LinkShortener = ({ adminKey, onBack }) => {
 
             setCreatedLink(data);
             setLongUrl('');
+            setDestinationName('');
             setCustomSlug('');
             showToast('Shortlink created successfully!');
             fetchLinks(true);
@@ -140,19 +161,28 @@ const LinkShortener = ({ adminKey, onBack }) => {
             setCopiedSlug(slug);
             setTimeout(() => setCopiedSlug(null), 2000);
         }
-        showToast('Copied to clipboard!');
+        showToast('Copied short URL to clipboard!');
     };
 
     // Handle Edit Link
     const openEditModal = (link) => {
         setEditingLink(link);
         setEditUrl(link.originalUrl);
+        setEditDestinationName(link.destinationName || '');
         setEditSlug(link.slug);
+        setEditValidationError('');
     };
 
     const handleSaveEdit = async (e) => {
         e.preventDefault();
         if (!editingLink) return;
+        setEditValidationError('');
+
+        const destTrimmed = editDestinationName.trim();
+        if (!destTrimmed || destTrimmed.length < 2 || destTrimmed.length > 60) {
+            setEditValidationError('Destination Name must be between 2 and 60 characters.');
+            return;
+        }
 
         setSavingEdit(true);
         setError(null);
@@ -168,6 +198,7 @@ const LinkShortener = ({ adminKey, onBack }) => {
                     action: 'update',
                     slug: editingLink.slug,
                     originalUrl: editUrl.trim(),
+                    destinationName: destTrimmed,
                     newSlug: editSlug.trim() !== editingLink.slug ? editSlug.trim() : undefined
                 })
             });
@@ -181,7 +212,7 @@ const LinkShortener = ({ adminKey, onBack }) => {
             setEditingLink(null);
             fetchLinks(true);
         } catch (err) {
-            setError(err.message);
+            setEditValidationError(err.message);
         } finally {
             setSavingEdit(false);
         }
@@ -255,6 +286,7 @@ const LinkShortener = ({ adminKey, onBack }) => {
         return links.filter(item => {
             const matchesSearch =
                 item.slug.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                item.destinationName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item.originalUrl.toLowerCase().includes(searchQuery.toLowerCase());
 
             if (statusFilter === 'active') return matchesSearch && item.isActive;
@@ -295,7 +327,7 @@ const LinkShortener = ({ adminKey, onBack }) => {
     };
 
     // Truncate string helper
-    const truncate = (str, n = 40) => {
+    const truncate = (str, n = 35) => {
         if (!str) return '';
         return str.length > n ? str.slice(0, n) + '...' : str;
     };
@@ -396,22 +428,49 @@ const LinkShortener = ({ adminKey, onBack }) => {
                     Create New Shortlink
                 </h3>
 
+                {formValidationError && (
+                    <div className="bg-red-900/40 border border-red-500 text-red-300 px-4 py-2 rounded-xl text-xs font-bold mb-4 flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-red-400" />
+                        <span>{formValidationError}</span>
+                    </div>
+                )}
+
                 <form onSubmit={handleCreateLink} className="space-y-4">
-                    <div className="grid md:grid-cols-3 gap-4">
-                        <div className="md:col-span-2">
+                    {/* Field 1: Original URL */}
+                    <div>
+                        <label className="block text-xs font-bold uppercase text-gray-300 mb-2">
+                            Original URL <span className="text-brand-yellow">*</span>
+                        </label>
+                        <input
+                            type="url"
+                            value={longUrl}
+                            onChange={(e) => { setLongUrl(e.target.value); setFormValidationError(''); }}
+                            placeholder="https://instagram.com/ecell.dypiu"
+                            required
+                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none transition-colors text-sm"
+                        />
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                        {/* Field 2: Destination Name */}
+                        <div>
                             <label className="block text-xs font-bold uppercase text-gray-300 mb-2">
-                                Paste Long URL <span className="text-brand-yellow">*</span>
+                                Destination Name <span className="text-brand-yellow">*</span>
                             </label>
                             <input
-                                type="url"
-                                value={longUrl}
-                                onChange={(e) => setLongUrl(e.target.value)}
-                                placeholder="https://example.com/very/long/destination/url"
+                                type="text"
+                                value={destinationName}
+                                onChange={(e) => { setDestinationName(e.target.value); setFormValidationError(''); }}
+                                placeholder="Example: Instagram"
                                 required
+                                minLength={2}
+                                maxLength={60}
                                 className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none transition-colors text-sm"
                             />
+                            <p className="text-zinc-500 text-xs mt-1">This name will be shown to visitors while they are being redirected.</p>
                         </div>
 
+                        {/* Field 3: Custom Slug */}
                         <div>
                             <label className="block text-xs font-bold uppercase text-gray-300 mb-2">
                                 Custom Slug <span className="text-gray-500">(Optional)</span>
@@ -427,10 +486,11 @@ const LinkShortener = ({ adminKey, onBack }) => {
                         </div>
                     </div>
 
+                    {/* Field 4: Create Button */}
                     <div className="flex justify-end pt-2">
                         <button
                             type="submit"
-                            disabled={creating || !longUrl.trim()}
+                            disabled={creating || !longUrl.trim() || !destinationName.trim()}
                             className="bg-brand-yellow text-black font-black px-6 py-3 rounded-xl uppercase hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             {creating ? (
@@ -455,6 +515,9 @@ const LinkShortener = ({ adminKey, onBack }) => {
                             <p className="text-xs text-brand-yellow font-bold uppercase mb-1">Success! Your Short URL:</p>
                             <p className="text-lg font-mono font-bold text-white flex items-center gap-2">
                                 <span>{createdLink.shortUrl}</span>
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                                Destination: <span className="text-white font-bold">{createdLink.destinationName}</span>
                             </p>
                         </div>
                         <button
@@ -485,7 +548,7 @@ const LinkShortener = ({ adminKey, onBack }) => {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                                placeholder="Search slug or URL..."
+                                placeholder="Search destination, slug, or URL..."
                                 className="bg-black border-2 border-zinc-700 pl-9 pr-4 py-2 text-xs text-white rounded-xl focus:border-brand-yellow focus:outline-none w-48 md:w-64"
                             />
                         </div>
@@ -543,8 +606,9 @@ const LinkShortener = ({ adminKey, onBack }) => {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="border-b-2 border-zinc-700 text-gray-400 text-xs uppercase font-bold">
-                                        <th className="py-3 px-4">Short URL</th>
-                                        <th className="py-3 px-4">Original URL</th>
+                                        <th className="py-3 px-4">Destination Name</th>
+                                        <th className="py-3 px-4">Short URL (Admin Only)</th>
+                                        <th className="py-3 px-4">Original Target</th>
                                         <th className="py-3 px-4">Clicks</th>
                                         <th className="py-3 px-4">Created On</th>
                                         <th className="py-3 px-4">Status</th>
@@ -556,7 +620,15 @@ const LinkShortener = ({ adminKey, onBack }) => {
                                         const fullShortUrl = `https://ecell.dypiu.ac.in/s/${link.slug}`;
                                         return (
                                             <tr key={link.id || link.slug} className="hover:bg-zinc-800/50 transition-colors">
-                                                {/* Short URL */}
+                                                {/* Destination Name */}
+                                                <td className="py-4 px-4 font-bold text-white">
+                                                    <div className="flex items-center gap-2">
+                                                        <Tag className="w-4 h-4 text-brand-yellow flex-shrink-0" />
+                                                        <span>{link.destinationName || 'your destination'}</span>
+                                                    </div>
+                                                </td>
+
+                                                {/* Short URL (Admin Only) */}
                                                 <td className="py-4 px-4 font-mono font-bold text-brand-yellow">
                                                     <div className="flex items-center gap-2">
                                                         <span>/s/{link.slug}</span>
@@ -582,7 +654,7 @@ const LinkShortener = ({ adminKey, onBack }) => {
                                                         rel="noopener noreferrer"
                                                         className="inline-flex items-center gap-1.5 hover:text-brand-yellow hover:underline transition-colors"
                                                     >
-                                                        <span>{truncate(link.originalUrl, 38)}</span>
+                                                        <span>{truncate(link.originalUrl, 30)}</span>
                                                         <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 text-gray-500" />
                                                     </a>
                                                 </td>
@@ -646,7 +718,10 @@ const LinkShortener = ({ adminKey, onBack }) => {
                                 return (
                                     <div key={link.id || link.slug} className="bg-black border-2 border-zinc-800 rounded-xl p-4 space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-mono font-bold text-brand-yellow text-base">/s/{link.slug}</span>
+                                            <span className="font-bold text-white text-base flex items-center gap-1.5">
+                                                <Tag className="w-4 h-4 text-brand-yellow" />
+                                                {link.destinationName || 'your destination'}
+                                            </span>
                                             <button
                                                 onClick={() => handleToggleStatus(link)}
                                                 className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${link.isActive ? 'bg-green-900/40 text-green-400 border border-green-500/50' : 'bg-red-900/40 text-red-400 border border-red-500/50'
@@ -656,10 +731,14 @@ const LinkShortener = ({ adminKey, onBack }) => {
                                             </button>
                                         </div>
 
+                                        <div className="text-xs text-brand-yellow font-mono font-bold">
+                                            Short URL: /s/{link.slug}
+                                        </div>
+
                                         <div className="text-xs text-gray-400 break-all">
                                             <span className="font-bold text-gray-500 uppercase block mb-1">Target:</span>
                                             <a href={link.originalUrl} target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-brand-yellow underline">
-                                                {truncate(link.originalUrl, 60)}
+                                                {truncate(link.originalUrl, 50)}
                                             </a>
                                         </div>
 
@@ -741,7 +820,43 @@ const LinkShortener = ({ adminKey, onBack }) => {
                             </button>
                         </div>
 
+                        {editValidationError && (
+                            <div className="bg-red-900/40 border border-red-500 text-red-300 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4 text-red-400" />
+                                <span>{editValidationError}</span>
+                            </div>
+                        )}
+
                         <form onSubmit={handleSaveEdit} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold uppercase text-gray-300 mb-1">
+                                    Original Destination URL <span className="text-brand-yellow">*</span>
+                                </label>
+                                <input
+                                    type="url"
+                                    value={editUrl}
+                                    onChange={(e) => setEditUrl(e.target.value)}
+                                    required
+                                    className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase text-gray-300 mb-1">
+                                    Destination Name <span className="text-brand-yellow">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editDestinationName}
+                                    onChange={(e) => setEditDestinationName(e.target.value)}
+                                    required
+                                    minLength={2}
+                                    maxLength={60}
+                                    placeholder="Example: Instagram"
+                                    className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none"
+                                />
+                            </div>
+
                             <div>
                                 <label className="block text-xs font-bold uppercase text-gray-300 mb-1">
                                     Short Code / Slug
@@ -752,19 +867,6 @@ const LinkShortener = ({ adminKey, onBack }) => {
                                     onChange={(e) => setEditSlug(e.target.value)}
                                     required
                                     className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl font-mono focus:border-brand-yellow focus:outline-none"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold uppercase text-gray-300 mb-1">
-                                    Original Destination URL
-                                </label>
-                                <input
-                                    type="url"
-                                    value={editUrl}
-                                    onChange={(e) => setEditUrl(e.target.value)}
-                                    required
-                                    className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none"
                                 />
                             </div>
 
@@ -799,7 +901,7 @@ const LinkShortener = ({ adminKey, onBack }) => {
                         </div>
 
                         <p className="text-sm text-gray-300">
-                            Are you sure you want to hard delete <span className="text-brand-yellow font-mono font-bold">/s/{deletingLink.slug}</span>? This action cannot be undone.
+                            Are you sure you want to hard delete <span className="text-brand-yellow font-mono font-bold">/s/{deletingLink.slug}</span> ({deletingLink.destinationName})? This action cannot be undone.
                         </p>
 
                         <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">

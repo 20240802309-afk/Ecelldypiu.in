@@ -38,6 +38,13 @@ const isValidUrl = (urlStr) => {
     }
 };
 
+// Helper to validate destination name (2-60 chars)
+const isValidDestinationName = (nameStr) => {
+    if (!nameStr || typeof nameStr !== 'string') return false;
+    const trimmed = nameStr.trim();
+    return trimmed.length >= 2 && trimmed.length <= 60;
+};
+
 export default async function handler(req, res) {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -114,9 +121,15 @@ async function handleRedirect(req, res, slugFromQuery) {
             lastClickedAt: Timestamp.now()
         });
 
+        // Return ONLY success, originalUrl, and destinationName
+        const destName = data.destinationName && data.destinationName.trim()
+            ? data.destinationName.trim()
+            : 'your destination';
+
         return res.status(200).json({
             success: true,
-            originalUrl: data.originalUrl
+            originalUrl: data.originalUrl,
+            destinationName: destName
         });
     } catch (error) {
         console.error('Redirect handler error:', error);
@@ -126,13 +139,18 @@ async function handleRedirect(req, res, slugFromQuery) {
 
 // ACTION: create (PROTECTED)
 async function handleCreate(req, res) {
-    const { originalUrl, slug } = req.body || {};
+    const { originalUrl, destinationName, slug } = req.body || {};
 
     if (!isValidUrl(originalUrl)) {
         return res.status(400).json({ error: 'Invalid URL. Please enter a valid URL starting with http:// or https://' });
     }
 
+    if (!isValidDestinationName(destinationName)) {
+        return res.status(400).json({ error: 'Destination name is required and must be between 2 and 60 characters.' });
+    }
+
     const trimmedUrl = originalUrl.trim();
+    const trimmedDestName = destinationName.trim();
     let finalSlug = '';
     let isCustomSlug = false;
 
@@ -177,6 +195,7 @@ async function handleCreate(req, res) {
     const docData = {
         slug: finalSlug,
         originalUrl: trimmedUrl,
+        destinationName: trimmedDestName,
         createdAt: now,
         createdBy: 'admin',
         clicks: 0,
@@ -194,6 +213,7 @@ async function handleCreate(req, res) {
         slug: finalSlug,
         shortUrl: `https://ecell.dypiu.ac.in/s/${finalSlug}`,
         originalUrl: trimmedUrl,
+        destinationName: trimmedDestName,
         clicks: 0,
         createdAt: createdAtIso,
         isActive: true
@@ -211,6 +231,7 @@ async function handleList(req, res) {
             id: doc.id,
             slug: data.slug || doc.id,
             originalUrl: data.originalUrl || '',
+            destinationName: data.destinationName || 'your destination',
             createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : (data.createdAt || null),
             createdBy: data.createdBy || 'admin',
             clicks: data.clicks || 0,
@@ -253,7 +274,7 @@ async function handleDelete(req, res) {
 
 // ACTION: update (PROTECTED)
 async function handleUpdate(req, res) {
-    const { slug, originalUrl, newSlug, isActive } = req.body || {};
+    const { slug, originalUrl, destinationName, newSlug, isActive } = req.body || {};
 
     if (!slug) {
         return res.status(400).json({ error: 'Slug is required for update' });
@@ -278,6 +299,15 @@ async function handleUpdate(req, res) {
         updatedUrl = originalUrl.trim();
     }
 
+    // Check if destinationName update is requested
+    let updatedDestName = oldData.destinationName || 'your destination';
+    if (destinationName !== undefined) {
+        if (!isValidDestinationName(destinationName)) {
+            return res.status(400).json({ error: 'Destination name must be between 2 and 60 characters.' });
+        }
+        updatedDestName = destinationName.trim();
+    }
+
     // Check if isActive update is requested
     const updatedIsActive = isActive !== undefined ? Boolean(isActive) : oldData.isActive;
 
@@ -298,6 +328,7 @@ async function handleUpdate(req, res) {
             ...oldData,
             slug: cleanNewSlug,
             originalUrl: updatedUrl,
+            destinationName: updatedDestName,
             isActive: updatedIsActive,
             customSlug: true
         };
@@ -315,6 +346,7 @@ async function handleUpdate(req, res) {
     // Otherwise update in-place
     await oldDocRef.update({
         originalUrl: updatedUrl,
+        destinationName: updatedDestName,
         isActive: updatedIsActive
     });
 
