@@ -1,0 +1,485 @@
+import { useState, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/useAuth';
+import { getMembershipDuration, getMilestone } from '../utils/membershipDuration';
+import {
+    User, Mail, Phone, GraduationCap, Calendar, Building, Edit2, LogOut,
+    CheckCircle2, Award, CalendarDays, Sparkles, Clock, Save, X, Loader2,
+    AlertCircle, ArrowRight
+} from 'lucide-react';
+
+const BRANCH_OPTIONS = ['CSE', 'ECE', 'ME', 'CE', 'EEE', 'Other'];
+const YEAR_OPTIONS = ['1st', '2nd', '3rd', '4th'];
+
+const Profile = () => {
+    const { currentUser, userProfile, logout, updateProfileData } = useAuth();
+    const navigate = useNavigate();
+
+    // Inline edit state
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState({
+        phone: '',
+        branch: 'CSE',
+        year: '1st',
+        bio: ''
+    });
+
+    const [saving, setSaving] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState('');
+    const [saveError, setSaveError] = useState('');
+
+    // Calculate live membership duration
+    const membership = useMemo(() => {
+        return getMembershipDuration(userProfile?.joinedAt);
+    }, [userProfile?.joinedAt]);
+
+    // Calculate milestone
+    const milestone = useMemo(() => {
+        return getMilestone(membership.totalDays);
+    }, [membership.totalDays]);
+
+    const handleStartEditing = () => {
+        setEditForm({
+            phone: userProfile?.phone || '',
+            branch: userProfile?.branch || 'CSE',
+            year: userProfile?.year || '1st',
+            bio: userProfile?.bio || ''
+        });
+        setIsEditing(true);
+        setSaveSuccess('');
+        setSaveError('');
+    };
+
+    const handleSaveProfile = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        setSaveSuccess('');
+        setSaveError('');
+
+        try {
+            // Strictly exclude joinedAt, uid, email
+            await updateProfileData({
+                phone: editForm.phone.replace(/\D/g, ''),
+                branch: editForm.branch,
+                year: editForm.year,
+                bio: editForm.bio.trim()
+            });
+
+            setSaveSuccess('Profile updated successfully!');
+            setIsEditing(false);
+        } catch (err) {
+            console.error('Update profile error:', err);
+            setSaveError(err.message || 'Failed to update profile.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/', { replace: true });
+        } catch (err) {
+            console.error('Logout error:', err);
+        }
+    };
+
+    // User avatar fallback (initial letter)
+    const userInitial = useMemo(() => {
+        if (userProfile?.name) return userProfile.name.charAt(0).toUpperCase();
+        if (currentUser?.email) return currentUser.email.charAt(0).toUpperCase();
+        return 'U';
+    }, [userProfile?.name, currentUser?.email]);
+
+    if (!userProfile) {
+        return (
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
+                <Loader2 className="w-10 h-10 text-brand-yellow animate-spin mb-4" />
+                <p className="font-bold text-white uppercase text-sm tracking-wider">Loading Profile...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-black text-white pt-24 pb-16 px-4 md:px-8">
+            <div className="max-w-5xl mx-auto space-y-8">
+                {/* Success/Error Alerts */}
+                {saveSuccess && (
+                    <div className="bg-green-900/40 border-2 border-green-500 text-green-300 p-4 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-green-400" />
+                            <span className="font-bold text-sm">{saveSuccess}</span>
+                        </div>
+                        <button onClick={() => setSaveSuccess('')} className="text-green-400 hover:text-white">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                )}
+
+                {saveError && (
+                    <div className="bg-red-900/40 border-2 border-red-500 text-red-300 p-4 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <AlertCircle className="w-5 h-5 text-red-400" />
+                            <span className="font-bold text-sm">{saveError}</span>
+                        </div>
+                        <button onClick={() => setSaveError('')} className="text-red-400 hover:text-white">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                )}
+
+                {/* SECTION 1: HERO CARD */}
+                <div className="bg-zinc-900 border-4 border-white rounded-3xl p-6 md:p-8 shadow-[8px_8px_0px_#FFB22C] relative overflow-hidden">
+                    <div className="absolute -top-16 -right-16 w-64 h-64 bg-brand-yellow/10 rounded-full blur-3xl pointer-events-none" />
+
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                        {/* Left: Avatar & Basic Info */}
+                        <div className="flex items-center gap-5">
+                            {userProfile.avatarUrl ? (
+                                <img
+                                    src={userProfile.avatarUrl}
+                                    alt={userProfile.name}
+                                    className="w-20 h-20 md:w-24 md:h-24 rounded-2xl border-4 border-brand-yellow object-cover"
+                                />
+                            ) : (
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl border-4 border-brand-yellow bg-black text-brand-yellow font-black text-4xl flex items-center justify-center shadow-[4px_4px_0px_#FFB22C]">
+                                    {userInitial}
+                                </div>
+                            )}
+
+                            <div>
+                                <h1 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tight flex items-center gap-2">
+                                    {userProfile.name || 'E-Cell Member'}
+                                </h1>
+                                <p className="text-gray-400 text-sm font-medium mb-3">
+                                    {userProfile.email}
+                                </p>
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-yellow/10 border border-brand-yellow/50 rounded-full text-brand-yellow font-bold text-xs uppercase tracking-wider">
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                    E-Cell DYPIU Member
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right: Actions */}
+                        <div className="flex items-center gap-3">
+                            {!isEditing && (
+                                <button
+                                    onClick={handleStartEditing}
+                                    className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold px-4 py-2.5 rounded-xl border-2 border-zinc-700 text-xs uppercase transition-colors"
+                                >
+                                    <Edit2 className="w-4 h-4 text-brand-yellow" />
+                                    Edit Profile
+                                </button>
+                            )}
+
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center gap-2 bg-red-900/30 hover:bg-red-600 border-2 border-red-500/50 hover:border-red-600 text-red-300 hover:text-white font-bold px-4 py-2.5 rounded-xl text-xs uppercase transition-colors"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* SECTION 2: MEMBERSHIP DURATION CARD */}
+                <div className="bg-zinc-900 border-4 border-zinc-800 rounded-3xl p-6 md:p-8 shadow-[8px_8px_0px_#FFB22C] relative overflow-hidden">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-zinc-400 text-xs uppercase font-bold tracking-widest mb-1">
+                                <Sparkles className="w-4 h-4 text-brand-yellow" />
+                                Your Journey with E-Cell
+                            </div>
+
+                            {/* Line 1: Member since date */}
+                            <p className="text-xl md:text-2xl font-bold text-gray-200">
+                                Member since <span className="text-white font-black">{membership.joinedDate}</span>
+                            </p>
+
+                            {/* Line 2: Live formatted duration */}
+                            <h2 className="text-3xl md:text-5xl font-black text-brand-yellow tracking-tight py-1 font-mono">
+                                {membership.formattedString}
+                            </h2>
+
+                            {/* Line 3: Muted subtitle */}
+                            <p className="text-gray-400 text-xs md:text-sm">
+                                You've been part of the E-Cell DYPIU entrepreneurial community.
+                            </p>
+                        </div>
+
+                        {/* Milestone Badge if achieved */}
+                        {milestone && (
+                            <div className="bg-black border-2 border-brand-yellow p-4 rounded-2xl flex flex-col items-center justify-center text-center shadow-[4px_4px_0px_#FFB22C] min-w-[160px]">
+                                <span className="text-4xl mb-1">{milestone.emoji}</span>
+                                <span className="text-brand-yellow font-black text-sm uppercase tracking-wider">
+                                    {milestone.label}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* SECTION 3: PROFILE INFORMATION */}
+                <div className="bg-zinc-900 border-4 border-zinc-800 rounded-3xl p-6 md:p-8 space-y-6">
+                    <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+                        <h3 className="text-xl font-black uppercase text-white flex items-center gap-2">
+                            <User className="w-5 h-5 text-brand-yellow" />
+                            Personal Details
+                        </h3>
+
+                        {isEditing && (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(false)}
+                                    className="px-3 py-1.5 rounded-lg bg-zinc-800 text-gray-300 text-xs font-bold uppercase hover:bg-zinc-700"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {isEditing ? (
+                        /* Edit Mode Form */
+                        <form onSubmit={handleSaveProfile} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase text-gray-300 mb-1">
+                                        Phone Number
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        value={editForm.phone}
+                                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                                        placeholder="9876543210"
+                                        required
+                                        className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase text-gray-300 mb-1">
+                                        Branch
+                                    </label>
+                                    <select
+                                        value={editForm.branch}
+                                        onChange={(e) => setEditForm({ ...editForm, branch: e.target.value })}
+                                        className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
+                                    >
+                                        {BRANCH_OPTIONS.map(b => (
+                                            <option key={b} value={b}>{b}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase text-gray-300 mb-1">
+                                        Year of Study
+                                    </label>
+                                    <select
+                                        value={editForm.year}
+                                        onChange={(e) => setEditForm({ ...editForm, year: e.target.value })}
+                                        className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
+                                    >
+                                        {YEAR_OPTIONS.map(y => (
+                                            <option key={y} value={y}>{y} Year</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase text-gray-400 mb-1">
+                                        College (Immutable)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={userProfile.college || 'DYPIU'}
+                                        disabled
+                                        className="w-full bg-zinc-800 border-2 border-zinc-700 p-3 text-gray-400 rounded-xl text-sm cursor-not-allowed"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase text-gray-300 mb-1">
+                                    Bio / Entrepreneurial Goals
+                                </label>
+                                <textarea
+                                    value={editForm.bio}
+                                    onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                                    rows={3}
+                                    placeholder="Tell us about yourself or your startup ideas..."
+                                    className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-xl focus:border-brand-yellow focus:outline-none text-sm"
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(false)}
+                                    className="px-4 py-2 rounded-xl bg-zinc-800 text-gray-300 font-bold uppercase text-xs hover:bg-zinc-700"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="px-6 py-2 rounded-xl bg-brand-yellow text-black font-black uppercase text-xs hover:bg-white transition-colors disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4" /> Save Changes</>}
+                                </button>
+                            </div>
+                        </form>
+                    ) : (
+                        /* Read-Only Details Grid */
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="flex items-center gap-3 bg-black border-2 border-zinc-800 p-4 rounded-2xl">
+                                    <Phone className="w-5 h-5 text-brand-yellow flex-shrink-0" />
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase font-bold">Phone Number</p>
+                                        <p className="text-sm font-bold text-white">{userProfile.phone || 'Not provided'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 bg-black border-2 border-zinc-800 p-4 rounded-2xl">
+                                    <GraduationCap className="w-5 h-5 text-brand-yellow flex-shrink-0" />
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase font-bold">Branch</p>
+                                        <p className="text-sm font-bold text-white">{userProfile.branch || 'N/A'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 bg-black border-2 border-zinc-800 p-4 rounded-2xl">
+                                    <Calendar className="w-5 h-5 text-brand-yellow flex-shrink-0" />
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase font-bold">Year of Study</p>
+                                        <p className="text-sm font-bold text-white">{userProfile.year ? `${userProfile.year} Year` : 'N/A'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 bg-black border-2 border-zinc-800 p-4 rounded-2xl">
+                                    <Building className="w-5 h-5 text-brand-yellow flex-shrink-0" />
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase font-bold">Institution</p>
+                                        <p className="text-sm font-bold text-white">{userProfile.college || 'DYPIU'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Bio Section */}
+                            <div className="bg-black border-2 border-zinc-800 p-4 rounded-2xl">
+                                <p className="text-xs text-gray-500 uppercase font-bold mb-1">Bio / Entrepreneurial Goals</p>
+                                <p className="text-sm text-gray-300 leading-relaxed italic">
+                                    {userProfile.bio || 'No bio added yet. Click "Edit Profile" to add one!'}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* SECTION 4: EVENTS ATTENDED */}
+                <div className="bg-zinc-900 border-4 border-zinc-800 rounded-3xl p-6 md:p-8 space-y-6">
+                    <h3 className="text-xl font-black uppercase text-white flex items-center gap-2">
+                        <CalendarDays className="w-5 h-5 text-brand-yellow" />
+                        Events You've Attended
+                    </h3>
+
+                    {userProfile.eventsAttended && userProfile.eventsAttended.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {userProfile.eventsAttended.map((event, idx) => (
+                                <div key={idx} className="bg-black border-2 border-zinc-800 p-4 rounded-2xl space-y-2">
+                                    <h4 className="font-bold text-white text-sm">{event.name || event}</h4>
+                                    <p className="text-xs text-gray-400">{event.date || 'Attended'}</p>
+                                    <span className="inline-block px-2 py-0.5 bg-green-900/40 text-green-400 border border-green-500/50 rounded-full text-[10px] font-bold uppercase">
+                                        Verified Attendee
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="py-8 text-center text-gray-500 bg-black/40 rounded-2xl border-2 border-dashed border-zinc-800 p-6 flex flex-col items-center justify-center">
+                            <CalendarDays className="w-10 h-10 mx-auto text-zinc-600 mb-2" />
+                            <p className="text-white font-bold text-base mb-1">No events yet</p>
+                            <p className="text-xs text-gray-400 mb-4 max-w-sm">
+                                Your entrepreneurial journey starts with your first event!
+                            </p>
+                            <Link
+                                to="/events"
+                                className="inline-flex items-center gap-2 bg-brand-yellow text-black font-black px-4 py-2 rounded-xl text-xs uppercase hover:bg-white transition-colors"
+                            >
+                                Browse Upcoming Events
+                                <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        </div>
+                    )}
+                </div>
+
+                {/* SECTION 5: CERTIFICATES */}
+                <div className="bg-zinc-900 border-4 border-zinc-800 rounded-3xl p-6 md:p-8 space-y-6">
+                    <h3 className="text-xl font-black uppercase text-white flex items-center gap-2">
+                        <Award className="w-5 h-5 text-brand-yellow" />
+                        Your Certificates
+                    </h3>
+
+                    {userProfile.certificatesEarned && userProfile.certificatesEarned.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {userProfile.certificatesEarned.map((cert, idx) => (
+                                <div key={idx} className="bg-black border-2 border-zinc-800 p-4 rounded-2xl space-y-2">
+                                    <Award className="w-6 h-6 text-brand-yellow" />
+                                    <h4 className="font-bold text-white text-sm">{cert.name || cert}</h4>
+                                    <button className="text-xs text-brand-yellow hover:underline font-bold">
+                                        Download Certificate
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="py-8 text-center text-gray-500 bg-black/40 rounded-2xl border-2 border-dashed border-zinc-800 p-6 flex flex-col items-center justify-center">
+                            <Award className="w-10 h-10 mx-auto text-zinc-600 mb-2" />
+                            <p className="text-white font-bold text-base mb-1">No certificates unlocked</p>
+                            <p className="text-xs text-gray-400 max-w-sm">
+                                You'll unlock verified certificates as you participate in E-Cell events and workshops.
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                {/* SECTION 6: ACTIVITY TIMELINE */}
+                <div className="bg-zinc-900 border-4 border-zinc-800 rounded-3xl p-6 md:p-8 space-y-6">
+                    <h3 className="text-xl font-black uppercase text-white flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-brand-yellow" />
+                        Activity Timeline
+                    </h3>
+
+                    <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-800">
+                        {/* Timeline Item: Joined */}
+                        <div className="relative flex items-start gap-4">
+                            <div className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-brand-yellow ring-4 ring-zinc-900" />
+                            <div>
+                                <h4 className="font-bold text-white text-sm">Joined E-Cell DYPIU</h4>
+                                <p className="text-xs text-gray-400">{membership.joinedDate}</p>
+                            </div>
+                        </div>
+
+                        {/* Timeline Item: Events */}
+                        {userProfile.eventsAttended && userProfile.eventsAttended.map((event, idx) => (
+                            <div key={idx} className="relative flex items-start gap-4">
+                                <div className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-green-500 ring-4 ring-zinc-900" />
+                                <div>
+                                    <h4 className="font-bold text-white text-sm">Attended {event.name || event}</h4>
+                                    <p className="text-xs text-gray-400">{event.date || 'Event Day'}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Profile;

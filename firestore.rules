@@ -52,5 +52,20 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
+
+    // 7. MEMBERS: Member authentication & immutable joinedAt/uid/email
+    match /members/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null 
+                    && request.auth.uid == userId
+                    && request.resource.data.uid == userId
+                    && request.resource.data.email == request.auth.token.email;
+      allow update: if request.auth != null 
+                    && request.auth.uid == userId
+                    && request.resource.data.joinedAt == resource.data.joinedAt
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.email == resource.data.email;
+      allow delete: if false;
+    }
   }
 }

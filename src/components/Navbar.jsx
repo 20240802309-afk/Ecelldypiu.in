@@ -1,11 +1,25 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { X, User, LogOut, UserCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/useAuth';
+
+const MotionNav = motion.nav;
+const MotionSpan = motion.span;
+const MotionDiv = motion.div;
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentUser, userProfile, logout } = useAuth();
+
+  const userInitial = useMemo(() => {
+    if (userProfile?.name) return userProfile.name.charAt(0).toUpperCase();
+    if (currentUser?.email) return currentUser.email.charAt(0).toUpperCase();
+    return 'M';
+  }, [userProfile?.name, currentUser?.email]);
 
   if (location.pathname === '/ourlinks' || location.pathname.startsWith('/s/')) return null;
 
@@ -19,9 +33,16 @@ const Navbar = () => {
     { name: 'Blogs', path: '/blogs' },
   ];
 
+  const handleLogout = async () => {
+    setShowDropdown(false);
+    setIsOpen(false);
+    await logout();
+    navigate('/', { replace: true });
+  };
+
   return (
     <>
-      <motion.nav
+      <MotionNav
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "circOut" }}
@@ -29,21 +50,21 @@ const Navbar = () => {
       >
         <div className="bg-black/80 backdrop-blur-md border border-brand-yellow rounded-full px-6 py-3 shadow-[0_0_30px_rgba(255,178,44,0.6),0_0_60px_rgba(255,178,44,0.3)] flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-3 flex-shrink-0 select-none">
+          <Link to="/" className="flex items-center space-x-3 flex-shrink-0 select-none">
             <img
               src="/logonew.png"
               alt="E-Cell"
               className="h-10 w-auto object-contain brightness-0 invert"
             />
-          </div>
+          </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center space-x-1 bg-white/5 rounded-full px-1 py-1 ml-3 border border-white/10 min-w-0 flex-shrink">
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
-                className={`relative px-2 lg:px-4 xl:px-5 py-2 text-[10px] lg:text-sm font-bold uppercase tracking-wide transition-all duration-300 rounded-full whitespace-nowrap ${location.pathname === item.path
+                className={`relative px-2 lg:px-3.5 py-2 text-[10px] lg:text-xs font-bold uppercase tracking-wide transition-all duration-300 rounded-full whitespace-nowrap ${location.pathname === item.path
                   ? 'text-black bg-brand-yellow shadow-[0_0_10px_rgba(255,178,44,0.5)]'
                   : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
@@ -53,47 +74,97 @@ const Navbar = () => {
             ))}
           </div>
 
-          <div className="hidden md:block ml-2 lg:ml-3 flex-shrink-0">
-            <Link to="/contact" className="bg-white text-black px-3 lg:px-6 py-2 lg:py-2.5 rounded-full font-bold text-[10px] lg:text-sm hover:bg-brand-yellow hover:text-black transition-all duration-300 border-2 border-transparent uppercase tracking-wider shadow-glow-white whitespace-nowrap">
-              Let's Talk
-            </Link>
+          {/* Right Action: Auth or Let's Talk */}
+          <div className="hidden md:flex items-center gap-2 ml-2 lg:ml-3 flex-shrink-0">
+            {currentUser ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="flex items-center gap-2 bg-brand-yellow text-black font-black px-3 py-1.5 rounded-full border-2 border-brand-yellow hover:bg-white transition-all text-xs uppercase"
+                >
+                  <div className="w-6 h-6 rounded-full bg-black text-brand-yellow font-black flex items-center justify-center text-xs border border-brand-yellow">
+                    {userInitial}
+                  </div>
+                  <span className="max-w-[100px] truncate">{userProfile?.name?.split(' ')[0] || 'Profile'}</span>
+                </button>
+
+                {/* Dropdown Menu */}
+                {showDropdown && (
+                  <div className="absolute right-0 mt-3 w-48 bg-zinc-900 border-2 border-brand-yellow rounded-2xl p-2 shadow-[4px_4px_0px_#FFB22C] z-50">
+                    <div className="px-3 py-2 border-b border-zinc-800">
+                      <p className="text-white font-bold text-xs truncate">{userProfile?.name || 'Member'}</p>
+                      <p className="text-gray-400 text-[10px] truncate">{currentUser.email}</p>
+                    </div>
+                    <Link
+                      to="/profile"
+                      onClick={() => setShowDropdown(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase text-gray-200 hover:text-brand-yellow hover:bg-zinc-800 rounded-xl transition-colors mt-1"
+                    >
+                      <User className="w-4 h-4 text-brand-yellow" />
+                      My Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase text-red-400 hover:text-white hover:bg-red-900/40 rounded-xl transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="text-gray-300 hover:text-white text-xs font-bold uppercase px-3 py-2 transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-brand-yellow text-black px-4 py-2 rounded-full font-black text-xs hover:bg-white transition-all border-2 border-transparent uppercase tracking-wider shadow-[0_0_15px_rgba(255,178,44,0.4)] whitespace-nowrap"
+                >
+                  Join Us
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="block md:hidden text-white p-2 hover:bg-white/10 rounded-full transition-colors"
+            className="block md:hidden text-white p-2 hover:bg-white/10 rounded-full transition-colors ml-auto"
           >
             <div className="w-6 h-5 flex flex-col justify-between items-center relative">
-              <motion.span
+              <MotionSpan
                 animate={isOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
                 className="w-full h-0.5 bg-white block origin-center transition-transform"
               />
-              <motion.span
+              <MotionSpan
                 animate={isOpen ? { opacity: 0 } : { opacity: 1 }}
                 className="w-full h-0.5 bg-white block transition-opacity"
               />
-              <motion.span
+              <MotionSpan
                 animate={isOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
                 className="w-full h-0.5 bg-white block origin-center transition-transform"
               />
             </div>
           </button>
         </div>
-      </motion.nav>
+      </MotionNav>
 
       {/* Mobile Navigation Overlay */}
-      {/* Mobile Navigation Overlay - MindMarket Style */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="mobile-menu-overlay md:hidden"
           >
-            {/* 1. Header Card (Logo + Close) */}
-            <motion.div
+            {/* Header Card */}
+            <MotionDiv
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
@@ -113,10 +184,10 @@ const Navbar = () => {
               >
                 <X className="w-6 h-6" />
               </button>
-            </motion.div>
+            </MotionDiv>
 
-            {/* 2. Links Card */}
-            <motion.div
+            {/* Links Card */}
+            <MotionDiv
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -133,23 +204,53 @@ const Navbar = () => {
                   <span className="text-zinc-500">→</span>
                 </Link>
               ))}
-            </motion.div>
 
-            {/* 3. Contact Card (Bottom) */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="mobile-contact-card"
-            >
-              <Link to="/contact" onClick={() => setIsOpen(false)} className="mobile-contact-btn">
-                <span>Let's Talk</span>
-                <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center">
-                  <span className="text-sm">↗</span>
-                </div>
-              </Link>
-            </motion.div>
-          </motion.div>
+              {currentUser ? (
+                <>
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsOpen(false)}
+                    className={`mobile-nav-item ${location.pathname === '/profile' ? 'active' : ''}`}
+                  >
+                    <span className="flex items-center gap-2 text-brand-yellow font-bold">
+                      <UserCheck className="w-4 h-4" />
+                      My Profile ({userProfile?.name?.split(' ')[0] || 'User'})
+                    </span>
+                    <span className="text-brand-yellow">→</span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="mobile-nav-item w-full text-left text-red-400 font-bold"
+                  >
+                    <span className="flex items-center gap-2">
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </span>
+                    <span className="text-red-400">→</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="mobile-nav-item"
+                  >
+                    Login
+                    <span className="text-zinc-500">→</span>
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setIsOpen(false)}
+                    className="mobile-nav-item text-brand-yellow font-bold"
+                  >
+                    Join Us
+                    <span className="text-brand-yellow">→</span>
+                  </Link>
+                </>
+              )}
+            </MotionDiv>
+          </MotionDiv>
         )}
       </AnimatePresence>
     </>
