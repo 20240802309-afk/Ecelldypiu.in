@@ -96,12 +96,15 @@ const Redirect = () => {
             {/* Main Container Card */}
             <div className="relative z-10 w-full max-w-md">
                 {/* E-Cell Logo */}
-                <div className="mb-8 flex items-center justify-center">
+                <div className="mb-8 flex items-center justify-center space-x-3 select-none">
                     <img
                         src="/logonew.png"
                         alt="E-Cell DYPIU"
-                        className="h-16 md:h-20 w-auto object-contain brightness-0 invert filter drop-shadow-[0_0_15px_rgba(255,178,44,0.3)]"
+                        className="h-12 md:h-14 w-auto object-contain"
                     />
+                    <span className="text-white font-bold text-2xl md:text-3xl tracking-wide">
+                        ECELL DYPIU
+                    </span>
                 </div>
 
                 {!error ? (
