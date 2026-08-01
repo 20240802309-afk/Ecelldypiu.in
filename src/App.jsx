@@ -28,6 +28,7 @@ import Newsletter from './pages/Newsletter';
 import AdminPortal from './pages/AdminPortal';
 import BlogDetail from './pages/BlogDetail';
 import GetCertificate from './pages/GetCertificate';
+import Redirect from './pages/Redirect';
 import './App.css';
 // import { useEffect } from 'react';
 // import Lenis from 'lenis';
@@ -46,6 +47,7 @@ function App() {
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/s/:slug" element={<Redirect />} />
             <Route path="/about" element={<About />} />
             <Route path="/sponsors" element={<Sponsors />} />
             <Route path="/events" element={<Events />} />

@@ -46,5 +46,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false; // Write only via server-side Admin SDK
     }
+
+    // 6. SHORTLINKS: Public read, server-side write only
+    match /shortlinks/{slug} {
+      allow read: if true;
+      allow write: if false;
+    }
   }
 }

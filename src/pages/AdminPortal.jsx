@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import CertificateManager from '../components/CertificateManager';
 import EventManager from '../components/EventManager';
+import LinkShortener from '../components/LinkShortener';
 
 const AdminPortal = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -135,7 +136,6 @@ const AdminPortal = () => {
 
     // Image upload state
     const [imageUrls, setImageUrls] = useState(['']);
-    const [previewImages, setPreviewImages] = useState([]);
 
     // Notification state
     const [notifyData, setNotifyData] = useState({
@@ -170,7 +170,7 @@ const AdminPortal = () => {
                         setAdminKey('');
                         setLoginError('Session expired. Please login again.');
                     }
-                } catch (err) {
+                } catch {
                     // Network error - still try to authenticate
                     setIsAuthenticated(true);
                 } finally {
@@ -1043,8 +1043,36 @@ const AdminPortal = () => {
                                     <span>Manage Collaborations</span>
                                 </button>
                             </div>
+
+                            {/* Link Shortener Card */}
+                            <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-14 h-14 bg-brand-yellow rounded-xl flex items-center justify-center">
+                                        <LinkIcon className="w-7 h-7 text-black" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black uppercase">Link Shortener</h3>
+                                        <p className="text-gray-400 text-sm">Create & manage short URLs</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => { setActiveTab('link-shortener'); setError(null); setResult(null); }}
+                                    className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-brand-yellow hover:text-black transition-colors text-left group"
+                                >
+                                    <LinkIcon className="w-4 h-4 text-brand-yellow group-hover:text-black" />
+                                    <span>Link Shortener</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
+                )}
+
+                {/* Link Shortener Tab */}
+                {activeTab === 'link-shortener' && (
+                    <LinkShortener
+                        adminKey={sessionStorage.getItem('adminKey') || adminKey}
+                        onBack={() => { setActiveTab('dashboard'); setError(null); setResult(null); }}
+                    />
                 )}
 
                 {/* Event Manager Tab */}
