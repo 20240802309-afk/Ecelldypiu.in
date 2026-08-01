@@ -1,22 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  if (location.pathname === '/ourlinks') return null;
+  if (location.pathname === '/ourlinks' || location.pathname.startsWith('/s/')) return null;
 
   const navItems = [
     { name: 'Home', path: '/' },
@@ -131,7 +122,7 @@ const Navbar = () => {
               transition={{ delay: 0.2 }}
               className="mobile-links-card"
             >
-              {navItems.map((item, index) => (
+              {navItems.map((item) => (
                 <Link
                   key={item.name}
                   to={item.path}

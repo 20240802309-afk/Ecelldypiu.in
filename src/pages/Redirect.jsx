@@ -87,7 +87,7 @@ const Redirect = () => {
         <div
             role="status"
             aria-live="polite"
-            className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden selection:bg-brand-yellow selection:text-black"
+            className="fixed inset-0 z-[9999] min-h-screen min-h-[100dvh] w-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center overflow-hidden selection:bg-brand-yellow selection:text-black"
         >
             {/* Ambient Background Radial Glow */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-yellow/10 rounded-full blur-[120px] pointer-events-none motion-reduce:hidden" />

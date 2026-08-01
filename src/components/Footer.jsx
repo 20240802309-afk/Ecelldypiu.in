@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Mail,
   MapPin,
@@ -8,8 +8,8 @@ import {
   MessageCircle,
 } from 'lucide-react';
 
-// Export socialLinks so other components (e.g. SocialSidebar) can reuse the same URLs
-export const socialLinks = [
+// socialLinks defined for Footer
+const socialLinks = [
   {
     icon: Instagram,
     href: 'https://www.instagram.com/ecell.dypiu?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==',
@@ -27,7 +27,12 @@ export const socialLinks = [
   },
 ];
 const Footer = () => {
+  const location = useLocation();
   const currentYear = new Date().getFullYear();
+
+  if (location.pathname === '/ourlinks' || location.pathname.startsWith('/s/')) {
+    return null;
+  }
 
   const quickLinks = [
     { name: 'Home', path: '/' },

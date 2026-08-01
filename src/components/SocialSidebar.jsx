@@ -17,8 +17,8 @@ const WhatsAppIcon = ({ className }) => (
 const SocialSidebar = () => {
   const location = useLocation();
 
-  // Hide sidebar on ourlinks page
-  if (location.pathname === '/ourlinks') {
+  // Hide sidebar on ourlinks page or shortlink redirect page
+  if (location.pathname === '/ourlinks' || location.pathname.startsWith('/s/')) {
     return null;
   }
 

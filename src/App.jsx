@@ -30,53 +30,58 @@ import BlogDetail from './pages/BlogDetail';
 import GetCertificate from './pages/GetCertificate';
 import Redirect from './pages/Redirect';
 import './App.css';
-// import { useEffect } from 'react';
-// import Lenis from 'lenis';
 
 function App() {
-  // Lenis initialized in ScrollToTop component
-
-
   return (
     <Router>
       <ScrollToTop />
       <SpeedInsights />
       <Analytics />
-      <div className="App font-sans selection:bg-brand-yellow selection:text-black">
-        <Navbar />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/s/:slug" element={<Redirect />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/sponsors" element={<Sponsors />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/events/inceptio" element={<Inceptio />} />
-            <Route path="/events/elevate" element={<Elevate />} />
-            <Route path="/events/sih" element={<SIH />} />
-            <Route path="/events/finbiz" element={<FinBiz />} />
-            <Route path="/events/innovate-for-impact" element={<InnovateForImpact />} />
-            <Route path="/events/:eventSlug/certificate" element={<GetCertificate />} />
-            <Route path="/team" element={<Team />} />
-            <Route path="/blogs" element={<Blogs />} />
-            <Route path="/blogs/where-ideas-meet-impact" element={<BlogDetail1 />} />
-            <Route path="/blogs/ceo-pune-meetup" element={<BlogDetail2 />} />
-            <Route path="/blogs/entrepreneurship-awareness-drive" element={<BlogDetail3 />} />
-            <Route path="/blogs/:slug" element={<BlogDetail />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/ourlinks" element={<Linktree />} />
-            <Route path="/collaborations" element={<Collaborations />} />
-            <Route path="/collaborations/status/:id" element={<CollabStatus />} />
-            <Route path="/apply" element={<ApplyNow />} />
-            <Route path="/newsletter" element={<Newsletter />} />
-            <Route path="/admin" element={<AdminPortal />} />
-            {/* Backward compatibility: redirect old path */}
-            <Route path="/linktree" element={<Navigate to="/ourlinks" replace />} />
-          </Routes>
-        </main>
-        <SocialSidebar />
-        <Footer />
-      </div>
+      <Routes>
+        {/* Standalone Route for URL Shortener Redirect (No Navbar/Footer/Chrome) */}
+        <Route path="/s/:slug" element={<Redirect />} />
+
+        {/* Standard Website Routes with Navbar, Footer & Social Sidebar */}
+        <Route
+          path="/*"
+          element={
+            <div className="App font-sans selection:bg-brand-yellow selection:text-black">
+              <Navbar />
+              <main>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/sponsors" element={<Sponsors />} />
+                  <Route path="/events" element={<Events />} />
+                  <Route path="/events/inceptio" element={<Inceptio />} />
+                  <Route path="/events/elevate" element={<Elevate />} />
+                  <Route path="/events/sih" element={<SIH />} />
+                  <Route path="/events/finbiz" element={<FinBiz />} />
+                  <Route path="/events/innovate-for-impact" element={<InnovateForImpact />} />
+                  <Route path="/events/:eventSlug/certificate" element={<GetCertificate />} />
+                  <Route path="/team" element={<Team />} />
+                  <Route path="/blogs" element={<Blogs />} />
+                  <Route path="/blogs/where-ideas-meet-impact" element={<BlogDetail1 />} />
+                  <Route path="/blogs/ceo-pune-meetup" element={<BlogDetail2 />} />
+                  <Route path="/blogs/entrepreneurship-awareness-drive" element={<BlogDetail3 />} />
+                  <Route path="/blogs/:slug" element={<BlogDetail />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/ourlinks" element={<Linktree />} />
+                  <Route path="/collaborations" element={<Collaborations />} />
+                  <Route path="/collaborations/status/:id" element={<CollabStatus />} />
+                  <Route path="/apply" element={<ApplyNow />} />
+                  <Route path="/newsletter" element={<Newsletter />} />
+                  <Route path="/admin" element={<AdminPortal />} />
+                  {/* Backward compatibility: redirect old path */}
+                  <Route path="/linktree" element={<Navigate to="/ourlinks" replace />} />
+                </Routes>
+              </main>
+              <SocialSidebar />
+              <Footer />
+            </div>
+          }
+        />
+      </Routes>
     </Router>
   );
 }
