@@ -190,7 +190,7 @@ const SIH = () => {
 
             {/* Judges */}
             <section className="py-20 bg-zinc-900 border-b-4 border-white relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20"></div>
                 <div className="container mx-auto px-4 relative z-10">
                     <h2 className="text-5xl md:text-8xl font-black mb-20 uppercase tracking-tighter text-center">
                         JUDGES

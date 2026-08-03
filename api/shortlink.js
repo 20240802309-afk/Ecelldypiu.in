@@ -45,6 +45,44 @@ const isValidDestinationName = (nameStr) => {
     return trimmed.length >= 2 && trimmed.length <= 60;
 };
 
+// Device detection helper
+function detectDevice(ua = '') {
+    const userAgent = (ua || '').toLowerCase();
+    if (/tablet|ipad|playbook|silk/i.test(userAgent)) return 'Tablet';
+    if (/mobile|android|i(phone|pod)|iemobile|blackberry/i.test(userAgent)) return 'Mobile';
+    return 'Desktop';
+}
+
+// Browser detection helper
+function detectBrowser(ua = '') {
+    const userAgent = (ua || '').toLowerCase();
+    if (userAgent.includes('edg/') || userAgent.includes('edge/')) return 'Edge';
+    if (userAgent.includes('chrome') || userAgent.includes('crios')) return 'Chrome';
+    if (userAgent.includes('safari') && !userAgent.includes('chrome')) return 'Safari';
+    if (userAgent.includes('firefox') || userAgent.includes('fxios')) return 'Firefox';
+    if (userAgent.includes('opera') || userAgent.includes('opr/')) return 'Opera';
+    return 'Other';
+}
+
+// Referrer category helper
+function detectReferrer(ref = '') {
+    if (!ref || ref.trim() === '') return 'Direct';
+    const lowerRef = ref.toLowerCase();
+    if (lowerRef.includes('instagram')) return 'Instagram';
+    if (lowerRef.includes('whatsapp') || lowerRef.includes('wa.me')) return 'WhatsApp';
+    if (lowerRef.includes('linkedin')) return 'LinkedIn';
+    if (lowerRef.includes('twitter') || lowerRef.includes('t.co') || lowerRef.includes('x.com')) return 'Twitter / X';
+    if (lowerRef.includes('facebook') || lowerRef.includes('fb.com')) return 'Facebook';
+    if (lowerRef.includes('google')) return 'Google';
+    if (lowerRef.includes('youtube')) return 'YouTube';
+    try {
+        const url = new URL(ref);
+        return url.hostname.replace(/^www\./, '');
+    } catch {
+        return 'Other';
+    }
+}
+
 export default async function handler(req, res) {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -62,9 +100,12 @@ export default async function handler(req, res) {
     const action = body.action || query.action || (req.method === 'GET' ? 'redirect' : null);
     const slugParam = body.slug || query.slug;
 
-    // Public action: redirect
+    // Public actions: redirect or track_event
     if (action === 'redirect') {
         return await handleRedirect(req, res, slugParam);
+    }
+    if (action === 'track_event') {
+        return await handleTrackEvent(req, res);
     }
 
     // All other actions require admin authorization
@@ -115,10 +156,37 @@ async function handleRedirect(req, res, slugFromQuery) {
             return res.status(404).json({ error: 'Shortlink is inactive' });
         }
 
-        // Increment clicks and update lastClickedAt asynchronously
+        const clientUa = req.body?.clientUa || req.headers['user-agent'] || '';
+        const clientRef = req.body?.clientRef || req.headers['referer'] || req.headers['referrer'] || '';
+
+        const device = detectDevice(clientUa);
+        const browser = detectBrowser(clientUa);
+        const referrer = detectReferrer(clientRef);
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        const logEntry = {
+            id: Math.random().toString(36).substring(2, 9),
+            timestamp: new Date().toISOString(),
+            event: 'redirect_completed',
+            device,
+            browser,
+            referrer
+        };
+
+        const existingLogs = data.recentLogs || [];
+        const updatedLogs = [logEntry, ...existingLogs].slice(0, 50);
+
+        // Increment analytics counters and log activity asynchronously
         await docRef.update({
             clicks: FieldValue.increment(1),
-            lastClickedAt: Timestamp.now()
+            totalOpens: FieldValue.increment(1),
+            redirectCompleted: FieldValue.increment(1),
+            lastClickedAt: Timestamp.now(),
+            [`devices.${device}`]: FieldValue.increment(1),
+            [`browsers.${browser}`]: FieldValue.increment(1),
+            [`referrers.${referrer}`]: FieldValue.increment(1),
+            [`dailyClicks.${todayStr}`]: FieldValue.increment(1),
+            recentLogs: updatedLogs
         });
 
         // Return ONLY success, originalUrl, and destinationName
@@ -134,6 +202,54 @@ async function handleRedirect(req, res, slugFromQuery) {
     } catch (error) {
         console.error('Redirect handler error:', error);
         return res.status(500).json({ error: 'Failed to process redirect', details: error.message });
+    }
+}
+
+// ACTION: track_event (PUBLIC)
+async function handleTrackEvent(req, res) {
+    try {
+        const { slug, event, clientUa, clientRef } = req.body || {};
+        if (!slug || !event) {
+            return res.status(400).json({ error: 'Slug and event are required' });
+        }
+
+        const cleanSlug = slug.trim().toLowerCase();
+        const docRef = db.collection('shortlinks').doc(cleanSlug);
+        const docSnap = await docRef.get();
+
+        if (!docSnap.exists) {
+            return res.status(404).json({ error: 'Shortlink not found' });
+        }
+
+        const updatePayload = {};
+        if (event === 'went_back') {
+            updatePayload.wentBack = FieldValue.increment(1);
+        } else if (event === 'redirect_completed') {
+            updatePayload.redirectCompleted = FieldValue.increment(1);
+        }
+
+        const device = detectDevice(clientUa || req.headers['user-agent'] || '');
+        const browser = detectBrowser(clientUa || req.headers['user-agent'] || '');
+        const referrer = detectReferrer(clientRef || req.headers['referer'] || req.headers['referrer'] || '');
+
+        const logEntry = {
+            id: Math.random().toString(36).substring(2, 9),
+            timestamp: new Date().toISOString(),
+            event: event === 'went_back' ? 'went_back' : 'redirect_completed',
+            device,
+            browser,
+            referrer
+        };
+
+        const existingLogs = docSnap.data().recentLogs || [];
+        const updatedLogs = [logEntry, ...existingLogs].slice(0, 50);
+        updatePayload.recentLogs = updatedLogs;
+
+        await docRef.update(updatePayload);
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('Track event error:', error);
+        return res.status(500).json({ error: 'Failed to track event' });
     }
 }
 
@@ -199,6 +315,14 @@ async function handleCreate(req, res) {
         createdAt: now,
         createdBy: 'admin',
         clicks: 0,
+        totalOpens: 0,
+        redirectCompleted: 0,
+        wentBack: 0,
+        devices: {},
+        browsers: {},
+        referrers: {},
+        dailyClicks: {},
+        recentLogs: [],
         lastClickedAt: null,
         isActive: true,
         customSlug: isCustomSlug
@@ -215,6 +339,9 @@ async function handleCreate(req, res) {
         originalUrl: trimmedUrl,
         destinationName: trimmedDestName,
         clicks: 0,
+        totalOpens: 0,
+        redirectCompleted: 0,
+        wentBack: 0,
         createdAt: createdAtIso,
         isActive: true
     });
@@ -235,6 +362,14 @@ async function handleList(req, res) {
             createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : (data.createdAt || null),
             createdBy: data.createdBy || 'admin',
             clicks: data.clicks || 0,
+            totalOpens: data.totalOpens || data.clicks || 0,
+            redirectCompleted: data.redirectCompleted || 0,
+            wentBack: data.wentBack || 0,
+            devices: data.devices || {},
+            browsers: data.browsers || {},
+            referrers: data.referrers || {},
+            dailyClicks: data.dailyClicks || {},
+            recentLogs: data.recentLogs || [],
             lastClickedAt: data.lastClickedAt?.toDate ? data.lastClickedAt.toDate().toISOString() : (data.lastClickedAt || null),
             isActive: data.isActive !== undefined ? data.isActive : true,
             customSlug: data.customSlug || false

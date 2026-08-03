@@ -167,7 +167,7 @@ const InnovateForImpact = () => {
 
             {/* Highlights / Why Join */}
             <section className="py-20 border-b-4 border-white bg-brand-yellow text-black relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20"></div>
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="max-w-4xl mx-auto">
                         <h2 className="text-5xl md:text-7xl font-black mb-12 uppercase tracking-tighter text-center leading-[0.9]">

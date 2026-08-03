@@ -173,7 +173,7 @@ const FinBiz = () => {
 
       {/* Registration CTA - Brutalist Style */}
       <section id="registration" className="py-20 border-b-4 border-white bg-brand-yellow text-black overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.svg')] opacity-10 pointer-events-none"></div>
         <div className="container mx-auto px-4 relative z-10 text-center">
           <h2 className="text-5xl md:text-7xl font-black mb-8 uppercase tracking-tighter">
             REGISTRATION CLOSED

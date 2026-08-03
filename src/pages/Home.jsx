@@ -199,7 +199,7 @@ const Home = () => {
       {/* CTA Section */}
       {/* CTA Section */}
       <section className="relative py-12 md:py-20 bg-brand-yellow px-4 border-y-2 border-black overflow-hidden group">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20"></div>
         <div className="container mx-auto text-center relative z-10">
           <h2 className="text-5xl md:text-9xl font-black text-black tracking-tighter mb-8 md:mb-12 transform group-hover:scale-105 transition-transform duration-500">
             READY TO LAUNCH?

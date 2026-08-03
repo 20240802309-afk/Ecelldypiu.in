@@ -22,6 +22,33 @@ const Redirect = () => {
         return PHRASES[randomIndex];
     }, []);
 
+    const trackEvent = useCallback((eventName) => {
+        if (!slug) return;
+        try {
+            const payload = JSON.stringify({
+                action: 'track_event',
+                slug: slug.trim().toLowerCase(),
+                event: eventName,
+                clientUa: navigator.userAgent,
+                clientRef: document.referrer
+            });
+
+            if (navigator.sendBeacon) {
+                const blob = new Blob([payload], { type: 'application/json' });
+                navigator.sendBeacon('/api/shortlink', blob);
+            } else {
+                fetch('/api/shortlink', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payload,
+                    keepalive: true
+                }).catch(() => {});
+            }
+        } catch (err) {
+            console.error('Track event error:', err);
+        }
+    }, [slug]);
+
     const performRedirect = useCallback(async (isRetry = false) => {
         if (isRetry) {
             setError(false);
@@ -41,6 +68,8 @@ const Redirect = () => {
                 body: JSON.stringify({
                     action: 'redirect',
                     slug: slug.trim().toLowerCase(),
+                    clientUa: navigator.userAgent,
+                    clientRef: document.referrer
                 }),
             });
 
@@ -59,6 +88,7 @@ const Redirect = () => {
 
             // Wait ~900ms before replacing window location for smooth branded feedback
             const timer = setTimeout(() => {
+                trackEvent('redirect_completed');
                 window.location.replace(data.originalUrl);
             }, 900);
 
@@ -67,7 +97,7 @@ const Redirect = () => {
             console.error('Redirection error:', err);
             setError(true);
         }
-    }, [slug]);
+    }, [slug, trackEvent]);
 
     useEffect(() => {
         let cleanupTimer;
@@ -149,6 +179,7 @@ const Redirect = () => {
                         <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
                             <Link
                                 to="/"
+                                onClick={() => trackEvent('went_back')}
                                 className="w-full inline-flex items-center justify-center gap-2 bg-brand-yellow text-black font-black px-5 py-3 rounded-xl uppercase text-xs hover:bg-white transition-colors"
                             >
                                 <ArrowLeft className="w-4 h-4" />
