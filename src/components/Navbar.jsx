@@ -46,20 +46,23 @@ const Navbar = () => {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "circOut" }}
-        className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[95%] max-w-5xl"
+        className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[94%] md:w-fit max-w-[96vw]"
       >
-        <div className="bg-black/80 backdrop-blur-md border border-brand-yellow rounded-full px-6 py-3 shadow-[0_0_30px_rgba(255,178,44,0.6),0_0_60px_rgba(255,178,44,0.3)] flex items-center justify-between">
+        <div className="bg-black/90 backdrop-blur-md border border-brand-yellow rounded-full px-4 sm:px-6 py-2 sm:py-2.5 shadow-[0_0_25px_rgba(255,178,44,0.5),0_0_50px_rgba(255,178,44,0.25)] flex items-center justify-between md:justify-center gap-3 md:gap-4 lg:gap-6">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 flex-shrink-0 select-none">
+          <Link to="/" className="flex items-center space-x-2.5 flex-shrink-0 select-none group">
             <img
               src="/logonew.png"
               alt="E-Cell"
-              className="h-10 w-auto object-contain brightness-0 invert"
+              className="h-8 md:h-9 w-auto object-contain brightness-0 invert group-hover:scale-105 transition-transform"
             />
+            <span className="text-white font-black text-sm md:text-base tracking-tight uppercase whitespace-nowrap group-hover:text-brand-yellow transition-colors">
+              ECELL DYPIU
+            </span>
           </Link>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-1 bg-white/5 rounded-full px-1 py-1 ml-3 border border-white/10 min-w-0 flex-shrink">
+          <div className="hidden md:flex items-center space-x-0.5 bg-white/5 rounded-full px-1 py-1 border border-white/10 flex-shrink-0">
             {navItems.map((item) => (
               <Link
                 key={item.name}
@@ -75,7 +78,7 @@ const Navbar = () => {
           </div>
 
           {/* Right Action: Auth or Let's Talk */}
-          <div className="hidden md:flex items-center gap-2 ml-2 lg:ml-3 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
             {currentUser ? (
               <div className="relative">
                 <button
@@ -134,7 +137,8 @@ const Navbar = () => {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="block md:hidden text-white p-2 hover:bg-white/10 rounded-full transition-colors ml-auto"
+            className="block md:hidden text-white p-2 hover:bg-white/10 rounded-full transition-colors ml-auto flex-shrink-0"
+            aria-label="Toggle navigation menu"
           >
             <div className="w-6 h-5 flex flex-col justify-between items-center relative">
               <MotionSpan
