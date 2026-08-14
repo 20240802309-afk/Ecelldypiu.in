@@ -55,6 +55,10 @@ npm run dev
 
 4. Open [http://localhost:5173](http://localhost:5173) in your browser
 
+## Project Documentation
+
+- [Member Dashboard and Ticket System](docs/MEMBER_DASHBOARD_TICKET_SYSTEM.md) — requirements, API contracts, privacy rules, acceptance criteria, and verification plan.
+
 ## 🚀 Deployment
 
 ### Deploy to Vercel
