@@ -280,7 +280,7 @@ const teamData = [
     name: 'Sneha Kelzarkar',
     position: 'Anchor',
     department: 'Management Team',
-    image: null,
+    image: '/team/sneha-kelzarkar.jpeg',
     priority: 15
   },
 
