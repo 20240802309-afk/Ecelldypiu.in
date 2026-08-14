@@ -511,15 +511,8 @@ const MemberCard = ({ member, index }) => {
       {/* Card Box with Neo-brutalist Shadow and Border */}
       <div className="bg-zinc-900 border-2 md:border-4 border-white rounded-2xl md:rounded-[2rem] overflow-hidden relative shadow-[4px_4px_0px_rgba(255,255,255,0.15)] md:shadow-[6px_6px_0px_rgba(255,255,255,0.15)] hover:shadow-[6px_6px_0px_#FFB22C] md:hover:shadow-[10px_10px_0px_#FFB22C] hover:border-brand-yellow transition-all duration-300 flex flex-col h-full">
         
-        {/* Department Badge Top Left */}
-        <div className="absolute top-2 left-2 md:top-4 md:left-4 z-30 pointer-events-none max-w-[calc(100%-1rem)]">
-          <span className="inline-block bg-black/85 backdrop-blur-md text-white border border-white/60 md:border-2 group-hover:border-brand-yellow group-hover:text-brand-yellow px-2 py-0.5 md:px-3 md:py-1 text-[8px] sm:text-[10px] md:text-xs font-mono font-bold uppercase tracking-tight sm:tracking-wider rounded-full shadow-md transition-colors duration-300 whitespace-nowrap">
-            {member.department.replace(' Team', '')}
-          </span>
-        </div>
-
         {/* Image / Avatar Container */}
-        <div className="aspect-[4/5] relative overflow-hidden bg-zinc-950 flex items-center justify-center">
+        <div className="flex-1 aspect-[4/5] relative overflow-hidden bg-zinc-950 flex items-center justify-center">
           {member.image && !imgError ? (
             <>
               <img
@@ -543,7 +536,7 @@ const MemberCard = ({ member, index }) => {
         </div>
 
         {/* Info Banner at Bottom */}
-        <div className="p-2.5 sm:p-4 md:p-5 z-20 bg-black/90 backdrop-blur-md border-t-2 md:border-t-4 border-white group-hover:border-brand-yellow transition-colors duration-300 mt-auto flex flex-col justify-end min-h-[4.25rem] sm:min-h-[5.5rem] md:min-h-[6.5rem]">
+        <div className="p-2.5 sm:p-4 md:p-5 z-20 bg-black/90 backdrop-blur-md border-t-2 md:border-t-4 border-white group-hover:border-brand-yellow transition-colors duration-300 flex flex-col justify-center">
           <h3 className="text-xs sm:text-lg md:text-2xl font-black uppercase italic tracking-tight text-white mb-0.5 md:mb-1 group-hover:text-brand-yellow transition-colors duration-300 line-clamp-2 leading-tight sm:leading-snug">
             {member.name}
           </h3>
