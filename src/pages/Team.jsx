@@ -300,46 +300,39 @@ const teamData = [
     priority: 2
   },
   {
-    name: 'Vanshika Kanojiya',
-    position: 'Design Team Member',
-    department: 'Design Team',
-    image: '/team/vanshika-kanojiya.jpg',
-    priority: 3
-  },
-  {
     name: 'Aarushi Jain',
     position: 'Design Team Member',
     department: 'Design Team',
     image: '/team/aarushi-jain.jpg',
-    priority: 4
+    priority: 3
   },
   {
     name: 'Diya Bagul',
     position: 'Design Team Member',
     department: 'Design Team',
     image: '/team/diya-bagul.jpg',
-    priority: 5
+    priority: 4
   },
   {
     name: 'Krutika Ashapure',
     position: 'Design Team Member',
     department: 'Design Team',
     image: '/team/krutika-ashapure.jpg',
-    priority: 6
+    priority: 5
   },
   {
     name: 'Pranjal',
     position: 'Design Team Member',
     department: 'Design Team',
     image: '/team/pranjal.jpg',
-    priority: 7
+    priority: 6
   },
   {
     name: 'Palak Kariya',
     position: 'Design Team Member',
     department: 'Design Team',
     image: '/team/palak-kariya.jpg',
-    priority: 8
+    priority: 7
   },
 
   // SOCIAL MEDIA TEAM
@@ -352,7 +345,7 @@ const teamData = [
   },
   {
     name: 'Samikshit Ghule',
-    position: 'Social Media Coordinator',
+    position: 'Social Media Secretary',
     department: 'Social Media Team',
     image: '/team/samikshit-ghule.jpg',
     priority: 2
@@ -396,14 +389,14 @@ const teamData = [
   },
   {
     name: 'Swara Pusalkar',
-    position: 'PR Joint-Coordinator',
+    position: 'PR Joint-Secretary',
     department: 'Public Relations Team',
     image: '/team/swara-pusalkar.jpg',
     priority: 2
   },
   {
     name: 'Kali Kanungo',
-    position: 'PR Joint-Coordinator',
+    position: 'PR Joint-Secretary',
     department: 'Public Relations Team',
     image: '/team/kali-kanungo.jpg',
     priority: 3
@@ -426,7 +419,7 @@ const teamData = [
   },
   {
     name: 'Sanskruti Amdare',
-    position: 'Marketing Coordinator',
+    position: 'Marketing Secretary',
     department: 'Marketing Team',
     image: '/team/sanskruti-amdare.png',
     priority: 2
@@ -465,6 +458,13 @@ const teamData = [
     department: 'Marketing Team',
     image: '/team/devesh-sankhla.jpg',
     priority: 7
+  },
+  {
+    name: 'Vanshika Kanojiya',
+    position: 'Marketing Team Member',
+    department: 'Marketing Team',
+    image: '/team/vanshika-kanojiya.jpg',
+    priority: 8
   }
 ];
 
@@ -543,13 +543,13 @@ const MemberCard = ({ member, index }) => {
         </div>
 
         {/* Info Banner at Bottom */}
-        <div className="p-3 sm:p-4 md:p-5 z-20 bg-black/90 backdrop-blur-md border-t-2 md:border-t-4 border-white group-hover:border-brand-yellow transition-colors duration-300 mt-auto">
-          <h3 className="text-sm sm:text-lg md:text-2xl font-black uppercase italic tracking-tight text-white mb-0.5 md:mb-1 group-hover:text-brand-yellow transition-colors duration-300 line-clamp-1">
+        <div className="p-2.5 sm:p-4 md:p-5 z-20 bg-black/90 backdrop-blur-md border-t-2 md:border-t-4 border-white group-hover:border-brand-yellow transition-colors duration-300 mt-auto flex flex-col justify-end min-h-[4.25rem] sm:min-h-[5.5rem] md:min-h-[6.5rem]">
+          <h3 className="text-xs sm:text-lg md:text-2xl font-black uppercase italic tracking-tight text-white mb-0.5 md:mb-1 group-hover:text-brand-yellow transition-colors duration-300 line-clamp-2 leading-tight sm:leading-snug">
             {member.name}
           </h3>
-          <p className="text-brand-yellow font-mono font-bold tracking-wider text-[10px] sm:text-xs md:text-sm uppercase flex items-center gap-1">
-            <span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 bg-brand-yellow rounded-full animate-pulse flex-shrink-0" />
-            <span className="truncate">{member.position}</span>
+          <p className="text-brand-yellow font-mono font-bold tracking-tight sm:tracking-wider text-[9px] sm:text-xs md:text-sm uppercase flex items-start gap-1 leading-tight">
+            <span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 bg-brand-yellow rounded-full animate-pulse flex-shrink-0 mt-0.5" />
+            <span className="line-clamp-2">{member.position}</span>
           </p>
         </div>
 
