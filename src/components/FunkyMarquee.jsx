@@ -1,11 +1,11 @@
 
 import React from 'react';
 
-const FunkyMarquee = ({ text, direction = 'left', speed = 20, className = "" }) => {
+const FunkyMarquee = ({ text, direction = 'left', speed = 45, className = "" }) => {
     return (
-        <div className={`relative flex overflow-hidden py-4 ${className}`}>
+        <div className={`relative flex overflow-hidden py-4 group ${className}`}>
             <div
-                className={`flex whitespace-nowrap ${direction === 'left' ? 'animate-marquee' : 'animate-marquee-reverse'}`}
+                className={`flex whitespace-nowrap group-hover:[animation-play-state:paused] ${direction === 'left' ? 'animate-marquee' : 'animate-marquee-reverse'}`}
                 style={{ animationDuration: `${speed}s` }}
             >
                 {[...Array(10)].map((_, i) => (
@@ -15,7 +15,7 @@ const FunkyMarquee = ({ text, direction = 'left', speed = 20, className = "" }) 
                 ))}
             </div>
             <div
-                className={`flex whitespace-nowrap ${direction === 'left' ? 'animate-marquee' : 'animate-marquee-reverse'} absolute top-4 left-0`}
+                className={`flex whitespace-nowrap group-hover:[animation-play-state:paused] ${direction === 'left' ? 'animate-marquee' : 'animate-marquee-reverse'} absolute top-4 left-0`}
                 style={{ animationDuration: `${speed}s` }}
             >
                 {[...Array(10)].map((_, i) => (
