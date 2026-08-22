@@ -77,8 +77,39 @@ const AdminPortal = () => {
 
     // Generic composer data state
     const [genericMailData, setGenericMailData] = useState({
-        body: ''
+        plainText: 'Dear {name},\n\nA very warm welcome to E-Cell DYPIU! We are absolutely thrilled to have you join our entrepreneurship community.\n\nWe will keep you updated with the latest incubation cohorts, ideation workshops, and startup funding opportunities.\n\nBest regards,\nTeam E-Cell DYPIU',
+        body: `<div style="font-family:Segoe UI,Arial,sans-serif;color:#ffffff;line-height:1.6;font-size:14px;">\n<p style="margin:0 0 12px;">Dear {name},</p>\n<p style="margin:0 0 10px;">&nbsp;</p>\n<p style="margin:0 0 12px;">A very warm welcome to E-Cell DYPIU! We are absolutely thrilled to have you join our entrepreneurship community.</p>\n<p style="margin:0 0 10px;">&nbsp;</p>\n<p style="margin:0 0 12px;">We will keep you updated with the latest incubation cohorts, ideation workshops, and startup funding opportunities.</p>\n<p style="margin:0 0 10px;">&nbsp;</p>\n<p style="margin:0 0 12px;">Best regards,</p>\n<p style="margin:0 0 12px;">Team E-Cell DYPIU</p>\n</div>`
     });
+    const [showMailPreviewModal, setShowMailPreviewModal] = useState(false);
+
+    // Sync plain text edit to HTML
+    const handlePlainTextChange = (text) => {
+        setGenericMailData(prev => {
+            const paragraphs = text.split('\n').map(line => {
+                const trimmed = line.trim();
+                if (!trimmed) return '<p style="margin:0 0 10px;">&nbsp;</p>';
+                return `<p style="margin:0 0 12px;">${trimmed}</p>`;
+            }).join('\n');
+            
+            const htmlContent = `<div style="font-family:Segoe UI,Arial,sans-serif;color:#ffffff;line-height:1.6;font-size:14px;">\n${paragraphs}\n</div>`;
+            
+            return {
+                ...prev,
+                plainText: text,
+                body: htmlContent
+            };
+        });
+    };
+
+    // Reset Generic Composer default template
+    const handleResetGenericDefault = () => {
+        if (window.confirm("Are you sure you want to reset the custom email template? This will discard your current edits.")) {
+            setGenericMailData({
+                plainText: 'Dear {name},\n\nA very warm welcome to E-Cell DYPIU! We are absolutely thrilled to have you join our entrepreneurship community.\n\nWe will keep you updated with the latest incubation cohorts, ideation workshops, and startup funding opportunities.\n\nBest regards,\nTeam E-Cell DYPIU',
+                body: `<div style="font-family:Segoe UI,Arial,sans-serif;color:#ffffff;line-height:1.6;font-size:14px;">\n<p style="margin:0 0 12px;">Dear {name},</p>\n<p style="margin:0 0 10px;">&nbsp;</p>\n<p style="margin:0 0 12px;">A very warm welcome to E-Cell DYPIU! We are absolutely thrilled to have you join our entrepreneurship community.</p>\n<p style="margin:0 0 10px;">&nbsp;</p>\n<p style="margin:0 0 12px;">We will keep you updated with the latest incubation cohorts, ideation workshops, and startup funding opportunities.</p>\n<p style="margin:0 0 10px;">&nbsp;</p>\n<p style="margin:0 0 12px;">Best regards,</p>\n<p style="margin:0 0 12px;">Team E-Cell DYPIU</p>\n</div>`
+            });
+        }
+    };
 
     // Export Contacts to CSV
     const handleExportSubscribersCSV = () => {
@@ -134,6 +165,55 @@ const AdminPortal = () => {
             e.target.value = '';
         };
         reader.readAsText(file);
+    };
+
+    // Generate live html preview of the custom email wrapped in E-cell branding
+    const getGenericPreviewHTML = (bodyContent) => {
+        const formattedBody = (bodyContent || '').replace(/\n/g, '<br/>');
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; padding: 0; background-color: #000000; font-family: Arial, sans-serif; color: #ffffff; }
+    </style>
+</head>
+<body>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #000000;">
+        <tr>
+            <td align="center" style="padding: 20px 10px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #18181b; border: 3px solid #ffffff; border-radius: 16px; overflow: hidden; max-width: 550px; width: 100%;">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background-color: #FFB22C; padding: 20px; text-align: center;">
+                            <h1 style="margin: 0; color: #000000; font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; font-family: Arial, sans-serif;">
+                                E-CELL DYPIU
+                            </h1>
+                        </td>
+                    </tr>
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 25px 30px; color: #ffffff; font-size: 14px; line-height: 1.6; font-family: Arial, sans-serif;">
+                            ${formattedBody}
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #0c0c0e; padding: 20px; text-align: center; border-top: 1px solid #27272a;">
+                            <p style="margin: 0; color: #71717a; font-size: 10px; font-family: Arial, sans-serif;">
+                                © ${new Date().getFullYear()} E-Cell DYPIU.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        `;
     };
 
     // Copy selected or all emails to clipboard
@@ -2759,6 +2839,28 @@ More content..."
                                     )}
                                 </div>
 
+                                {/* Mail Template Action Bar */}
+                                <div className="flex gap-2 justify-between items-center border-t-2 border-zinc-800 pt-6">
+                                    <h3 className="text-lg font-black uppercase text-brand-yellow">Mail Template</h3>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowMailPreviewModal(true)}
+                                            className="px-4 py-2 bg-brand-yellow text-black font-black text-xs uppercase rounded-lg border-2 border-white hover:bg-white transition-all flex items-center gap-1.5"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                            Preview Changes
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleResetGenericDefault}
+                                            className="px-4 py-2 bg-zinc-800 text-gray-300 hover:text-white font-bold text-xs uppercase rounded-lg border border-zinc-700 transition-colors"
+                                        >
+                                            Reset Default
+                                        </button>
+                                    </div>
+                                </div>
+
                                 {/* Subject Line */}
                                 <div>
                                     <label className="block text-sm font-bold uppercase mb-2">
@@ -2769,24 +2871,47 @@ More content..."
                                         value={mailerSubject}
                                         onChange={(e) => setMailerSubject(e.target.value)}
                                         className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
-                                        placeholder="Enter subject here..."
+                                        placeholder="📢 Welcome to E-Cell DYPIU!"
                                         required
                                     />
                                 </div>
 
-                                {/* Body Composer */}
-                                <div>
-                                    <label className="block text-sm font-bold uppercase mb-2">
-                                        Email Body Message <span className="text-brand-yellow">*</span>
-                                    </label>
-                                    <textarea
-                                        value={genericMailData.body}
-                                        onChange={(e) => setGenericMailData(prev => ({ ...prev, body: e.target.value }))}
-                                        rows={10}
-                                        className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none resize-none font-mono text-sm"
-                                        placeholder="Compose your custom email here... (supports basic HTML markup or plain text with paragraphs)"
-                                        required
-                                    />
+                                {/* Side-by-Side Editors */}
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    {/* Left Column: Quick Edit */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">
+                                            Quick Edit (No Code)
+                                        </label>
+                                        <textarea
+                                            value={genericMailData.plainText}
+                                            onChange={(e) => handlePlainTextChange(e.target.value)}
+                                            rows={14}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none resize-none text-sm font-sans"
+                                            placeholder="Dear {name},&#10;&#10;Type your message here..."
+                                        />
+                                        <p className="text-[11px] text-zinc-500 mt-1">
+                                            Editing here automatically updates the HTML template on the right. Use <strong>Preview Changes</strong> to see the rendered preview.
+                                        </p>
+                                    </div>
+
+                                    {/* Right Column: HTML Editor */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">
+                                            Body (HTML or Plain Text)
+                                        </label>
+                                        <textarea
+                                            value={genericMailData.body}
+                                            onChange={(e) => setGenericMailData(prev => ({ ...prev, body: e.target.value }))}
+                                            rows={14}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none resize-none font-mono text-xs"
+                                            placeholder="HTML code content..."
+                                            required
+                                        />
+                                        <p className="text-[11px] text-zinc-500 mt-1">
+                                            Placeholders: <code>{`{name}`}</code> will be automatically replaced with the recipient's name during dispatch.
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <button
@@ -2998,6 +3123,51 @@ More content..."
                                         Send to {selectedSubscribers.length} Subscriber{selectedSubscribers.length !== 1 ? 's' : ''}
                                     </>
                                 )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Mail Preview Modal */}
+            {showMailPreviewModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-zinc-900 border-4 border-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-[8px_8px_0px_#FFB22C] overflow-hidden">
+                        {/* Modal Header */}
+                        <div className="p-4 border-b-2 border-zinc-700 flex items-center justify-between bg-zinc-800">
+                            <h3 className="text-md font-black uppercase text-brand-yellow">Mail Preview</h3>
+                            <button
+                                type="button"
+                                onClick={() => setShowMailPreviewModal(false)}
+                                className="text-gray-400 hover:text-white transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        {/* Subject Indicator */}
+                        <div className="p-4 bg-zinc-900 border-b border-zinc-800">
+                            <p className="text-xs font-bold text-zinc-500 uppercase">Subject</p>
+                            <p className="text-sm font-black text-white">{mailerSubject || '(No Subject)'}</p>
+                        </div>
+                        
+                        {/* Rendered Preview Area */}
+                        <div className="flex-1 overflow-y-auto bg-black p-4">
+                            <iframe
+                                srcDoc={getGenericPreviewHTML(genericMailData.body)}
+                                title="Email Rendered Preview"
+                                className="w-full h-[380px] border-none bg-black rounded-lg"
+                            />
+                        </div>
+                        
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t-2 border-zinc-700 bg-zinc-800 text-right">
+                            <button
+                                type="button"
+                                onClick={() => setShowMailPreviewModal(false)}
+                                className="px-6 py-2 bg-brand-yellow text-black font-black text-xs uppercase rounded-lg border-2 border-white hover:bg-white transition-all"
+                            >
+                                Close Preview
                             </button>
                         </div>
                     </div>
