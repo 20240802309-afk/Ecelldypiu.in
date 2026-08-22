@@ -20,6 +20,59 @@ const db = getFirestore();
 
 // Email sending function using Resend API
 async function sendEmail(to, subject, htmlContent) {
+    if (process.env.ZEPTOMAIL_API_KEY) {
+        const url = process.env.ZEPTOMAIL_URL || 'https://api.zeptomail.in/v1.1/email';
+        let authHeader = process.env.ZEPTOMAIL_API_KEY;
+        if (!authHeader.toLowerCase().startsWith('zoho-enczapikey')) {
+            authHeader = `Zoho-enczapikey ${authHeader}`;
+        }
+
+        const fromAddress = process.env.ZEPTOMAIL_FROM_ADDRESS || 'ecell@dypiu.ac.in';
+        const fromName = process.env.ZEPTOMAIL_FROM_NAME || 'E-Cell DYPIU';
+
+        let toName = '';
+        let toAddress = to;
+        const toMatch = to.match(/^(.*?)\s*<(.*?)>$/);
+        if (toMatch) {
+            toName = toMatch[1].trim();
+            toAddress = toMatch[2].trim();
+        }
+
+        const payload = {
+            from: {
+                address: fromAddress,
+                name: fromName
+            },
+            to: [
+                {
+                    email_address: {
+                        address: toAddress,
+                        name: toName || toAddress.split('@')[0]
+                    }
+                }
+            ],
+            subject: subject,
+            htmlbody: htmlContent
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': authHeader
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(`ZeptoMail send failed: ${error}`);
+        }
+
+        return response.json();
+    }
+
     const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {

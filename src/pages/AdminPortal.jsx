@@ -47,6 +47,181 @@ const AdminPortal = () => {
     const [addingSubscriber, setAddingSubscriber] = useState(false);
     const [deletingSubscriber, setDeletingSubscriber] = useState(null);
 
+    // Mailer state variables
+    const [mailerTo, setMailerTo] = useState('all'); // 'all', 'selected', 'manual'
+    const [mailerManualEmails, setMailerManualEmails] = useState('');
+    const [mailerSubject, setMailerSubject] = useState('');
+    const [mailerType, setMailerType] = useState('announcement'); // 'announcement', 'event', 'generic'
+    
+    // Announcement data state
+    const [announcementData, setAnnouncementData] = useState({
+        title: '',
+        subtitle: '',
+        bannerUrl: '',
+        body: '',
+        buttonText: '',
+        buttonUrl: ''
+    });
+
+    // Event notification data state
+    const [eventMailData, setEventMailData] = useState({
+        title: '',
+        bannerUrl: '',
+        description: '',
+        date: '',
+        time: '',
+        venue: '',
+        registrationLink: '',
+        buttonText: 'Register Now'
+    });
+
+    // Generic composer data state
+    const [genericMailData, setGenericMailData] = useState({
+        body: ''
+    });
+
+    // Export Contacts to CSV
+    const handleExportSubscribersCSV = () => {
+        if (subscribers.length === 0) {
+            alert('No subscribers to export.');
+            return;
+        }
+        const headers = ['Name', 'Email', 'Phone', 'College/Organization'];
+        const rows = subscribers.map(s => [
+            s.name || 'Unknown',
+            s.email || '',
+            s.phone || '',
+            s.college || ''
+        ]);
+        
+        let csvContent = "data:text/csv;charset=utf-8," 
+            + [headers.join(','), ...rows.map(e => e.map(val => `"${val.replace(/"/g, '""')}"`).join(','))].join('\n');
+            
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `ECell_Subscribers_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // Import Emails from CSV/TXT file
+    const handleImportEmailsCSV = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const text = event.target.result;
+            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+            const matches = text.match(emailRegex) || [];
+            
+            if (matches.length === 0) {
+                alert("No valid email addresses found in the selected file!");
+                return;
+            }
+
+            const uniqueEmails = [...new Set(matches.map(email => email.toLowerCase()))];
+            
+            setMailerManualEmails(prev => {
+                const existing = prev ? prev.split(',').map(email => email.trim().toLowerCase()).filter(Boolean) : [];
+                const combined = [...new Set([...existing, ...uniqueEmails])];
+                return combined.join(', ');
+            });
+            
+            alert(`Successfully imported ${uniqueEmails.length} unique email address(es) from "${file.name}"!`);
+            e.target.value = '';
+        };
+        reader.readAsText(file);
+    };
+
+    // Copy selected or all emails to clipboard
+    const handleCopyEmails = () => {
+        const listToCopy = selectedSubscribers.length > 0 
+            ? selectedSubscribers 
+            : subscribers.map(s => s.email);
+            
+        if (listToCopy.length === 0) {
+            alert('No emails to copy!');
+            return;
+        }
+        
+        navigator.clipboard.writeText(listToCopy.join(', '));
+        alert(`Copied ${listToCopy.length} email address(es) to clipboard!`);
+    };
+
+    // Dispatch Emails via Mailer API
+    const handleSendMailerEmail = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+        setResult(null);
+
+        let payloadData = {};
+        if (mailerType === 'announcement') {
+            payloadData = announcementData;
+        } else if (mailerType === 'event') {
+            payloadData = eventMailData;
+        } else {
+            payloadData = genericMailData;
+        }
+
+        const selectedSubs = subscribers.filter(s => selectedSubscribers.includes(s.email));
+
+        try {
+            const response = await fetch('/api/mailer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminKey}`
+                },
+                body: JSON.stringify({
+                    to: mailerTo,
+                    manualEmails: mailerManualEmails,
+                    type: mailerType,
+                    subject: mailerSubject,
+                    data: payloadData,
+                    selectedSubscribers: selectedSubs
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to dispatch emails');
+            }
+
+            setResult({
+                type: 'notification',
+                message: `Emails dispatched successfully to ${data.results?.sent || 0} of ${data.results?.validSubscribers || 0} recipients!`,
+                details: data.results?.details || [],
+                sent: data.results?.sent || 0,
+                failed: data.results?.failed || 0,
+                total: data.results?.validSubscribers || 0,
+                totalDocs: data.results?.totalDocs || 0,
+                skipped: data.results?.skippedDocs || 0,
+                skippedDetails: data.results?.skipped || []
+            });
+
+            // Reset form details if successful
+            if (mailerType === 'announcement') {
+                setAnnouncementData({ title: '', subtitle: '', bannerUrl: '', body: '', buttonText: '', buttonUrl: '' });
+            } else if (mailerType === 'event') {
+                setEventMailData({ title: '', bannerUrl: '', description: '', date: '', time: '', venue: '', registrationLink: '', buttonText: 'Register Now' });
+            } else {
+                setGenericMailData({ body: '' });
+            }
+            setMailerSubject('');
+            setMailerManualEmails('');
+
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Login state
     const [loginError, setLoginError] = useState('');
     const [loginLoading, setLoginLoading] = useState(false);
@@ -955,24 +1130,47 @@ const AdminPortal = () => {
                                 </div>
                             </div>
 
-                            {/* Subscriber Management Card */}
+                            {/* Mailer & Contacts Card */}
                             <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
                                 <div className="flex items-center gap-4 mb-4">
                                     <div className="w-14 h-14 bg-green-500 rounded-xl flex items-center justify-center">
-                                        <Users className="w-7 h-7 text-black" />
+                                        <Mail className="w-7 h-7 text-black" />
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-black uppercase">Subscriber Management</h3>
-                                        <p className="text-gray-400 text-sm">View, add & remove subscribers</p>
+                                        <h3 className="text-xl font-black uppercase">Mailer & Contacts</h3>
+                                        <p className="text-gray-400 text-sm">Send updates & manage directory</p>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => { setActiveTab('manage-subscribers'); setError(null); setResult(null); }}
-                                    className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-green-500 hover:text-black transition-colors text-left group"
-                                >
-                                    <List className="w-4 h-4 text-green-500 group-hover:text-black" />
-                                    <span>Manage Subscribers</span>
-                                </button>
+                                <div className="space-y-2 text-sm">
+                                    <button
+                                        onClick={() => { setActiveTab('manage-subscribers'); setError(null); setResult(null); }}
+                                        className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-green-500 hover:text-black transition-colors text-left group"
+                                    >
+                                        <Users className="w-4 h-4 text-green-500 group-hover:text-black" />
+                                        <span>Contacts Directory</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setActiveTab('mailer-announcement'); setMailerType('announcement'); setError(null); setResult(null); }}
+                                        className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-green-500 hover:text-black transition-colors text-left group"
+                                    >
+                                        <PlusCircle className="w-4 h-4 text-green-500 group-hover:text-black" />
+                                        <span>Announcement Creator</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setActiveTab('mailer-event'); setMailerType('event'); setError(null); setResult(null); }}
+                                        className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-green-500 hover:text-black transition-colors text-left group"
+                                    >
+                                        <Calendar className="w-4 h-4 text-green-500 group-hover:text-black" />
+                                        <span>Event Notifier</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setActiveTab('mailer-generic'); setMailerType('generic'); setError(null); setResult(null); }}
+                                        className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-green-500 hover:text-black transition-colors text-left group"
+                                    >
+                                        <Send className="w-4 h-4 text-green-500 group-hover:text-black" />
+                                        <span>Direct Custom Composer</span>
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Event Management Card */}
@@ -1833,7 +2031,7 @@ More content..."
                     </div>
                 )}
 
-                {/* Manage Subscribers Tab */}
+                {/* Manage Subscribers Tab (Enhanced Contacts Directory) */}
                 {activeTab === 'manage-subscribers' && (
                     <div className="max-w-4xl mx-auto">
                         <button
@@ -1844,30 +2042,92 @@ More content..."
                             <span>Back to Dashboard</span>
                         </button>
                         <h2 className="text-3xl font-black uppercase mb-6">
-                            Manage <span className="text-green-500">Subscribers</span>
+                            Contacts <span className="text-green-500">Directory</span>
                         </h2>
 
-                        {/* Stats Bar */}
-                        <div className="bg-zinc-900 border-2 border-zinc-700 rounded-xl p-4 mb-6 flex items-center justify-between">
+                        {/* Stats & Actions Bar */}
+                        <div className="bg-zinc-900 border-2 border-zinc-700 rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <Users className="w-6 h-6 text-green-500" />
-                                <span className="text-gray-400">Total Subscribers:</span>
+                                <span className="text-gray-400 font-bold">Total Contacts:</span>
                                 <span className="text-green-500 font-black text-2xl">{subscribers.length}</span>
                             </div>
-                            <button
-                                onClick={fetchSubscribersForManagement}
-                                className="flex items-center gap-2 px-4 py-2 bg-zinc-800 text-gray-400 rounded-lg hover:bg-zinc-700 transition-colors"
-                            >
-                                <Loader2 className={`w-4 h-4 ${loadingSubscribers ? 'animate-spin' : ''}`} />
-                                Refresh
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={fetchSubscribersForManagement}
+                                    className="flex items-center gap-2 px-4 py-2 bg-zinc-800 text-gray-400 rounded-lg hover:bg-zinc-700 transition-colors text-xs font-bold uppercase"
+                                >
+                                    <Loader2 className={`w-4 h-4 ${loadingSubscribers ? 'animate-spin' : ''}`} />
+                                    Refresh
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Add New Subscriber Form */}
+                        {/* Selection & Export actions */}
+                        <div className="flex flex-wrap gap-3 mb-6 justify-between items-center bg-zinc-900 border-2 border-zinc-700 rounded-xl p-4">
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => setSelectedSubscribers(subscribers.map(s => s.email))}
+                                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase rounded-lg border border-zinc-700 transition-colors"
+                                >
+                                    Select All
+                                </button>
+                                <button
+                                    onClick={() => setSelectedSubscribers([])}
+                                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase rounded-lg border border-zinc-700 transition-colors"
+                                >
+                                    Deselect All
+                                </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    onClick={handleCopyEmails}
+                                    className="px-4 py-2 bg-brand-yellow text-black font-bold text-xs uppercase rounded-lg border border-white hover:bg-white transition-colors"
+                                >
+                                    Copy Emails
+                                </button>
+                                <button
+                                    onClick={handleExportSubscribersCSV}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase rounded-lg border border-blue-400 transition-colors"
+                                >
+                                    Export CSV
+                                </button>
+                            </div>
+                        </div>
+
+                        {selectedSubscribers.length > 0 && (
+                            <div className="bg-brand-yellow/10 border-2 border-brand-yellow rounded-xl p-4 mb-6 flex flex-wrap justify-between items-center gap-4 animate-pulse">
+                                <p className="m-0 font-bold text-sm text-brand-yellow">
+                                    ⚡ {selectedSubscribers.length} contact(s) selected. Quick Compose:
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    <button
+                                        onClick={() => { setActiveTab('mailer-announcement'); setMailerTo('selected'); setMailerType('announcement'); setError(null); setResult(null); }}
+                                        className="px-3 py-1.5 bg-brand-yellow text-black font-black text-xs uppercase rounded-lg border-2 border-white hover:bg-white transition-all"
+                                    >
+                                        Announcement
+                                    </button>
+                                    <button
+                                        onClick={() => { setActiveTab('mailer-event'); setMailerTo('selected'); setMailerType('event'); setError(null); setResult(null); }}
+                                        className="px-3 py-1.5 bg-brand-yellow text-black font-black text-xs uppercase rounded-lg border-2 border-white hover:bg-white transition-all"
+                                    >
+                                        Event Invitation
+                                    </button>
+                                    <button
+                                        onClick={() => { setActiveTab('mailer-generic'); setMailerTo('selected'); setMailerType('generic'); setError(null); setResult(null); }}
+                                        className="px-3 py-1.5 bg-brand-yellow text-black font-black text-xs uppercase rounded-lg border-2 border-white hover:bg-white transition-all"
+                                    >
+                                        Compose Email
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Add New Contact Form */}
                         <div className="bg-zinc-900 border-4 border-green-500/30 rounded-2xl p-6 mb-6">
                             <h3 className="text-xl font-black uppercase mb-4 flex items-center gap-3">
                                 <UserPlus className="w-5 h-5 text-green-500" />
-                                Add New Subscriber
+                                Add New Contact
                             </h3>
                             <form onSubmit={handleAddSubscriber} className="space-y-4">
                                 <div className="grid md:grid-cols-2 gap-4">
@@ -1937,7 +2197,7 @@ More content..."
                                     ) : (
                                         <>
                                             <UserPlus className="w-5 h-5" />
-                                            Add Subscriber
+                                            Add to Directory
                                         </>
                                     )}
                                 </button>
@@ -1952,7 +2212,7 @@ More content..."
                                     type="text"
                                     value={subscriberSearch}
                                     onChange={(e) => setSubscriberSearch(e.target.value)}
-                                    placeholder="Search by name, email, phone..."
+                                    placeholder="Search by name, email, phone, college..."
                                     className="w-full bg-zinc-900 border-2 border-zinc-700 pl-12 pr-4 py-3 text-white rounded-xl focus:border-green-500 focus:outline-none"
                                 />
                             </div>
@@ -1962,7 +2222,7 @@ More content..."
                         <div className="bg-zinc-900 border-2 border-zinc-700 rounded-xl overflow-hidden">
                             <div className="bg-zinc-800 p-4 border-b border-zinc-700 flex items-center justify-between">
                                 <h3 className="font-bold uppercase text-sm text-gray-400">
-                                    Subscriber List ({filteredSubscribers.length})
+                                    Contact Records ({filteredSubscribers.length})
                                 </h3>
                             </div>
 
@@ -1973,22 +2233,33 @@ More content..."
                             ) : filteredSubscribers.length === 0 ? (
                                 <div className="text-center py-12 text-gray-400">
                                     <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                    <p>{subscriberSearch ? 'No subscribers match your search' : 'No subscribers yet'}</p>
+                                    <p>{subscriberSearch ? 'No contacts match your search' : 'No contacts in directory yet'}</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-zinc-800 max-h-[400px] overflow-y-auto custom-scrollbar">
+                                <div className="divide-y divide-zinc-800 max-h-[500px] overflow-y-auto custom-scrollbar">
                                     {filteredSubscribers.map((subscriber, index) => (
                                         <div
                                             key={subscriber.id}
-                                            className="p-4 hover:bg-zinc-800/50 transition-colors flex items-center justify-between"
+                                            className={`p-4 hover:bg-zinc-800/50 transition-colors flex items-center justify-between ${
+                                                selectedSubscribers.includes(subscriber.email) ? 'bg-brand-yellow/5' : ''
+                                            }`}
                                         >
-                                            <div className="flex items-start gap-4">
-                                                <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-green-500 font-bold">
-                                                    {index + 1}
+                                            <div className="flex items-start gap-4 flex-1">
+                                                {/* Checkbox */}
+                                                <div 
+                                                    onClick={() => toggleSubscriber(subscriber.email)}
+                                                    className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center cursor-pointer mt-1 ${
+                                                        selectedSubscribers.includes(subscriber.email)
+                                                        ? 'bg-brand-yellow text-black'
+                                                        : 'bg-black border-2 border-zinc-700'
+                                                    }`}
+                                                >
+                                                    {selectedSubscribers.includes(subscriber.email) && <CheckCircle2 className="w-4.5 h-4.5" />}
                                                 </div>
-                                                <div>
-                                                    <p className="font-bold text-white">{subscriber.name}</p>
-                                                    <p className="text-green-500 text-sm flex items-center gap-1">
+
+                                                <div className="flex-1" onClick={() => toggleSubscriber(subscriber.email)}>
+                                                    <p className="font-bold text-white cursor-pointer hover:text-brand-yellow transition-colors">{subscriber.name}</p>
+                                                    <p className="text-green-500 text-sm flex items-center gap-1 cursor-pointer">
                                                         <Mail className="w-3 h-3" />
                                                         {subscriber.email}
                                                     </p>
@@ -2000,7 +2271,7 @@ More content..."
                                                             </span>
                                                         )}
                                                         {subscriber.college && (
-                                                            <span>{subscriber.college}</span>
+                                                            <span>• {subscriber.college}</span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -2009,7 +2280,7 @@ More content..."
                                                 onClick={() => handleDeleteSubscriber(subscriber.id)}
                                                 disabled={deletingSubscriber === subscriber.id}
                                                 className="p-2 bg-red-900/50 text-red-400 rounded-lg hover:bg-red-900 transition-colors disabled:opacity-50"
-                                                title="Remove Subscriber"
+                                                title="Remove Contact"
                                             >
                                                 {deletingSubscriber === subscriber.id ? (
                                                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -2021,6 +2292,521 @@ More content..."
                                     ))}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Mailer - Announcement Creator */}
+                {activeTab === 'mailer-announcement' && (
+                    <div className="max-w-3xl mx-auto">
+                        <button
+                            onClick={() => { setActiveTab('dashboard'); setError(null); setResult(null); }}
+                            className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                            <span>Back to Dashboard</span>
+                        </button>
+                        <h2 className="text-3xl font-black uppercase mb-6">
+                            Announcement <span className="text-brand-yellow">Creator</span>
+                        </h2>
+                        <p className="text-gray-400 mb-6">
+                            Send a structured announcement email containing a banner image, headlines, and call-to-action button to your audience.
+                        </p>
+
+                        <div className="bg-zinc-900 border-4 border-white p-8 rounded-2xl shadow-[8px_8px_0px_#FFB22C] mb-8">
+                            <form onSubmit={handleSendMailerEmail} className="space-y-6">
+                                {/* Audience Selection */}
+                                <div>
+                                    <label className="block text-sm font-bold uppercase mb-2">Target Audience</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {['all', 'selected', 'manual'].map(type => (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                onClick={() => setMailerTo(type)}
+                                                className={`py-2 px-4 rounded-lg font-bold text-xs uppercase border-2 transition-all ${
+                                                    mailerTo === type 
+                                                    ? 'bg-brand-yellow text-black border-white' 
+                                                    : 'bg-black text-gray-400 border-zinc-800 hover:border-zinc-600'
+                                                }`}
+                                            >
+                                                {type === 'all' && 'All Subscribers'}
+                                                {type === 'selected' && `Selected (${selectedSubscribers.length})`}
+                                                {type === 'manual' && 'Manual Entry'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {mailerTo === 'manual' && (
+                                        <div className="mt-3">
+                                            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Recipients Emails (comma separated)</label>
+                                            <textarea
+                                                value={mailerManualEmails}
+                                                onChange={(e) => setMailerManualEmails(e.target.value)}
+                                                rows={2}
+                                                className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                                placeholder="email1@domain.com, email2@domain.com"
+                                                required={mailerTo === 'manual'}
+                                            />
+                                            <div className="mt-2 flex items-center gap-3">
+                                                <label className="bg-zinc-800 border-2 border-zinc-700 hover:border-brand-yellow text-gray-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold uppercase cursor-pointer transition-colors flex items-center gap-2">
+                                                    <Upload className="w-4 h-4 text-brand-yellow" />
+                                                    <span>Import Emails from CSV / Text File</span>
+                                                    <input 
+                                                        type="file" 
+                                                        accept=".csv,.txt" 
+                                                        onChange={handleImportEmailsCSV} 
+                                                        className="hidden" 
+                                                    />
+                                                </label>
+                                                <span className="text-zinc-500 text-[10px] uppercase font-bold">Supports CSV/Excel/Text lists</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {mailerTo === 'selected' && (
+                                        <div className="mt-3 bg-zinc-800/50 p-3 rounded-lg border border-zinc-700 text-xs text-zinc-400">
+                                            ⚡ Sending to the **{selectedSubscribers.length}** contact(s) currently checkmarked in the Contacts Directory.
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Subject Line */}
+                                <div>
+                                    <label className="block text-sm font-bold uppercase mb-2">
+                                        Email Subject Line <span className="text-brand-yellow">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={mailerSubject}
+                                        onChange={(e) => setMailerSubject(e.target.value)}
+                                        className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                        placeholder="📢 Important Update: E-Cell Incubation Cohort 2026 Open!"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Form Fields */}
+                                <div className="border-t-2 border-zinc-800 pt-6 space-y-4">
+                                    <h3 className="text-lg font-black uppercase text-brand-yellow mb-2">Announcement Layout Settings</h3>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-bold uppercase mb-2">Announcement Heading Title <span className="text-brand-yellow">*</span></label>
+                                        <input
+                                            type="text"
+                                            value={announcementData.title}
+                                            onChange={(e) => setAnnouncementData(prev => ({ ...prev, title: e.target.value }))}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                            placeholder="Incubation Registration Open"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold uppercase mb-2">Subheading / Excerpt</label>
+                                        <input
+                                            type="text"
+                                            value={announcementData.subtitle}
+                                            onChange={(e) => setAnnouncementData(prev => ({ ...prev, subtitle: e.target.value }))}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                            placeholder="Apply now to secure funding & mentorship for your startup venture."
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold uppercase mb-2">Banner Image URL</label>
+                                        <input
+                                            type="url"
+                                            value={announcementData.bannerUrl}
+                                            onChange={(e) => setAnnouncementData(prev => ({ ...prev, bannerUrl: e.target.value }))}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                            placeholder="https://example.com/banner.png"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold uppercase mb-2">Body Content (supports paragraphs) <span className="text-brand-yellow">*</span></label>
+                                        <textarea
+                                            value={announcementData.body}
+                                            onChange={(e) => setAnnouncementData(prev => ({ ...prev, body: e.target.value }))}
+                                            rows={6}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none font-sans text-sm resize-none"
+                                            placeholder="Type the main message body of your announcement here..."
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-bold uppercase mb-2">CTA Button Text</label>
+                                            <input
+                                                type="text"
+                                                value={announcementData.buttonText}
+                                                onChange={(e) => setAnnouncementData(prev => ({ ...prev, buttonText: e.target.value }))}
+                                                className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                                placeholder="APPLY NOW"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold uppercase mb-2">CTA Button Link</label>
+                                            <input
+                                                type="url"
+                                                value={announcementData.buttonUrl}
+                                                onChange={(e) => setAnnouncementData(prev => ({ ...prev, buttonUrl: e.target.value }))}
+                                                className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                                placeholder="https://ecelldypiu.in/apply"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading || (mailerTo === 'selected' && selectedSubscribers.length === 0)}
+                                    className="w-full bg-brand-yellow text-black text-xl font-black uppercase py-4 border-4 border-black hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="animate-spin w-6 h-6" />
+                                            Broadcasting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Send className="w-6 h-6" />
+                                            Send Announcement
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Mailer - Event Notifier */}
+                {activeTab === 'mailer-event' && (
+                    <div className="max-w-3xl mx-auto">
+                        <button
+                            onClick={() => { setActiveTab('dashboard'); setError(null); setResult(null); }}
+                            className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                            <span>Back to Dashboard</span>
+                        </button>
+                        <h2 className="text-3xl font-black uppercase mb-6">
+                            Event <span className="text-brand-yellow">Notifier</span>
+                        </h2>
+                        <p className="text-gray-400 mb-6">
+                            Draft and dispatch structured invitations containing description, banner, details (Date, Time, Venue), and registration URL to subscribers.
+                        </p>
+
+                        <div className="bg-zinc-900 border-4 border-white p-8 rounded-2xl shadow-[8px_8px_0px_#FFB22C] mb-8">
+                            <form onSubmit={handleSendMailerEmail} className="space-y-6">
+                                {/* Audience Selection */}
+                                <div>
+                                    <label className="block text-sm font-bold uppercase mb-2">Target Audience</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {['all', 'selected', 'manual'].map(type => (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                onClick={() => setMailerTo(type)}
+                                                className={`py-2 px-4 rounded-lg font-bold text-xs uppercase border-2 transition-all ${
+                                                    mailerTo === type 
+                                                    ? 'bg-brand-yellow text-black border-white' 
+                                                    : 'bg-black text-gray-400 border-zinc-800 hover:border-zinc-600'
+                                                }`}
+                                            >
+                                                {type === 'all' && 'All Subscribers'}
+                                                {type === 'selected' && `Selected (${selectedSubscribers.length})`}
+                                                {type === 'manual' && 'Manual Entry'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {mailerTo === 'manual' && (
+                                        <div className="mt-3">
+                                            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Recipients Emails (comma separated)</label>
+                                            <textarea
+                                                value={mailerManualEmails}
+                                                onChange={(e) => setMailerManualEmails(e.target.value)}
+                                                rows={2}
+                                                className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                                placeholder="email1@domain.com, email2@domain.com"
+                                                required={mailerTo === 'manual'}
+                                            />
+                                            <div className="mt-2 flex items-center gap-3">
+                                                <label className="bg-zinc-800 border-2 border-zinc-700 hover:border-brand-yellow text-gray-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold uppercase cursor-pointer transition-colors flex items-center gap-2">
+                                                    <Upload className="w-4 h-4 text-brand-yellow" />
+                                                    <span>Import Emails from CSV / Text File</span>
+                                                    <input 
+                                                        type="file" 
+                                                        accept=".csv,.txt" 
+                                                        onChange={handleImportEmailsCSV} 
+                                                        className="hidden" 
+                                                    />
+                                                </label>
+                                                <span className="text-zinc-500 text-[10px] uppercase font-bold">Supports CSV/Excel/Text lists</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {mailerTo === 'selected' && (
+                                        <div className="mt-3 bg-zinc-800/50 p-3 rounded-lg border border-zinc-700 text-xs text-zinc-400">
+                                            ⚡ Sending to the **{selectedSubscribers.length}** contact(s) currently checkmarked in the Contacts Directory.
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Subject Line */}
+                                <div>
+                                    <label className="block text-sm font-bold uppercase mb-2">
+                                        Email Subject Line <span className="text-brand-yellow">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={mailerSubject}
+                                        onChange={(e) => setMailerSubject(e.target.value)}
+                                        className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                        placeholder="📅 RSVP: E-Cell Ideation Workshop next Saturday!"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Event Specific Fields */}
+                                <div className="border-t-2 border-zinc-800 pt-6 space-y-4">
+                                    <h3 className="text-lg font-black uppercase text-brand-yellow mb-2">Event Schedule & Settings</h3>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-bold uppercase mb-2">Event Title <span className="text-brand-yellow">*</span></label>
+                                        <input
+                                            type="text"
+                                            value={eventMailData.title}
+                                            onChange={(e) => setEventMailData(prev => ({ ...prev, title: e.target.value }))}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                            placeholder="Ideation Workshop"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold uppercase mb-2">Banner Image URL</label>
+                                        <input
+                                            type="url"
+                                            value={eventMailData.bannerUrl}
+                                            onChange={(e) => setEventMailData(prev => ({ ...prev, bannerUrl: e.target.value }))}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                            placeholder="https://example.com/event-banner.png"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold uppercase mb-2">Event Description <span className="text-brand-yellow">*</span></label>
+                                        <textarea
+                                            value={eventMailData.description}
+                                            onChange={(e) => setEventMailData(prev => ({ ...prev, description: e.target.value }))}
+                                            rows={4}
+                                            className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none resize-none text-sm"
+                                            placeholder="Provide a description of the event details, speakers, and topics covered..."
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="grid md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase mb-2">Date (e.g. Oct 12, 2026)</label>
+                                            <input
+                                                type="text"
+                                                value={eventMailData.date}
+                                                onChange={(e) => setEventMailData(prev => ({ ...prev, date: e.target.value }))}
+                                                className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                                placeholder="Oct 12, 2026"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase mb-2">Time (e.g. 10:00 AM)</label>
+                                            <input
+                                                type="text"
+                                                value={eventMailData.time}
+                                                onChange={(e) => setEventMailData(prev => ({ ...prev, time: e.target.value }))}
+                                                className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                                placeholder="10:00 AM IST"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase mb-2">Venue</label>
+                                            <input
+                                                type="text"
+                                                value={eventMailData.venue}
+                                                onChange={(e) => setEventMailData(prev => ({ ...prev, venue: e.target.value }))}
+                                                className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                                placeholder="Seminar Hall, DYPIU"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-bold uppercase mb-2">Registration Link</label>
+                                            <input
+                                                type="url"
+                                                value={eventMailData.registrationLink}
+                                                onChange={(e) => setEventMailData(prev => ({ ...prev, registrationLink: e.target.value }))}
+                                                className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                                placeholder="https://ecelldypiu.in/events/ideation-2026/register"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold uppercase mb-2">Button Text</label>
+                                            <input
+                                                type="text"
+                                                value={eventMailData.buttonText}
+                                                onChange={(e) => setEventMailData(prev => ({ ...prev, buttonText: e.target.value }))}
+                                                className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                                placeholder="Register Now"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading || (mailerTo === 'selected' && selectedSubscribers.length === 0)}
+                                    className="w-full bg-brand-yellow text-black text-xl font-black uppercase py-4 border-4 border-black hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="animate-spin w-6 h-6" />
+                                            Broadcasting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Calendar className="w-6 h-6" />
+                                            Send Event Invite
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Mailer - Direct Custom Composer */}
+                {activeTab === 'mailer-generic' && (
+                    <div className="max-w-3xl mx-auto">
+                        <button
+                            onClick={() => { setActiveTab('dashboard'); setError(null); setResult(null); }}
+                            className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                            <span>Back to Dashboard</span>
+                        </button>
+                        <h2 className="text-3xl font-black uppercase mb-6">
+                            Direct Custom <span className="text-brand-yellow">Composer</span>
+                        </h2>
+                        <p className="text-gray-400 mb-6">
+                            Compose a personalized text email to selected contacts. The message will be beautifully wrapped inside the default E-Cell DYPIU branding layout.
+                        </p>
+
+                        <div className="bg-zinc-900 border-4 border-white p-8 rounded-2xl shadow-[8px_8px_0px_#FFB22C] mb-8">
+                            <form onSubmit={handleSendMailerEmail} className="space-y-6">
+                                {/* Audience Selection */}
+                                <div>
+                                    <label className="block text-sm font-bold uppercase mb-2">Target Audience</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {['all', 'selected', 'manual'].map(type => (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                onClick={() => setMailerTo(type)}
+                                                className={`py-2 px-4 rounded-lg font-bold text-xs uppercase border-2 transition-all ${
+                                                    mailerTo === type 
+                                                    ? 'bg-brand-yellow text-black border-white' 
+                                                    : 'bg-black text-gray-400 border-zinc-800 hover:border-zinc-600'
+                                                }`}
+                                            >
+                                                {type === 'all' && 'All Subscribers'}
+                                                {type === 'selected' && `Selected (${selectedSubscribers.length})`}
+                                                {type === 'manual' && 'Manual Entry'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {mailerTo === 'manual' && (
+                                        <div className="mt-3">
+                                            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Recipients Emails (comma separated)</label>
+                                            <textarea
+                                                value={mailerManualEmails}
+                                                onChange={(e) => setMailerManualEmails(e.target.value)}
+                                                rows={2}
+                                                className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                                placeholder="email1@domain.com, email2@domain.com"
+                                                required={mailerTo === 'manual'}
+                                            />
+                                            <div className="mt-2 flex items-center gap-3">
+                                                <label className="bg-zinc-800 border-2 border-zinc-700 hover:border-brand-yellow text-gray-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold uppercase cursor-pointer transition-colors flex items-center gap-2">
+                                                    <Upload className="w-4 h-4 text-brand-yellow" />
+                                                    <span>Import Emails from CSV / Text File</span>
+                                                    <input 
+                                                        type="file" 
+                                                        accept=".csv,.txt" 
+                                                        onChange={handleImportEmailsCSV} 
+                                                        className="hidden" 
+                                                    />
+                                                </label>
+                                                <span className="text-zinc-500 text-[10px] uppercase font-bold">Supports CSV/Excel/Text lists</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {mailerTo === 'selected' && (
+                                        <div className="mt-3 bg-zinc-800/50 p-3 rounded-lg border border-zinc-700 text-xs text-zinc-400">
+                                            ⚡ Sending to the **{selectedSubscribers.length}** contact(s) currently checkmarked in the Contacts Directory.
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Subject Line */}
+                                <div>
+                                    <label className="block text-sm font-bold uppercase mb-2">
+                                        Email Subject Line <span className="text-brand-yellow">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={mailerSubject}
+                                        onChange={(e) => setMailerSubject(e.target.value)}
+                                        className="w-full bg-black border-2 border-zinc-700 p-4 text-white rounded-lg focus:border-brand-yellow focus:outline-none"
+                                        placeholder="Enter subject here..."
+                                        required
+                                    />
+                                </div>
+
+                                {/* Body Composer */}
+                                <div>
+                                    <label className="block text-sm font-bold uppercase mb-2">
+                                        Email Body Message <span className="text-brand-yellow">*</span>
+                                    </label>
+                                    <textarea
+                                        value={genericMailData.body}
+                                        onChange={(e) => setGenericMailData(prev => ({ ...prev, body: e.target.value }))}
+                                        rows={10}
+                                        className="w-full bg-black border-2 border-zinc-700 p-3 text-white rounded-lg focus:border-brand-yellow focus:outline-none resize-none font-mono text-sm"
+                                        placeholder="Compose your custom email here... (supports basic HTML markup or plain text with paragraphs)"
+                                        required
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading || (mailerTo === 'selected' && selectedSubscribers.length === 0)}
+                                    className="w-full bg-brand-yellow text-black text-xl font-black uppercase py-4 border-4 border-black hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="animate-spin w-6 h-6" />
+                                            Dispatched...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Send className="w-6 h-6" />
+                                            Send Email
+                                        </>
+                                    )}
+                                </button>
+                            </form>
                         </div>
                     </div>
                 )}

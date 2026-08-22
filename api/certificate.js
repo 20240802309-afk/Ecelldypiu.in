@@ -96,6 +96,72 @@ async function sendEmail(to, subject, html, provider = 'resend', attachments = [
         return data;
     }
 
+    if (provider === 'zeptomail' || (!process.env.RESEND_API_KEY && process.env.ZEPTOMAIL_API_KEY)) {
+        if (!process.env.ZEPTOMAIL_API_KEY) {
+            throw new Error('ZEPTOMAIL_API_KEY is not set');
+        }
+        const url = process.env.ZEPTOMAIL_URL || 'https://api.zeptomail.in/v1.1/email';
+        
+        let authHeader = process.env.ZEPTOMAIL_API_KEY;
+        if (!authHeader.toLowerCase().startsWith('zoho-enczapikey')) {
+            authHeader = `Zoho-enczapikey ${authHeader}`;
+        }
+        
+        const fromAddress = process.env.ZEPTOMAIL_FROM_ADDRESS || 'ecell@dypiu.ac.in';
+        const fromName = process.env.ZEPTOMAIL_FROM_NAME || 'E-Cell DYPIU';
+        
+        let toName = '';
+        let toAddress = to;
+        const toMatch = to.match(/^(.*?)\s*<(.*?)>$/);
+        if (toMatch) {
+            toName = toMatch[1].trim();
+            toAddress = toMatch[2].trim();
+        }
+
+        const formattedAttachments = attachments.map(att => ({
+            content: att.content || att.base64 || att.data,
+            mime_type: att.contentType || att.mimeType || att.type || 'application/octet-stream',
+            name: att.filename || att.name || 'attachment'
+        }));
+
+        const payload = {
+            from: {
+                address: fromAddress,
+                name: fromName
+            },
+            to: [
+                {
+                    email_address: {
+                        address: toAddress,
+                        name: toName || toAddress.split('@')[0]
+                    }
+                }
+            ],
+            subject,
+            htmlbody: html
+        };
+
+        if (formattedAttachments.length > 0) {
+            payload.attachments = formattedAttachments;
+        }
+
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': authHeader
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`ZeptoMail send failed: ${errorText}`);
+        }
+        return res.json();
+    }
+
     if (!process.env.RESEND_API_KEY) {
         throw new Error('RESEND_API_KEY is not set');
     }

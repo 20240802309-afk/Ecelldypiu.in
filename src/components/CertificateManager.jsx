@@ -72,7 +72,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
     const [emailHTML, setEmailHTML] = useState('');
     const [dispatching, setDispatching] = useState(false);
     const [dispatchResult, setDispatchResult] = useState(null);
-    const [emailProvider, setEmailProvider] = useState('resend');
+    const [emailProvider, setEmailProvider] = useState('zeptomail');
     const [showDispatchConfirm, setShowDispatchConfirm] = useState(false);
     const [dispatchPassword, setDispatchPassword] = useState('');
     const [dispatchPasswordError, setDispatchPasswordError] = useState('');
@@ -1598,6 +1598,7 @@ const CertificateManager = ({ adminKey, onBack }) => {
                                 onChange={(e) => setEmailProvider(e.target.value)}
                                 className="bg-black border-2 border-zinc-700 p-3 rounded-lg text-white font-bold focus:border-brand-yellow outline-none uppercase text-sm"
                             >
+                                <option value="zeptomail">Zoho ZeptoMail</option>
                                 <option value="resend">Default (Resend)</option>
                                 <option value="bridge1">Bridge 1 (CIIE)</option>
                                 <option value="bridge2">Bridge 2 (E-Cell)</option>

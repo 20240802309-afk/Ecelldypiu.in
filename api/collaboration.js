@@ -19,6 +19,64 @@ const db = getFirestore();
 
 // Send email via Resend
 async function sendEmail(to, subject, html) {
+    if (process.env.ZEPTOMAIL_API_KEY) {
+        try {
+            const url = process.env.ZEPTOMAIL_URL || 'https://api.zeptomail.in/v1.1/email';
+            let authHeader = process.env.ZEPTOMAIL_API_KEY;
+            if (!authHeader.toLowerCase().startsWith('zoho-enczapikey')) {
+                authHeader = `Zoho-enczapikey ${authHeader}`;
+            }
+
+            const fromAddress = process.env.ZEPTOMAIL_FROM_ADDRESS || 'ecell@dypiu.ac.in';
+            const fromName = process.env.ZEPTOMAIL_FROM_NAME || 'E-Cell DYPIU';
+
+            let toName = '';
+            let toAddress = to;
+            const toMatch = to.match(/^(.*?)\s*<(.*?)>$/);
+            if (toMatch) {
+                toName = toMatch[1].trim();
+                toAddress = toMatch[2].trim();
+            }
+
+            const payload = {
+                from: {
+                    address: fromAddress,
+                    name: fromName
+                },
+                to: [
+                    {
+                        email_address: {
+                            address: toAddress,
+                            name: toName || toAddress.split('@')[0]
+                        }
+                    }
+                ],
+                subject,
+                htmlbody: html
+            };
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': authHeader
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                console.error(`ZeptoMail send failed: ${errorText}`);
+            } else {
+                console.log(`Email sent successfully via ZeptoMail to ${to}`);
+            }
+        } catch (err) {
+            console.error(`ZeptoMail send error: ${err.message}`);
+        }
+        return;
+    }
+
     if (!process.env.RESEND_API_KEY) {
         console.warn('RESEND_API_KEY is not set. Skipping email send.');
         return;
