@@ -13,9 +13,60 @@ import {
   Loader2
 } from 'lucide-react';
 
+const defaultEvents = [
+  {
+    id: 'inceptio-26',
+    slug: 'inceptio-26',
+    title: "INCEPTIO'26",
+    date: '23rd Aug 2026',
+    image: '/INCEPTIO26.png',
+    description: "Flagship Pitching & Startup Challenge organized by E-Cell × CIIE, DYPIU."
+  },
+  {
+    id: 'inceptio',
+    slug: 'inceptio',
+    title: "Inceptio'25",
+    date: 'August 2025',
+    image: '/INCEPTIO.png',
+    description: "Showcasing the Next Generation of Innovators."
+  },
+  {
+    id: 'finbiz',
+    slug: 'finbiz',
+    title: "FinBiz'25",
+    date: '8th & 9th Nov 2025',
+    image: '/FINBIZ_SURYA.png',
+    description: "Finance & Business Innovation Festival."
+  },
+  {
+    id: 'elevate',
+    slug: 'elevate',
+    title: "Elevate'25",
+    date: '21st August 2025',
+    image: '/ELEVATE.jpeg',
+    description: "Celebrating World Entrepreneurship Day."
+  },
+  {
+    id: 'sih',
+    slug: 'sih',
+    title: "SIH'25",
+    date: 'August 2025',
+    image: '/SIH.png',
+    description: "Smart India Hackathon Internal Hackathon."
+  },
+  {
+    id: 'innovate-for-impact',
+    slug: 'innovate-for-impact',
+    title: 'Innovate For Impact',
+    date: '2025',
+    image: '/innovate-completed.png',
+    description: "Social Innovation & Impact Challenge."
+  }
+];
+
 const Events = () => {
   const location = useLocation();
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState(defaultEvents);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,11 +92,19 @@ const Events = () => {
       try {
         const response = await fetch('/api/event?action=get-events');
         const data = await response.json();
-        if (response.ok) {
-          setEvents(data);
+        if (response.ok && Array.isArray(data) && data.length > 0) {
+          const hasInceptio26 = data.some(e => e.slug === 'inceptio-26' || e.id === 'inceptio-26');
+          if (!hasInceptio26) {
+            setEvents([defaultEvents[0], ...data]);
+          } else {
+            setEvents(data);
+          }
+        } else {
+          setEvents(defaultEvents);
         }
       } catch (err) {
         console.error('Failed to fetch events:', err);
+        setEvents(defaultEvents);
       } finally {
         setLoading(false);
       }

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 const EVENTS = [
+    { id: 'inceptio-26', name: "Inceptio'26", collection: 'events/inceptio-26/attendees' },
     { id: 'fdp-trie', name: 'FDP on TRIE by CIIE', collection: 'events/fdp-trie/attendees' },
     { id: 'innovate-for-impact', name: 'Innovate For Impact', collection: 'events/innovate-for-impact/attendees' },
     { id: 'finbiz', name: "FinBiz'25", collection: 'events/finbiz/attendees' },

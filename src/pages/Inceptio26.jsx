@@ -23,69 +23,66 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const Inceptio = () => {
+const Inceptio26 = () => {
     const [certificateEnabled, setCertificateEnabled] = useState(true);
     const [selectedImageIndex, setSelectedImageIndex] = useState(null);
 
     useEffect(() => {
-        fetch('/api/certificate?eventId=inceptio')
+        fetch('/api/certificate?eventId=inceptio-26')
             .then(res => res.ok ? res.json() : null)
             .then(data => { if (data?.config?.enabled !== false) setCertificateEnabled(true); })
             .catch(() => { });
     }, []);
 
     const galleryImages = [
-        { src: '/INCEPTIO.png', title: 'Inceptio 25 Main Poster & Showcase' },
-        { src: '/Santosh Ranjan.png', title: 'Jury Member Mr. Santosh Ranjan' },
-        { src: '/Sanjay Jagtap.png', title: 'Jury Member Mr. Sanjay Jagtap' }
+        { src: '/INCEPTIO26.png', title: 'Official INCEPTIO \'26 Event Poster' },
+        { src: '/inceptio26/inceptio26-1.jpg', title: 'Certificate Presentation Ceremony' },
+        { src: '/inceptio26/inceptio26-2.jpg', title: 'Participants and Jury Group Photo' },
+        { src: '/inceptio26/inceptio26-3.jpg', title: 'Grand Finale Award Felicitation' },
+        { src: '/inceptio26/inceptio26-4.jpg', title: 'Organizing Committee and Student Delegations' },
+        { src: '/inceptio26/inceptio26-5.jpg', title: 'Felicitation of Top Performing Teams' }
     ];
 
     const eventDetails = {
-        title: 'INCEPTIO\'25',
-        subtitle: 'BUSINESS IDEA PITCHING COMPETITION',
-        organizedBy: 'IIC, CIIE & E-Cell, DYPIU',
-        date: '19th & 20th August 2025',
-        time: 'Two Day Pitch Arena',
+        title: 'INCEPTIO\'26',
+        subtitle: 'FLAGSHIP PITCHING & STARTUP CHALLENGE',
+        organizedBy: 'E-Cell × CIIE, DYPIU',
+        date: '23rd August, 2026',
+        time: 'Two Day Event',
         location: 'DYPIU Campus, Akurdi, Pune',
-        teamSize: '21 Pitching Teams',
-        category: 'Startup Pitching Competition',
-        image: '/INCEPTIO.png',
-        description: 'INCEPTIO\'25 brought together students and young innovators to present groundbreaking business ideas across med-tech, dairy sustainability, AI dev tools, and active learning hardware.',
-        longDescription: 'Organized by the Institution\'s Innovation Council (IIC), CIIE, and E-Cell at DYPIU, 21 student teams entered screening. 15 shortlisted teams presented before an expert jury panel on 19th August, leading to an intense Grand Finale with 9 top contenders on 20th August.',
+        teamSize: '40 Pitching Teams',
+        category: 'Startup Challenge',
+        image: '/INCEPTIO26.png',
+        description: 'INCEPTIO\'26, our flagship pitching and startup challenge, wrapped up in style this year — and the ideas on display made the judges\' job anything but easy.',
+        longDescription: 'After an Online Screening round on 22nd August, 40 teams battled it out offline with 5-minute pitches and 2-minute Q&A rounds, narrowing down to the Top 10 who took the final stage on 23rd August. From there, three teams rose to the top.',
         highlights: [
-            '21 Student Startup Teams Screened Across Multiple Disciplines',
-            'Grand Finale Pitch Arena with 9 Top Finalist Contenders',
-            'Evaluated by Experienced Industry Leaders, VCs & Faculty Panels',
-            '₹10,000 Total Cash Prize Pool Awarded to Top Performers',
-            'Official Certificates of Participation & Incubation Mentorship Support'
+            '₹5,000 Cash Prize for 1st Place Winner (CampusBites)',
+            '₹3,000 for 2nd Place (The Method Studio) & ₹2,000 for 3rd Place (Swaraj Saathi)',
+            'Direct Entry to Eureka! 2026 Zonals at IIT Bombay for Top 3 Teams',
+            'Access to Advanced Startup Bootcamp & Incubation Support through CIIE',
+            'Official Participation Certificates for Every Registered Pitching Team'
         ],
         process: [
-            { title: 'Screening', desc: 'Online submissions evaluated, shortlisting 21 qualified teams for offline presentation', icon: Target },
-            { title: 'Semi-Finals', desc: '15 shortlisted teams presented offline pitches before expert internal jury panels', icon: Zap },
-            { title: 'Grand Finale', desc: 'Top 9 finalist teams delivered live presentations followed by rigorous jury Q&A', icon: Users },
-            { title: 'Felicitation', desc: 'Top podium winners recognized with cash rewards & incubation acceleration', icon: Trophy }
+            { title: 'Screen', desc: 'Online Screening round on 22nd August evaluating innovative pitch decks', icon: Target },
+            { title: 'Battle', desc: '40 teams presented 5-minute pitches & faced 2-minute Q&A rounds offline', icon: Zap },
+            { title: 'Finale', desc: 'Top 10 finalist teams took the final stage on 23rd August', icon: Users },
+            { title: 'Triumph', desc: 'Three standout teams crowned as champions for national advancement', icon: Trophy }
         ],
         winners: {
             first: {
-                team: 'VENTURA',
-                subName: 'Ventura-Pro Respiratory Support',
+                team: 'CAMPUSBITES',
                 prize: '₹5,000',
-                lead: 'Sanya Jain (Team Lead)',
-                desc: 'A compact, low-cost, portable respiratory support system designed for disaster-prone and resource-limited settings, delivering critical emergency ventilation where standard infrastructure is unavailable.'
+                members: 'Yash Maru & Aviraj Raut'
             },
             second: {
-                team: 'WHYEVOLUTION',
-                subName: 'Ricotta Whey Valorization',
+                team: 'THE METHOD STUDIO',
                 prize: '₹3,000',
-                lead: 'Srushti Amol Bhoite (Team Lead)',
-                desc: 'Focuses on ricotta cheese production to convert dairy industry whey byproduct into a high-protein, cost-effective, and sustainable functional food product.'
+                members: 'Drashti Tushar Bhatt, Shivani Rakshasbhuwankar, Siddharth Maind, Shreya Tiwari, Keyur Nartam'
             },
             third: {
-                team: 'SKYSHIFT & THE CO-PILOTS',
-                subName: 'AI Cloud Platform & TinkerJoyToys',
-                prize: '₹1,000 Each (Joint Tie)',
-                lead: 'Shreyas Maurya (SkyShift) & Saif Salam Shaikh (The Co-Pilots)',
-                desc: 'SkyShift delivers an AI-powered zero-code cloud deployment & Terraform automation engine, tied with The Co-Pilots (TinkerJoyToys), producing tactile educational toys to reduce children\'s screen time.'
+                team: 'SWARAJ SAATHI',
+                prize: '₹2,000',
+                members: 'Team Swaraj Saathi'
             }
         }
     };
@@ -115,7 +112,7 @@ const Inceptio = () => {
                     >
                         <div>
                             <div className="inline-block bg-brand-yellow text-black font-black px-4 py-1 mb-6 text-xl transform -rotate-1 rounded-sm">
-                                COMPLETED EDITION
+                                FLAGSHIP CHALLENGE
                             </div>
                             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-4 uppercase tracking-tighter leading-[0.9]">
                                 {eventDetails.title}
@@ -145,7 +142,7 @@ const Inceptio = () => {
                                 </div>
                                 {certificateEnabled && (
                                     <Link
-                                        to="/events/inceptio/certificate"
+                                        to="/events/inceptio-26/certificate"
                                         className="bg-white text-black text-lg md:text-2xl font-black px-8 py-4 rounded-full border-4 border-brand-yellow transform hover:-translate-y-1 transition-all shadow-[8px_8px_0px_#FFB22C] hover:shadow-[12px_12px_0px_#FFB22C] flex items-center gap-3 group no-underline"
                                     >
                                         <Award className="w-6 h-6 md:w-8 md:h-8 group-hover:scale-110 transition-transform" />
@@ -181,7 +178,7 @@ const Inceptio = () => {
 
                             <div className="absolute -bottom-10 -left-10 bg-black border-4 border-white p-6 rounded-xl shadow-[8px_8px_0px_white] hidden md:block">
                                 <p className="text-brand-yellow font-black text-4xl mb-1">₹5,000</p>
-                                <p className="text-white font-bold uppercase tracking-wide text-sm">1st Place Cash Prize</p>
+                                <p className="text-white font-bold uppercase tracking-wide text-sm">1st Place Prize</p>
                             </div>
                         </div>
                     </motion.div>
@@ -192,7 +189,7 @@ const Inceptio = () => {
             <section className="py-20 border-b-4 border-white bg-zinc-900">
                 <div className="container mx-auto px-4">
                     <h2 className="text-4xl md:text-6xl font-black mb-16 uppercase tracking-tighter text-center">
-                        COMPETITION <span className="text-brand-yellow">PROCEEDINGS</span>
+                        HOW IT <span className="text-brand-yellow">UNFOLDED</span>
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {eventDetails.process.map((step, i) => (
@@ -272,10 +269,9 @@ const Inceptio = () => {
                                     </div>
                                 </div>
 
-                                <h3 className="text-2xl md:text-3xl font-black uppercase mb-1 text-gray-300">{eventDetails.winners.second.team}</h3>
-                                <p className="text-xs font-mono text-brand-yellow mb-2">{eventDetails.winners.second.subName}</p>
+                                <h3 className="text-2xl md:text-3xl font-black uppercase mb-2 text-gray-300">{eventDetails.winners.second.team}</h3>
                                 <div className="h-1 w-20 bg-gray-500 rounded-full mb-4"></div>
-                                <p className="text-sm font-mono text-gray-400 max-w-xs text-center">{eventDetails.winners.second.lead}</p>
+                                <p className="text-sm font-mono text-gray-400 max-w-xs text-center">{eventDetails.winners.second.members}</p>
                             </motion.div>
                         </div>
 
@@ -303,9 +299,8 @@ const Inceptio = () => {
                                 <h3 className="text-4xl md:text-6xl font-black uppercase mb-2 text-white drop-shadow-[0_4px_0_rgba(0,0,0,1)] text-center leading-[0.9]">
                                     {eventDetails.winners.first.team}
                                 </h3>
-                                <p className="text-sm font-mono text-brand-yellow font-bold mb-3">{eventDetails.winners.first.subName}</p>
                                 <div className="h-2 w-32 bg-brand-yellow rounded-full mb-4"></div>
-                                <p className="text-base font-mono text-gray-200 font-bold max-w-xs text-center mb-4">{eventDetails.winners.first.lead}</p>
+                                <p className="text-base font-mono text-gray-200 font-bold max-w-xs text-center mb-4">{eventDetails.winners.first.members}</p>
                                 <p className="text-brand-yellow font-bold tracking-widest uppercase text-xs border border-brand-yellow/30 px-4 py-1 rounded-full bg-brand-yellow/5">
                                     Grand Prize Winner
                                 </p>
@@ -326,29 +321,43 @@ const Inceptio = () => {
                                         <Medal className="w-16 h-16 text-white" />
                                     </div>
                                     <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-[#572b09] text-[#CD7F32] font-black px-4 py-1 rounded-full border-2 border-[#CD7F32] shadow-lg whitespace-nowrap z-20">
-                                        3RD PLACE (JOINT TIE)
+                                        3RD PLACE (₹2,000)
                                     </div>
                                 </div>
 
                                 <h3 className="text-2xl md:text-3xl font-black uppercase mb-2 text-[#CD7F32]">{eventDetails.winners.third.team}</h3>
-                                <p className="text-xs font-mono text-brand-yellow mb-2">{eventDetails.winners.third.subName}</p>
                                 <div className="h-1 w-20 bg-[#CD7F32] rounded-full mb-4"></div>
-                                <p className="text-sm font-mono text-gray-400 max-w-xs text-center">{eventDetails.winners.third.lead}</p>
+                                <p className="text-sm font-mono text-gray-400 max-w-xs text-center">{eventDetails.winners.third.members}</p>
                             </motion.div>
                         </div>
                     </div>
 
-                    {/* Judges' Note & Jury Panel Evaluation */}
+                    {/* What's Next for Winners Banner */}
+                    <div className="max-w-4xl mx-auto bg-zinc-900 border-4 border-white p-8 md:p-12 rounded-[2.5rem] shadow-[12px_12px_0px_#FFB22C] text-left mb-20 relative overflow-hidden">
+                        <div className="inline-flex items-center gap-2 bg-brand-yellow text-black font-black px-4 py-1 mb-6 text-sm rounded-sm uppercase tracking-wider">
+                            <Sparkles className="w-4 h-4 text-black" /> NATIONAL STAGE ADVANCEMENT
+                        </div>
+
+                        <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-4 text-white">
+                            WHAT'S NEXT FOR THE WINNERS
+                        </h3>
+
+                        <p className="text-lg md:text-xl text-gray-300 leading-relaxed mb-6 font-medium">
+                            Our Top 3 teams don't stop here — they're headed straight to <strong className="text-brand-yellow">Eureka! 2026 Zonals</strong>, IIT Bombay's flagship business plan competition, where they'll take their pitches to a national stage. They'll also get access to an advanced startup bootcamp and incubation support through CIIE.
+                        </p>
+                    </div>
+
+                    {/* Thank You & Verification Note */}
                     <div className="max-w-4xl mx-auto bg-zinc-900/60 border border-white/10 rounded-2xl p-8 backdrop-blur-sm text-left mb-20">
                         <h4 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
                             <Award className="w-6 h-6 text-brand-yellow" />
-                            Judges' Note & Jury Panel Evaluation
+                            Thank You & Certificates
                         </h4>
                         <p className="text-zinc-300 text-lg leading-relaxed mb-4">
-                            The distinguished jury panel—including <strong className="text-white">Mr. Sanjay Jagtap</strong> (Director, ENSIN Forum), <strong className="text-white">Mr. Santosh Ranjan</strong> (Managing Director, Knowledge Horizon India), and <strong className="text-white">Dr. Surabhi Sonam</strong> (Head, Dept of Biosciences & Bioengineering)—evaluated teams on innovation, market potential, scalability, and team strength.
+                            To every team that registered, built a deck, and stood up to pitch — thank you for making INCEPTIO'26 a genuine showcase of entrepreneurial energy at DYPIU. Every participant receives an official certificate of participation.
                         </p>
                         <p className="text-brand-yellow font-mono text-base font-bold">
-                            Congratulations to all 21 participating teams and top podium winners!
+                            Congratulations once again to CampusBites, The Method Studio, and Swaraj Saathi — see you at Eureka! Zonals.
                         </p>
                     </div>
 
@@ -390,7 +399,7 @@ const Inceptio = () => {
 
                         <div className="text-center mt-6">
                             <p className="text-gray-500 font-mono text-sm uppercase tracking-widest mb-2">Organized By</p>
-                            <p className="text-xl font-bold text-white uppercase">IIC × CIIE × E-Cell, DYPIU</p>
+                            <p className="text-xl font-bold text-white uppercase">E-Cell × CIIE, DYPIU</p>
                         </div>
                     </div>
                 </div>
@@ -445,4 +454,4 @@ const Inceptio = () => {
     );
 };
 
-export default Inceptio;
+export default Inceptio26;

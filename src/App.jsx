@@ -15,6 +15,7 @@ import Blogs from './pages/Blogs';
 import Contact from './pages/Contact';
 import Sponsors from './pages/Sponsors';
 import Inceptio from './pages/Inceptio';
+import Inceptio26 from './pages/Inceptio26';
 import Elevate from './pages/Elevate';
 import SIH from './pages/SIH';
 import FinBiz from './pages/FinBiz';
@@ -69,6 +70,10 @@ function App() {
                     <Route path="/about" element={<About />} />
                     <Route path="/sponsors" element={<Sponsors />} />
                     <Route path="/events" element={<Events />} />
+                    <Route path="/events/inceptio-26" element={<Inceptio26 />} />
+                    <Route path="/events/inceptio26" element={<Inceptio26 />} />
+                    <Route path="/events/inceptio-25" element={<Inceptio />} />
+                    <Route path="/events/inceptio25" element={<Inceptio />} />
                     <Route path="/events/inceptio" element={<Inceptio />} />
                     <Route path="/events/elevate" element={<Elevate />} />
                     <Route path="/events/sih" element={<SIH />} />
