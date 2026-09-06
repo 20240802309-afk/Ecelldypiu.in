@@ -47,6 +47,31 @@ const AdminPortal = () => {
     const [addingSubscriber, setAddingSubscriber] = useState(false);
     const [deletingSubscriber, setDeletingSubscriber] = useState(null);
 
+    // Team Applications state
+    const [applications, setApplications] = useState([]);
+    const [loadingApplications, setLoadingApplications] = useState(false);
+    const [selectedApplications, setSelectedApplications] = useState([]);
+    const [appSearch, setAppSearch] = useState('');
+    const [appRoleFilter, setAppRoleFilter] = useState('all');
+    const [viewingApp, setViewingApp] = useState(null);
+
+    // Interview schedule modal & email editor state
+    const [showInterviewModal, setShowInterviewModal] = useState(false);
+    const [interviewEditorTab, setInterviewEditorTab] = useState('guided'); // 'guided', 'html', 'preview'
+    const [interviewData, setInterviewData] = useState({
+        subject: 'Interview Schedule - E-Cell DYPIU Team Application',
+        role: '',
+        date: '',
+        time: '',
+        venue: '',
+        notes: 'Please arrive 5 minutes prior to your scheduled slot. Bring a copy of your resume or portfolio if applicable.',
+        buttonText: 'Confirm Slot / Join Meet',
+        buttonUrl: '',
+        useCustomHtml: false,
+        customHtml: ''
+    });
+    const [sendingInterviewMail, setSendingInterviewMail] = useState(false);
+
     // Mailer state variables
     const [mailerTo, setMailerTo] = useState('all'); // 'all', 'selected', 'manual'
     const [mailerManualEmails, setMailerManualEmails] = useState('');
@@ -953,6 +978,333 @@ const AdminPortal = () => {
         }
     }, [isAuthenticated, activeTab]);
 
+    // Fetch team applications
+    const fetchApplications = async () => {
+        setLoadingApplications(true);
+        try {
+            const response = await fetch('/api/event?action=list-applications', {
+                headers: {
+                    'Authorization': `Bearer ${adminKey}`
+                }
+            });
+            const data = await response.json();
+            if (data.applications) {
+                setApplications(data.applications);
+            }
+        } catch (err) {
+            console.error('Failed to fetch applications:', err);
+            setError('Failed to load team applications');
+        } finally {
+            setLoadingApplications(false);
+        }
+    };
+
+    // Load team applications when manage-applications or dashboard is active
+    useEffect(() => {
+        if (isAuthenticated && (activeTab === 'manage-applications' || activeTab === 'dashboard')) {
+            fetchApplications();
+        }
+    }, [isAuthenticated, activeTab]);
+
+    const toggleApplicationSelection = (id) => {
+        setSelectedApplications(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const selectAllApplications = (appList) => {
+        setSelectedApplications(appList.map(app => app.id));
+    };
+
+    const deselectAllApplications = () => {
+        setSelectedApplications([]);
+    };
+
+    const handleExportApplicationsCSV = (appList) => {
+        if (!appList || appList.length === 0) {
+            alert('No applications to export.');
+            return;
+        }
+
+        const headers = ['Full Name', 'PRN', 'Division', 'Email', 'Contact Number', 'Role', 'Time Management Score', 'Submitted Date'];
+        const rows = appList.map(app => [
+            app.fullName || '',
+            app.prn || '',
+            app.division || '',
+            app.email || '',
+            app.contactNumber || '',
+            app.role || '',
+            app.timeManagementRating || '',
+            app.submittedAt ? new Date(app.submittedAt).toLocaleString() : ''
+        ]);
+
+        let csvContent = "data:text/csv;charset=utf-8,"
+            + [headers.join(','), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `ECell_Team_Applications_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const generateInterviewHtmlTemplate = (data) => {
+        const roleText = data.role || '{role}';
+        const dateText = data.date || '{date}';
+        const timeText = data.time || '{time}';
+        const venueText = data.venue || '{venue}';
+        const notesText = (data.notes || '').replace(/\n/g, '<br/>');
+
+        return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Schedule - E-Cell DYPIU</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: Arial, sans-serif; color: #ffffff;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #000000;">
+        <tr>
+            <td align="center" style="padding: 30px 10px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color: #18181b; border: 4px solid #ffffff; border-radius: 20px; overflow: hidden; max-width: 600px; width: 100%;">
+                    <!-- Header Banner -->
+                    <tr>
+                        <td style="background-color: #FFB22C; padding: 25px 30px; text-align: center;">
+                            <h1 style="margin: 0; color: #000000; font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; font-family: Arial, sans-serif;">
+                                E-CELL DYPIU
+                            </h1>
+                            <p style="margin: 5px 0 0 0; color: #000000; font-size: 13px; font-weight: bold; font-family: Arial, sans-serif;">
+                                TEAM SELECTION INTERVIEW INVITATION
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 35px 40px; color: #ffffff;">
+                            <p style="font-size: 17px; margin: 0 0 20px 0; line-height: 1.5;">
+                                Dear <strong>{name}</strong>,
+                            </p>
+                            <p style="color: #e4e4e7; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                                Thank you for applying to join <strong>E-Cell DYPIU</strong>! Based on your application review, we are pleased to invite you for an interview round.
+                            </p>
+                            
+                            <!-- Interview Details Box -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #000000; border: 2px solid #FFB22C; border-radius: 12px; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h3 style="margin: 0 0 12px 0; color: #FFB22C; font-size: 16px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #27272a; padding-bottom: 8px;">Interview Schedule Details</h3>
+                                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                            <tr>
+                                                <td style="padding: 6px 0; color: #a1a1aa; font-size: 14px; width: 110px; font-weight: bold;">ROLE:</td>
+                                                <td style="padding: 6px 0; color: #FFB22C; font-size: 14px; font-weight: bold;">${roleText}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 6px 0; color: #a1a1aa; font-size: 14px; font-weight: bold;">DATE:</td>
+                                                <td style="padding: 6px 0; color: #ffffff; font-size: 14px;">${dateText}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 6px 0; color: #a1a1aa; font-size: 14px; font-weight: bold;">TIME / SLOT:</td>
+                                                <td style="padding: 6px 0; color: #ffffff; font-size: 14px;">${timeText}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 6px 0; color: #a1a1aa; font-size: 14px; font-weight: bold;">LOCATION:</td>
+                                                <td style="padding: 6px 0; color: #ffffff; font-size: 14px;">${venueText}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            ${notesText ? `
+                            <div style="background-color: #27272a; padding: 18px; border-radius: 10px; margin-bottom: 25px;">
+                                <h4 style="margin: 0 0 8px 0; color: #FFB22C; font-size: 14px; text-transform: uppercase;">Important Instructions / Notes</h4>
+                                <p style="color: #e4e4e7; font-size: 14px; line-height: 1.5; margin: 0;">${notesText}</p>
+                            </div>
+                            ` : ''}
+
+                            ${data.buttonUrl ? `
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td align="center" style="padding: 10px 0 15px 0;">
+                                        <a href="${data.buttonUrl}" target="_blank" style="display: inline-block; background-color: #FFB22C; color: #000000; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 8px; text-transform: uppercase; border: 3px solid #ffffff;">
+                                            ${data.buttonText || 'Join Interview / Confirm Slot'}
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            ` : ''}
+
+                            <p style="color: #a1a1aa; font-size: 14px; line-height: 1.5; margin: 25px 0 0 0;">
+                                Best of luck! We look forward to meeting you.<br/><br/>
+                                Warm regards,<br/>
+                                <strong>Team E-Cell DYPIU</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #0c0c0e; padding: 25px 30px; text-align: center; border-top: 2px solid #27272a;">
+                            <p style="margin: 0; color: #71717a; font-size: 12px;">
+                                © ${new Date().getFullYear()} E-Cell DYPIU. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`;
+    };
+
+    const handleSendInterviewScheduleEmails = async (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        if (selectedApplications.length === 0) {
+            setError('Please select at least one applicant.');
+            return;
+        }
+
+        setSendingInterviewMail(true);
+        setError(null);
+
+        const selectedAppDocs = applications.filter(app => selectedApplications.includes(app.id));
+        const selectedSubscribers = selectedAppDocs.map(app => ({
+            name: app.fullName || app.email.split('@')[0],
+            email: app.email,
+            role: getRoleLabel(app.role)
+        }));
+
+        let payloadData = {};
+        if (interviewData.useCustomHtml && interviewData.customHtml) {
+            payloadData = {
+                customHtml: interviewData.customHtml,
+                role: interviewData.role || 'E-Cell Team Member',
+                date: interviewData.date,
+                time: interviewData.time,
+                venue: interviewData.venue
+            };
+        } else {
+            const compiledHtml = generateInterviewHtmlTemplate(interviewData);
+            payloadData = {
+                customHtml: compiledHtml,
+                role: interviewData.role || (selectedAppDocs.length === 1 ? getRoleLabel(selectedAppDocs[0].role) : 'E-Cell Team Role'),
+                date: interviewData.date,
+                time: interviewData.time,
+                venue: interviewData.venue,
+                notes: interviewData.notes,
+                buttonText: interviewData.buttonText,
+                buttonUrl: interviewData.buttonUrl
+            };
+        }
+
+        try {
+            const response = await fetch('/api/mailer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminKey}`
+                },
+                body: JSON.stringify({
+                    to: 'selected',
+                    type: 'interview',
+                    subject: interviewData.subject,
+                    data: payloadData,
+                    selectedSubscribers
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to dispatch interview emails');
+            }
+
+            setShowInterviewModal(false);
+            setResult({
+                type: 'notification',
+                message: `Interview emails dispatched successfully to ${data.results?.sent || 0} candidate(s)!`,
+                details: data.results?.details || [],
+                sent: data.results?.sent || 0,
+                failed: data.results?.failed || 0,
+                total: data.results?.validSubscribers || 0,
+                totalDocs: data.results?.totalDocs || 0
+            });
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSendingInterviewMail(false);
+        }
+    };
+
+    const getRoleLabel = (roleId) => {
+        const rolesList = [
+            { id: 'pr', label: 'PR (Public Relations)' },
+            { id: 'marketing', label: 'Marketing' },
+            { id: 'social_media', label: 'Social Media' },
+            { id: 'operations', label: 'Operations' },
+            { id: 'technical', label: 'Technical' },
+            { id: 'corporate_relations', label: 'Corporate Relations' },
+            { id: 'design', label: 'Design' },
+            { id: 'aesthetics', label: 'Aesthetics (Creatives)' }
+        ];
+        const found = rolesList.find(r => r.id === roleId);
+        return found ? found.label : (roleId || 'General');
+    };
+
+    const getRoleBadgeStyle = (roleId) => {
+        switch (roleId) {
+            case 'pr': return 'bg-pink-500/20 text-pink-400 border-pink-500/40';
+            case 'marketing': return 'bg-blue-500/20 text-blue-400 border-blue-500/40';
+            case 'social_media': return 'bg-purple-500/20 text-purple-400 border-purple-500/40';
+            case 'operations': return 'bg-green-500/20 text-green-400 border-green-500/40';
+            case 'technical': return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40';
+            case 'corporate_relations': return 'bg-orange-500/20 text-orange-400 border-orange-500/40';
+            case 'design': return 'bg-red-500/20 text-red-400 border-red-500/40';
+            case 'aesthetics': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40';
+            default: return 'bg-zinc-800 text-zinc-300 border-zinc-700';
+        }
+    };
+
+    const roleQuestionsMap = {
+        pr: [
+            { key: 'pr_why', label: 'Why PR?' },
+            { key: 'pr_experience', label: 'Past experience promoting/convincing people' },
+            { key: 'pr_scenario', label: 'Scenario: Posters/social media fail — crowd attraction strategy' }
+        ],
+        marketing: [
+            { key: 'marketing_promotion', label: 'College event promotion strategy' },
+            { key: 'marketing_strategy', label: 'Low registrations 2 days before deadline strategy' },
+            { key: 'marketing_adapt', label: 'Adapting when marketing plan fails' }
+        ],
+        social_media: [
+            { key: 'sm_experience', label: 'Social media handling experience' },
+            { key: 'sm_skills', label: 'Key skills for social media' },
+            { key: 'sm_brand', label: 'Favorite brand/page social media presence' }
+        ],
+        operations: [
+            { key: 'ops_jugaad', label: 'Most "jugaad" thing pulled off' },
+            { key: 'ops_prioritize', label: 'Task prioritization strategy' },
+            { key: 'ops_crisis', label: 'Event day crisis response plan' }
+        ],
+        technical: [
+            { key: 'tech_project', label: 'Built code projects' },
+            { key: 'tech_experience', label: 'Website / App / Event tech experience' }
+        ],
+        corporate_relations: [
+            { key: 'cr_why', label: 'Why suited for Corporate Relations' },
+            { key: 'cr_pitch', label: '2-sentence sponsor pitch' }
+        ],
+        design: [
+            { key: 'design_portfolio', label: 'Portfolio Link' },
+            { key: 'design_software', label: 'Proficient design software' }
+        ],
+        aesthetics: [
+            { key: 'aesthetics_ideas', label: 'Tech event decoration theme idea' },
+            { key: 'aesthetics_experience', label: 'Venue decoration / Stage setup experience' }
+        ]
+    };
+
     // Login Screen
     if (!isAuthenticated) {
         return (
@@ -1170,10 +1522,35 @@ const AdminPortal = () => {
                                     <span className="text-gray-400 text-sm">Subscribers</span>
                                     <span className="text-green-500 font-black text-lg">{subscribers.length}</span>
                                 </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-400 text-sm">Applications</span>
+                                    <span className="text-pink-500 font-black text-lg">{applications.length}</span>
+                                </div>
                             </div>
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-6">
+                            {/* Team Applications Card */}
+                            <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-14 h-14 bg-pink-500 rounded-xl flex items-center justify-center">
+                                        <Users className="w-7 h-7 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black uppercase">Team Applications</h3>
+                                        <p className="text-gray-400 text-sm font-medium">Review /apply responses & schedule interviews</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-2 text-sm">
+                                    <button
+                                        onClick={() => { setActiveTab('manage-applications'); setError(null); setResult(null); }}
+                                        className="w-full flex items-center gap-3 p-3 bg-zinc-800 rounded-lg hover:bg-pink-500 hover:text-white transition-colors text-left group"
+                                    >
+                                        <List className="w-4 h-4 text-pink-500 group-hover:text-white" />
+                                        <span>View Responses ({applications.length})</span>
+                                    </button>
+                                </div>
+                            </div>
                             {/* Blog Section Card */}
                             <div className="bg-zinc-900 border-4 border-zinc-700 rounded-2xl p-6">
                                 <div className="flex items-center gap-4 mb-4">
@@ -1344,6 +1721,199 @@ const AdminPortal = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Manage Team Applications Tab */}
+                {activeTab === 'manage-applications' && (() => {
+                    const filteredApplications = applications.filter(app => {
+                        const matchesSearch = !appSearch || (
+                            (app.fullName || '').toLowerCase().includes(appSearch.toLowerCase()) ||
+                            (app.email || '').toLowerCase().includes(appSearch.toLowerCase()) ||
+                            (app.prn || '').toLowerCase().includes(appSearch.toLowerCase()) ||
+                            (app.division || '').toLowerCase().includes(appSearch.toLowerCase()) ||
+                            (app.contactNumber || '').includes(appSearch)
+                        );
+                        const matchesRole = appRoleFilter === 'all' || app.role === appRoleFilter;
+                        return matchesSearch && matchesRole;
+                    });
+
+                    return (
+                        <div className="max-w-7xl mx-auto space-y-6">
+                            <button
+                                onClick={() => { setActiveTab('dashboard'); setError(null); setResult(null); }}
+                                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                            >
+                                <ArrowLeft className="w-5 h-5" />
+                                <span>Back to Dashboard</span>
+                            </button>
+
+                            {/* Header Title & Actions */}
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-900 border-4 border-zinc-700 p-6 rounded-2xl">
+                                <div>
+                                    <h2 className="text-2xl md:text-3xl font-black uppercase text-white flex items-center gap-3">
+                                        <Users className="w-8 h-8 text-brand-yellow" />
+                                        Team Application <span className="text-brand-yellow">Responses</span>
+                                    </h2>
+                                    <p className="text-gray-400 text-sm mt-1">
+                                        Manage form submissions from /apply, review detailed Q&A answers, and dispatch interview schedule emails.
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <button
+                                        onClick={() => fetchApplications()}
+                                        disabled={loadingApplications}
+                                        className="px-4 py-2.5 bg-zinc-800 border-2 border-zinc-600 rounded-xl text-sm font-bold hover:bg-zinc-700 flex items-center gap-2"
+                                    >
+                                        <Loader2 className={`w-4 h-4 ${loadingApplications ? 'animate-spin' : ''}`} />
+                                        Refresh
+                                    </button>
+                                    <button
+                                        onClick={() => handleExportApplicationsCSV(filteredApplications)}
+                                        className="px-4 py-2.5 bg-zinc-800 border-2 border-zinc-600 rounded-xl text-sm font-bold hover:bg-white hover:text-black transition-colors flex items-center gap-2"
+                                    >
+                                        <FileText className="w-4 h-4" />
+                                        Export CSV
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (selectedApplications.length === 0) {
+                                                alert('Please select at least one application response to schedule an interview.');
+                                                return;
+                                            }
+                                            setShowInterviewModal(true);
+                                        }}
+                                        className="px-5 py-2.5 bg-brand-yellow text-black font-black uppercase text-sm rounded-xl hover:bg-white transition-colors border-2 border-black flex items-center gap-2 shadow-[4px_4px_0px_#fff]"
+                                    >
+                                        <Mail className="w-4 h-4" />
+                                        Schedule Interview ({selectedApplications.length})
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Search & Role Filter Toolbar */}
+                            <div className="bg-zinc-900 border-2 border-zinc-700 p-4 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
+                                <div className="relative w-full md:w-96">
+                                    <Search className="w-4 h-4 absolute left-3 top-3.5 text-gray-500" />
+                                    <input
+                                        type="text"
+                                        value={appSearch}
+                                        onChange={(e) => setAppSearch(e.target.value)}
+                                        placeholder="Search name, email, PRN, phone..."
+                                        className="w-full bg-black border border-zinc-700 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-brand-yellow focus:outline-none"
+                                    />
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+                                    <span className="text-xs text-gray-400 font-bold uppercase">Filter Role:</span>
+                                    <select
+                                        value={appRoleFilter}
+                                        onChange={(e) => setAppRoleFilter(e.target.value)}
+                                        className="bg-black border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-yellow focus:outline-none font-bold"
+                                    >
+                                        <option value="all">All Roles ({applications.length})</option>
+                                        <option value="pr">PR (Public Relations)</option>
+                                        <option value="marketing">Marketing</option>
+                                        <option value="social_media">Social Media</option>
+                                        <option value="operations">Operations</option>
+                                        <option value="technical">Technical</option>
+                                        <option value="corporate_relations">Corporate Relations</option>
+                                        <option value="design">Design</option>
+                                        <option value="aesthetics">Aesthetics (Creatives)</option>
+                                    </select>
+
+                                    <div className="flex items-center gap-2 ml-2">
+                                        <button
+                                            onClick={() => selectAllApplications(filteredApplications)}
+                                            className="text-xs text-brand-yellow font-bold hover:underline"
+                                        >
+                                            Select All ({filteredApplications.length})
+                                        </button>
+                                        <span className="text-zinc-600">|</span>
+                                        <button
+                                            onClick={deselectAllApplications}
+                                            className="text-xs text-gray-400 font-bold hover:underline"
+                                        >
+                                            Deselect All
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Applications List */}
+                            {loadingApplications ? (
+                                <div className="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-12 text-center text-gray-400">
+                                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-brand-yellow" />
+                                    <p className="font-bold">Fetching application responses from Firebase...</p>
+                                </div>
+                            ) : filteredApplications.length === 0 ? (
+                                <div className="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-12 text-center text-gray-400">
+                                    <AlertCircle className="w-10 h-10 mx-auto mb-3 text-zinc-600" />
+                                    <p className="font-bold text-lg text-white">No applications found</p>
+                                    <p className="text-sm mt-1">Try clearing your search or role filter.</p>
+                                </div>
+                            ) : (
+                                <div className="grid gap-4">
+                                    {filteredApplications.map((app) => {
+                                        const isSelected = selectedApplications.includes(app.id);
+                                        return (
+                                            <div
+                                                key={app.id}
+                                                className={`bg-zinc-900 border-2 rounded-xl p-5 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                                                    isSelected ? 'border-brand-yellow bg-zinc-900/90 shadow-[4px_4px_0px_#FFB22C]' : 'border-zinc-800 hover:border-zinc-700'
+                                                }`}
+                                            >
+                                                <div className="flex items-start md:items-center gap-4">
+                                                    <button
+                                                        onClick={() => toggleApplicationSelection(app.id)}
+                                                        className="mt-1 md:mt-0 text-brand-yellow flex-shrink-0"
+                                                    >
+                                                        {isSelected ? (
+                                                            <CheckSquare className="w-6 h-6 text-brand-yellow" />
+                                                        ) : (
+                                                            <Square className="w-6 h-6 text-zinc-600 hover:text-white" />
+                                                        )}
+                                                    </button>
+
+                                                    <div className="space-y-1">
+                                                        <div className="flex flex-wrap items-center gap-3">
+                                                            <h3 className="text-lg font-black uppercase text-white">{app.fullName || 'Anonymous'}</h3>
+                                                            <span className={`px-2.5 py-0.5 rounded-md text-xs font-black uppercase border ${getRoleBadgeStyle(app.role)}`}>
+                                                                {getRoleLabel(app.role)}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
+                                                            <span>PRN: <strong className="text-zinc-200">{app.prn || 'N/A'}</strong></span>
+                                                            <span>Div: <strong className="text-zinc-200">{app.division || 'N/A'}</strong></span>
+                                                            <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-zinc-500" /> {app.email}</span>
+                                                            {app.contactNumber && <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-zinc-500" /> {app.contactNumber}</span>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 border-zinc-800 pt-3 md:pt-0">
+                                                    <div className="text-right">
+                                                        <div className="text-[10px] uppercase font-bold text-gray-400">Time Mgmt</div>
+                                                        <div className="text-sm font-black text-brand-yellow">{app.timeManagementRating || '-'}/10</div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => setViewingApp(app)}
+                                                            className="px-4 py-2 bg-zinc-800 border border-zinc-700 hover:border-brand-yellow hover:text-brand-yellow rounded-lg text-xs font-bold uppercase transition-colors flex items-center gap-1.5"
+                                                        >
+                                                            <Eye className="w-3.5 h-3.5" /> View Response
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
 
                 {/* Link Shortener Tab */}
                 {activeTab === 'link-shortener' && (
@@ -3170,6 +3740,445 @@ More content..."
                                 Close Preview
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Viewing Application Details Modal */}
+            {viewingApp && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+                    <div className="bg-zinc-900 border-4 border-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-[8px_8px_0px_#FFB22C] relative">
+                        <button
+                            onClick={() => setViewingApp(null)}
+                            className="absolute top-6 right-6 p-2 text-gray-400 hover:text-white bg-black rounded-lg border border-zinc-700"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="mb-6 border-b border-zinc-800 pb-4">
+                            <div className="flex items-center gap-3 mb-2">
+                                <h2 className="text-2xl font-black uppercase text-white">{viewingApp.fullName}</h2>
+                                <span className={`px-3 py-1 rounded-md text-xs font-black uppercase border ${getRoleBadgeStyle(viewingApp.role)}`}>
+                                    {getRoleLabel(viewingApp.role)}
+                                </span>
+                            </div>
+                            <p className="text-xs text-gray-400">
+                                Submitted: {viewingApp.submittedAt ? new Date(viewingApp.submittedAt).toLocaleString() : 'N/A'}
+                            </p>
+                        </div>
+
+                        {/* Candidate Key Details Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-black p-4 rounded-xl border border-zinc-800 mb-6">
+                            <div>
+                                <span className="text-[10px] text-gray-500 uppercase font-bold block">PRN</span>
+                                <span className="text-sm font-bold text-white">{viewingApp.prn || '-'}</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-gray-500 uppercase font-bold block">Division</span>
+                                <span className="text-sm font-bold text-white">{viewingApp.division || '-'}</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-gray-500 uppercase font-bold block">Contact</span>
+                                <span className="text-sm font-bold text-white">{viewingApp.contactNumber || '-'}</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-gray-500 uppercase font-bold block">Time Management</span>
+                                <span className="text-sm font-black text-brand-yellow">{viewingApp.timeManagementRating || '-'}/10</span>
+                            </div>
+                            <div className="col-span-2 md:col-span-4 border-t border-zinc-800 pt-2">
+                                <span className="text-[10px] text-gray-500 uppercase font-bold block">Email</span>
+                                <span className="text-sm font-bold text-brand-yellow">{viewingApp.email}</span>
+                            </div>
+                        </div>
+
+                        {/* Role-Specific Answers */}
+                        <div className="space-y-4 mb-6">
+                            <h3 className="text-lg font-black uppercase text-brand-yellow border-b border-zinc-800 pb-2">
+                                Role Specific Questionnaire Answers
+                            </h3>
+
+                            {roleQuestionsMap[viewingApp.role] ? (
+                                roleQuestionsMap[viewingApp.role].map((q) => (
+                                    <div key={q.key} className="bg-black/60 p-4 rounded-xl border border-zinc-800">
+                                        <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">{q.label}</h4>
+                                        <p className="text-sm text-white whitespace-pre-wrap font-medium">
+                                            {viewingApp[q.key] ? viewingApp[q.key] : <span className="text-zinc-600 italic">No response provided</span>}
+                                        </p>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-gray-400">No role-specific answers available for this entry.</p>
+                            )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-zinc-800">
+                            <button
+                                onClick={() => {
+                                    toggleApplicationSelection(viewingApp.id);
+                                    setViewingApp(null);
+                                }}
+                                className={`px-5 py-2.5 rounded-xl font-bold uppercase text-xs flex items-center gap-2 border-2 ${
+                                    selectedApplications.includes(viewingApp.id)
+                                        ? 'bg-red-900/30 border-red-500 text-red-400'
+                                        : 'bg-brand-yellow text-black border-black hover:bg-white'
+                                }`}
+                            >
+                                {selectedApplications.includes(viewingApp.id) ? 'Deselect for Interview' : 'Select for Interview'}
+                            </button>
+
+                            <button
+                                onClick={() => setViewingApp(null)}
+                                className="px-6 py-2.5 bg-zinc-800 text-white font-bold uppercase text-xs rounded-xl hover:bg-zinc-700"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Interview Schedule & Email Editor Modal */}
+            {showInterviewModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+                    <div className="bg-zinc-900 border-4 border-brand-yellow rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-[12px_12px_0px_#FFB22C] relative overflow-hidden">
+                        
+                        {/* Header */}
+                        <div className="p-6 bg-zinc-900 border-b-2 border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-2xl font-black uppercase text-white flex items-center gap-3">
+                                    <Mail className="w-7 h-7 text-brand-yellow" />
+                                    Interview <span className="text-brand-yellow">Emailing Panel & Editor</span>
+                                </h2>
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Compose, format, preview, and dispatch interview invitations to selected candidates.
+                                </p>
+                            </div>
+
+                            <div className="flex items-center gap-2 bg-black p-1.5 rounded-xl border border-zinc-800">
+                                <button
+                                    type="button"
+                                    onClick={() => setInterviewEditorTab('guided')}
+                                    className={`px-3.5 py-1.5 text-xs font-bold uppercase rounded-lg transition-colors ${
+                                        interviewEditorTab === 'guided' ? 'bg-brand-yellow text-black shadow-sm' : 'text-gray-400 hover:text-white'
+                                    }`}
+                                >
+                                    Guided Form
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!interviewData.customHtml) {
+                                            setInterviewData(prev => ({
+                                                ...prev,
+                                                useCustomHtml: true,
+                                                customHtml: generateInterviewHtmlTemplate(interviewData)
+                                            }));
+                                        }
+                                        setInterviewEditorTab('html');
+                                    }}
+                                    className={`px-3.5 py-1.5 text-xs font-bold uppercase rounded-lg transition-colors ${
+                                        interviewEditorTab === 'html' ? 'bg-brand-yellow text-black shadow-sm' : 'text-gray-400 hover:text-white'
+                                    }`}
+                                >
+                                    HTML Code Editor
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setInterviewEditorTab('preview')}
+                                    className={`px-3.5 py-1.5 text-xs font-bold uppercase rounded-lg transition-colors ${
+                                        interviewEditorTab === 'preview' ? 'bg-brand-yellow text-black shadow-sm' : 'text-gray-400 hover:text-white'
+                                    }`}
+                                >
+                                    Live Preview
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setShowInterviewModal(false)}
+                                className="absolute top-6 right-6 p-2 text-gray-400 hover:text-white bg-black rounded-lg border border-zinc-700"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Selected Recipients Bar */}
+                        <div className="bg-black/80 px-6 py-3 border-b border-zinc-800 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2 overflow-x-auto py-1 max-w-3xl">
+                                <span className="text-xs font-bold uppercase text-brand-yellow flex-shrink-0">
+                                    Recipients ({selectedApplications.length}):
+                                </span>
+                                {applications.filter(app => selectedApplications.includes(app.id)).map(app => (
+                                    <span key={app.id} className="px-2.5 py-0.5 bg-zinc-800 text-white rounded-md text-xs font-medium border border-zinc-700 flex items-center gap-1.5 flex-shrink-0">
+                                        {app.fullName}
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleApplicationSelection(app.id)}
+                                            className="text-zinc-500 hover:text-red-400 ml-1 font-bold"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                            <div className="text-xs text-zinc-500 font-mono flex-shrink-0">
+                                Mode: <strong className="text-white uppercase">{interviewData.useCustomHtml ? 'Custom HTML' : 'Standard Layout'}</strong>
+                            </div>
+                        </div>
+
+                        {/* Main Content Body */}
+                        <div className="p-6 flex-1 overflow-y-auto space-y-6">
+                            
+                            {/* Email Subject Line (Always visible) */}
+                            <div>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-xs font-bold uppercase text-gray-300">Email Subject Line *</label>
+                                    <div className="flex gap-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => setInterviewData(prev => ({ ...prev, subject: prev.subject + ' {name}' }))}
+                                            className="text-[10px] bg-zinc-800 text-brand-yellow px-2 py-0.5 rounded border border-zinc-700 font-mono hover:bg-zinc-700"
+                                        >
+                                            + {'{name}'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setInterviewData(prev => ({ ...prev, subject: prev.subject + ' {role}' }))}
+                                            className="text-[10px] bg-zinc-800 text-brand-yellow px-2 py-0.5 rounded border border-zinc-700 font-mono hover:bg-zinc-700"
+                                        >
+                                            + {'{role}'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <input
+                                    type="text"
+                                    value={interviewData.subject}
+                                    onChange={(e) => setInterviewData(prev => ({ ...prev, subject: e.target.value }))}
+                                    className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-sm text-white focus:border-brand-yellow focus:outline-none font-bold"
+                                    required
+                                />
+                            </div>
+
+                            {/* Tab 1: Guided Form */}
+                            {interviewEditorTab === 'guided' && (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase mb-1 text-gray-300">
+                                                Role Title (Auto-Filled Per Candidate)
+                                            </label>
+                                            <div className="w-full bg-zinc-900/90 border border-zinc-700 rounded-lg p-3 text-sm text-brand-yellow font-mono font-bold flex items-center justify-between">
+                                                <span>
+                                                    {selectedApplications.length === 1
+                                                        ? getRoleLabel(applications.find(a => selectedApplications.includes(a.id))?.role)
+                                                        : 'Auto-filled per candidate\'s applied role ({role})'}
+                                                </span>
+                                                <span className="text-[10px] bg-zinc-800 text-gray-400 px-2 py-0.5 rounded border border-zinc-700 font-sans uppercase flex-shrink-0">
+                                                    Locked
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase mb-1 text-gray-300">Interview Date *</label>
+                                            <input
+                                                type="text"
+                                                value={interviewData.date}
+                                                onChange={(e) => setInterviewData(prev => ({ ...prev, date: e.target.value }))}
+                                                placeholder="e.g. 10th September 2026"
+                                                className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-sm text-white focus:border-brand-yellow focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase mb-1 text-gray-300">Time / Slot *</label>
+                                            <input
+                                                type="text"
+                                                value={interviewData.time}
+                                                onChange={(e) => setInterviewData(prev => ({ ...prev, time: e.target.value }))}
+                                                placeholder="e.g. 03:00 PM - 03:15 PM"
+                                                className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-sm text-white focus:border-brand-yellow focus:outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase mb-1 text-gray-300">Location / Venue / Link *</label>
+                                            <input
+                                                type="text"
+                                                value={interviewData.venue}
+                                                onChange={(e) => setInterviewData(prev => ({ ...prev, venue: e.target.value }))}
+                                                placeholder="e.g. Room 204, Academic Block / Google Meet Link"
+                                                className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-sm text-white focus:border-brand-yellow focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase mb-1 text-gray-300">Important Instructions / Notes</label>
+                                        <textarea
+                                            value={interviewData.notes}
+                                            onChange={(e) => setInterviewData(prev => ({ ...prev, notes: e.target.value }))}
+                                            rows="3"
+                                            placeholder="e.g. Please arrive 5 minutes prior. Bring a copy of your resume."
+                                            className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-sm text-white focus:border-brand-yellow focus:outline-none font-medium"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase mb-1 text-gray-300">Action Button Text (Optional)</label>
+                                            <input
+                                                type="text"
+                                                value={interviewData.buttonText}
+                                                onChange={(e) => setInterviewData(prev => ({ ...prev, buttonText: e.target.value }))}
+                                                placeholder="Confirm Slot / Join Meet"
+                                                className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-sm text-white focus:border-brand-yellow focus:outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase mb-1 text-gray-300">Action Button URL (Optional)</label>
+                                            <input
+                                                type="url"
+                                                value={interviewData.buttonUrl}
+                                                onChange={(e) => setInterviewData(prev => ({ ...prev, buttonUrl: e.target.value }))}
+                                                placeholder="https://meet.google.com/abc-xyz-123"
+                                                className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-sm text-white focus:border-brand-yellow focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 flex justify-between items-center border-t border-zinc-800">
+                                        <span className="text-xs text-gray-400">Want full control over HTML?</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const compiled = generateInterviewHtmlTemplate(interviewData);
+                                                setInterviewData(prev => ({ ...prev, useCustomHtml: true, customHtml: compiled }));
+                                                setInterviewEditorTab('html');
+                                            }}
+                                            className="px-4 py-2 bg-zinc-800 border border-zinc-700 text-brand-yellow rounded-lg text-xs font-bold uppercase hover:bg-zinc-700"
+                                        >
+                                            Convert to HTML Code & Edit →
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Tab 2: HTML Code Editor */}
+                            {interviewEditorTab === 'html' && (
+                                <div className="space-y-4">
+                                    <div className="flex flex-wrap items-center justify-between gap-3 bg-black p-3 rounded-xl border border-zinc-800">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className="text-xs font-bold uppercase text-gray-400">Insert Tags:</span>
+                                            {['{name}', '{email}', '{role}', '{date}', '{time}', '{venue}'].map((tag) => (
+                                                <button
+                                                    key={tag}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setInterviewData(prev => ({
+                                                            ...prev,
+                                                            useCustomHtml: true,
+                                                            customHtml: (prev.customHtml || '') + tag
+                                                        }));
+                                                    }}
+                                                    className="text-xs bg-zinc-800 text-brand-yellow px-2 py-1 rounded font-mono hover:bg-zinc-700 border border-zinc-700"
+                                                >
+                                                    + {tag}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const compiled = generateInterviewHtmlTemplate(interviewData);
+                                                    setInterviewData(prev => ({ ...prev, useCustomHtml: true, customHtml: compiled }));
+                                                }}
+                                                className="text-xs text-gray-400 hover:text-white underline font-bold"
+                                            >
+                                                Reset to Standard Template
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <textarea
+                                            value={interviewData.useCustomHtml ? interviewData.customHtml : generateInterviewHtmlTemplate(interviewData)}
+                                            onChange={(e) => setInterviewData(prev => ({ ...prev, useCustomHtml: true, customHtml: e.target.value }))}
+                                            rows="14"
+                                            className="w-full bg-black border border-zinc-700 p-4 text-xs font-mono text-green-400 focus:border-brand-yellow focus:outline-none rounded-xl leading-relaxed resize-y"
+                                            placeholder="Paste or type raw email HTML content..."
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Tab 3: Live Preview */}
+                            {interviewEditorTab === 'preview' && (
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold uppercase text-gray-400">Live Email Output Render</span>
+                                        <span className="text-xs text-brand-yellow font-mono">Sample variables applied for preview</span>
+                                    </div>
+
+                                    <div className="border-2 border-zinc-700 rounded-xl overflow-hidden bg-black p-2">
+                                        <iframe
+                                            srcDoc={(interviewData.useCustomHtml ? interviewData.customHtml : generateInterviewHtmlTemplate(interviewData))
+                                                .replace(/\{name\}/g, selectedApplications.length > 0 ? (applications.find(a => selectedApplications.includes(a.id))?.fullName || 'John Doe') : 'John Doe')
+                                                .replace(/\{email\}/g, 'john@example.com')
+                                                .replace(/\{role\}/g, interviewData.role || 'Technical')
+                                                .replace(/\{date\}/g, interviewData.date || '10th September 2026')
+                                                .replace(/\{time\}/g, interviewData.time || '03:00 PM')
+                                                .replace(/\{venue\}/g, interviewData.venue || 'Room 204')}
+                                            title="Live Email Render"
+                                            className="w-full h-[450px] border-none bg-black rounded-lg"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer Actions */}
+                        <div className="p-6 bg-zinc-900 border-t-2 border-zinc-800 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                {interviewEditorTab !== 'preview' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setInterviewEditorTab('preview')}
+                                        className="px-4 py-2 bg-zinc-800 text-gray-300 font-bold uppercase text-xs rounded-xl hover:bg-zinc-700 flex items-center gap-1.5"
+                                    >
+                                        <Eye className="w-3.5 h-3.5" /> Preview Output
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowInterviewModal(false)}
+                                    className="px-5 py-2.5 bg-zinc-800 text-gray-300 font-bold uppercase text-xs rounded-xl hover:bg-zinc-700"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSendInterviewScheduleEmails}
+                                    disabled={sendingInterviewMail || selectedApplications.length === 0}
+                                    className="px-6 py-2.5 bg-brand-yellow text-black font-black uppercase text-xs rounded-xl hover:bg-white transition-colors border-2 border-black flex items-center gap-2 disabled:opacity-50 shadow-[4px_4px_0px_#fff]"
+                                >
+                                    {sendingInterviewMail ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" /> Dispatching...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Send className="w-4 h-4" /> Send Email ({selectedApplications.length})
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             )}

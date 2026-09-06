@@ -299,6 +299,120 @@ function generateEventHTML(data, subscriberName) {
 `;
 }
 
+// Generate Interview Schedule Email Layout
+function generateInterviewHTML(data, candidateName) {
+    const formattedNotes = (data.notes || data.body || '').replace(/\n/g, '<br/>');
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Schedule - E-Cell DYPIU</title>
+    <style type="text/css">
+        @media only screen and (max-width: 620px) {
+            .email-container { width: 100% !important; }
+            .mobile-cta { width: 100% !important; display: block !important; box-sizing: border-box !important; text-align: center !important; }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: Arial, sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #000000;">
+        <tr>
+            <td align="center" style="padding: 30px 10px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" class="email-container" style="background-color: #18181b; border: 4px solid #ffffff; border-radius: 20px; overflow: hidden; max-width: 600px; width: 100%;">
+                    <!-- Header Banner -->
+                    <tr>
+                        <td style="background-color: #FFB22C; padding: 25px 30px; text-align: center;">
+                            <h1 style="margin: 0; color: #000000; font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">
+                                E-CELL DYPIU
+                            </h1>
+                            <p style="margin: 5px 0 0 0; color: #000000; font-size: 13px; font-weight: bold;">
+                                TEAM SELECTION INTERVIEW INVITATION
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 35px 40px; color: #ffffff;">
+                            <p style="font-size: 17px; margin: 0 0 20px 0;">
+                                Dear <strong>${candidateName || 'Applicant'}</strong>,
+                            </p>
+                            <p style="color: #e4e4e7; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                                Thank you for applying to join <strong>E-Cell DYPIU</strong>! Based on your application review, we are pleased to invite you for an interview round.
+                            </p>
+                            
+                            <!-- Interview Details Box -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #000000; border: 2px solid #FFB22C; border-radius: 12px; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h3 style="margin: 0 0 12px 0; color: #FFB22C; font-size: 16px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #27272a; padding-bottom: 8px;">Interview Schedule Details</h3>
+                                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                            ${data.role ? `<tr>
+                                                <td style="padding: 6px 0; color: #a1a1aa; font-size: 14px; width: 100px; font-weight: bold;">ROLE:</td>
+                                                <td style="padding: 6px 0; color: #FFB22C; font-size: 14px; font-weight: bold;">${data.role}</td>
+                                            </tr>` : ''}
+                                            ${data.date ? `<tr>
+                                                <td style="padding: 6px 0; color: #a1a1aa; font-size: 14px; width: 100px; font-weight: bold;">DATE:</td>
+                                                <td style="padding: 6px 0; color: #ffffff; font-size: 14px;">${data.date}</td>
+                                            </tr>` : ''}
+                                            ${data.time ? `<tr>
+                                                <td style="padding: 6px 0; color: #a1a1aa; font-size: 14px; font-weight: bold;">TIME / SLOT:</td>
+                                                <td style="padding: 6px 0; color: #ffffff; font-size: 14px;">${data.time}</td>
+                                            </tr>` : ''}
+                                            ${data.venue ? `<tr>
+                                                <td style="padding: 6px 0; color: #a1a1aa; font-size: 14px; font-weight: bold;">LOCATION:</td>
+                                                <td style="padding: 6px 0; color: #ffffff; font-size: 14px;">${data.venue}</td>
+                                            </tr>` : ''}
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            ${formattedNotes ? `
+                            <div style="background-color: #27272a; padding: 18px; border-radius: 10px; margin-bottom: 25px;">
+                                <h4 style="margin: 0 0 8px 0; color: #FFB22C; font-size: 14px; text-transform: uppercase;">Important Instructions / Notes</h4>
+                                <p style="color: #e4e4e7; font-size: 14px; line-height: 1.5; margin: 0;">${formattedNotes}</p>
+                            </div>
+                            ` : ''}
+
+                            ${data.buttonUrl ? `
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td align="center" style="padding: 10px 0 15px 0;">
+                                        <a href="${data.buttonUrl}" target="_blank" style="display: inline-block; background-color: #FFB22C; color: #000000; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 8px; text-transform: uppercase; border: 3px solid #ffffff;" class="mobile-cta">
+                                            ${data.buttonText || 'Join Interview / Confirm Slot'}
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            ` : ''}
+
+                            <p style="color: #a1a1aa; font-size: 14px; line-height: 1.5; margin: 25px 0 0 0;">
+                                Best of luck! We look forward to meeting you.<br/><br/>
+                                Warm regards,<br/>
+                                <strong>Team E-Cell DYPIU</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #0c0c0e; padding: 25px 30px; text-align: center; border-top: 2px solid #27272a;">
+                            <p style="margin: 0; color: #71717a; font-size: 12px;">
+                                © ${new Date().getFullYear()} E-Cell DYPIU. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+`;
+}
+
 // Generate Generic Compose Email Layout
 function generateGenericHTML(data, subscriberName) {
     const formattedBody = (data.body || '').replace(/\n/g, '<br/>');
@@ -429,16 +543,31 @@ export default async function handler(req, res) {
             const recipient = recipients[i];
 
             try {
+                let recipientSubject = (subject || '')
+                    .replace(/\{name\}/g, recipient.name || 'Applicant')
+                    .replace(/\{email\}/g, recipient.email || '')
+                    .replace(/\{role\}/g, recipient.role || data?.role || 'Team Role');
+
                 let htmlContent = '';
-                if (type === 'announcement') {
+                if (data && data.customHtml) {
+                    htmlContent = data.customHtml
+                        .replace(/\{name\}/g, recipient.name || 'Applicant')
+                        .replace(/\{email\}/g, recipient.email || '')
+                        .replace(/\{role\}/g, recipient.role || data.role || 'E-Cell Team Member')
+                        .replace(/\{date\}/g, data.date || '')
+                        .replace(/\{time\}/g, data.time || '')
+                        .replace(/\{venue\}/g, data.venue || '');
+                } else if (type === 'announcement') {
                     htmlContent = generateAnnouncementHTML(data, recipient.name);
                 } else if (type === 'event') {
                     htmlContent = generateEventHTML(data, recipient.name);
+                } else if (type === 'interview') {
+                    htmlContent = generateInterviewHTML(data, recipient.name);
                 } else {
                     htmlContent = generateGenericHTML(data, recipient.name);
                 }
 
-                await sendEmail(recipient.email, subject, htmlContent);
+                await sendEmail(recipient.email, recipientSubject, htmlContent);
                 results.sent++;
                 results.details.push({
                     name: recipient.name,

@@ -124,6 +124,8 @@ export default async function handler(req, res) {
             return await handleListAttendees(req, res);
         } else if (action === 'get-events') {
             return await handleGetEvents(req, res);
+        } else if (action === 'list-applications') {
+            return await handleListApplications(req, res);
         }
     }
 
@@ -132,6 +134,8 @@ export default async function handler(req, res) {
             return await handleLookupAttendee(req, res);
         } else if (action === 'submit-application') {
             return await handleSubmitApplication(req, res);
+        } else if (action === 'list-applications') {
+            return await handleListApplications(req, res);
         } else if (action === 'verify-admin') {
             return await handleVerifyAdmin(req, res);
         } else if (action === 'import-attendees') {
@@ -146,6 +150,44 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ error: 'Method not allowed or invalid action' });
+}
+
+async function handleListApplications(req, res) {
+    const authHeader = req.headers.authorization;
+    const adminKey = process.env.ADMIN_API_KEY;
+    if (!adminKey || authHeader !== `Bearer ${adminKey}`) return res.status(401).json({ error: 'Unauthorized' });
+
+    if (!db) return res.status(503).json({ error: 'Database not available' });
+
+    try {
+        const snapshot = await db.collection('TEAM_APPLICATION_FORM').get();
+        const applications = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            let submittedAt = data.submittedAt;
+            if (submittedAt && typeof submittedAt.toDate === 'function') {
+                submittedAt = submittedAt.toDate().toISOString();
+            } else if (submittedAt && submittedAt._seconds) {
+                submittedAt = new Date(submittedAt._seconds * 1000).toISOString();
+            }
+            applications.push({
+                id: doc.id,
+                ...data,
+                submittedAt: submittedAt || null
+            });
+        });
+
+        applications.sort((a, b) => {
+            const timeA = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+            const timeB = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+            return timeB - timeA;
+        });
+
+        return res.status(200).json({ success: true, count: applications.length, applications });
+    } catch (error) {
+        console.error('Error listing applications:', error);
+        return res.status(500).json({ error: 'Failed to list applications', details: error.message });
+    }
 }
 
 async function handleListAttendees(req, res) {
