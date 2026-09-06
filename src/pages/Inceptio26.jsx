@@ -82,7 +82,7 @@ const Inceptio26 = () => {
             third: {
                 team: 'SWARAJ SAATHI',
                 prize: '₹2,000',
-                members: 'Team Swaraj Saathi'
+                members: 'Sarthak Rodge & Sarthak Dhemse'
             }
         }
     };
